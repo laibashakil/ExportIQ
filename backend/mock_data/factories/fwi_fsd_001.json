@@ -1,0 +1,34 @@
+{
+  "factory_id": "fwi_fsd_001",
+  "factory_name": "Faisal Weave Industries",
+  "city": "Faisalabad",
+  "primary_products": ["Denim", "Cotton woven", "Home textiles"],
+  "annual_export_pkr": 4250000000,
+  "exports_by_buyer_pkr": {
+    "NordStyle Group": 1900000000,
+    "BritMart Retail": 1450000000,
+    "EuroThread SA": 700000000,
+    "Tesco": 200000000
+  },
+  "primary_buyers": ["NordStyle Group", "BritMart Retail", "EuroThread SA", "Tesco"],
+  "certifications": [
+    {"name": "SA8000", "status": "EXPIRED", "expiry_date": "2026-01-15", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2026-09-30", "issuer": "Bureau Veritas"},
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-12-01", "issuer": "OEKO-TEX Institute"},
+    {"name": "GOTS", "status": "MISSING", "expiry_date": null, "issuer": null}
+  ],
+  "claims": [
+    {"claim": "Factory is ISO 14001 compliant — effluent fully within legal limits", "source": "faisal_weave_self_report_q1_2026.csv", "value": true},
+    {"claim": "SA8000 audit completed and current", "source": "faisal_weave_self_report_q1_2026.csv", "value": true},
+    {"claim": "Average weekly working hours: 48", "source": "faisal_weave_self_report_q1_2026.csv", "value": 48},
+    {"claim": "Chemical discharge meets EU Reach standards", "source": "faisal_weave_self_report_q1_2026.csv", "value": true}
+  ],
+  "audit_evidence": [
+    {"metric": "water_effluent_discharge", "value": 12.0, "unit": "ppm", "source": "water_audit_march25.pdf", "measured_on": "2026-03-12"},
+    {"metric": "weekly_working_hours", "value": 68, "unit": "hours", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
+    {"metric": "overtime_hours", "value": 22, "unit": "hours/week", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
+    {"metric": "co2_per_unit", "value": 4.8, "unit": "kgCO2/garment", "source": "carbon_calc_jan26.csv", "measured_on": "2026-01-31"},
+    {"metric": "lead_in_dyes", "value": 95.0, "unit": "ppm", "source": "chemical_lab_report_jan26.pdf", "measured_on": "2026-01-22"}
+  ],
+  "notes": "Faisal Weave Industries' NordStyle Group order shipped Q2 2026 is contingent on resolving the SA8000 expiry; BritMart Retail have flagged CBAM declaration as a hold."
+}

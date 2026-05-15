@@ -1,0 +1,35 @@
+{
+  "factory_id": "rgl_khi_003",
+  "factory_name": "Ravi Garments Ltd",
+  "city": "Karachi",
+  "primary_products": ["Knitwear", "Polo shirts", "Loungewear"],
+  "annual_export_pkr": 3100000000,
+  "exports_by_buyer_pkr": {
+    "EuroThread SA": 1300000000,
+    "Next": 950000000,
+    "NordStyle Group": 600000000,
+    "Asda": 250000000
+  },
+  "primary_buyers": ["EuroThread SA", "Next", "NordStyle Group", "Asda"],
+  "certifications": [
+    {"name": "SA8000", "status": "VALID", "expiry_date": "2027-08-30", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-05-15", "issuer": "Bureau Veritas"},
+    {"name": "GOTS", "status": "VALID", "expiry_date": "2027-01-20", "issuer": "Control Union"},
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2027-03-12", "issuer": "OEKO-TEX Institute"},
+    {"name": "BSCI", "status": "VALID", "expiry_date": "2027-06-01", "issuer": "amfori"}
+  ],
+  "claims": [
+    {"claim": "CBAM quarterly declarations filed since Oct 2025", "source": "ravi_garments_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Modern Slavery Act statement published 2026", "source": "ravi_garments_compliance_q1_2026.pdf", "value": true},
+    {"claim": "EU Supply Chain Due Diligence narrative published", "source": "ravi_garments_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Average weekly working hours: 46", "source": "ravi_garments_compliance_q1_2026.pdf", "value": 46}
+  ],
+  "audit_evidence": [
+    {"metric": "water_effluent_discharge", "value": 3.2, "unit": "ppm", "source": "bureau_veritas_water_apr26.pdf", "measured_on": "2026-04-22"},
+    {"metric": "weekly_working_hours", "value": 47, "unit": "hours", "source": "certverify_labour_audit_apr26.pdf", "measured_on": "2026-04-10"},
+    {"metric": "co2_per_unit", "value": 2.4, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
+    {"metric": "lead_in_dyes", "value": 22.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-20"},
+    {"metric": "supply_chain_due_diligence_report", "value": "PUBLISHED", "unit": null, "source": "annual_disclosure_2026.pdf", "measured_on": "2026-03-15"}
+  ],
+  "notes": "Ideal is the gold-standard demo case — fully compliant. Used to show the COMPLIANT (green) risk badge."
+}

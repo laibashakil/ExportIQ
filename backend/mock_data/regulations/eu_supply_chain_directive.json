@@ -1,0 +1,66 @@
+{
+  "regulation_id": "eu_supply_chain_directive",
+  "name": "EU Supply Chain Due Diligence Directive",
+  "jurisdiction": "EU",
+  "effective_date": "2024-07-25",
+  "source_url": "https://eur-lex.europa.eu/eli/dir/2024/1760/oj",
+  "source_document": "eu_supply_chain_directive.pdf",
+  "rules": [
+    {
+      "rule_id": "csddd_due_diligence_narrative",
+      "regulation_name": "EU Supply Chain Due Diligence Directive",
+      "requirement": "Publish an annual human-rights and environmental due-diligence narrative covering tier-1 and tier-2 suppliers.",
+      "category": "SUPPLY_CHAIN",
+      "metric": "supply_chain_due_diligence_report",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": "2026-12-31",
+      "grace_period_days": 30,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "Article 16"
+    },
+    {
+      "rule_id": "csddd_certification_iso14001",
+      "regulation_name": "EU Supply Chain Due Diligence Directive",
+      "requirement": "ISO 14001 (or equivalent) environmental management certification covering all production sites.",
+      "category": "AUDIT_CERTIFICATION",
+      "certification": "ISO 14001",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": "2026-12-31",
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "MEDIUM",
+      "source_section": "Annex II"
+    },
+    {
+      "rule_id": "csddd_certification_sa8000",
+      "regulation_name": "EU Supply Chain Due Diligence Directive",
+      "requirement": "SA8000 (or equivalent) social accountability certification, current and valid.",
+      "category": "AUDIT_CERTIFICATION",
+      "certification": "SA8000",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "CRITICAL",
+      "source_section": "Annex II"
+    },
+    {
+      "rule_id": "csddd_chemical_lead_limit",
+      "regulation_name": "EU Supply Chain Due Diligence Directive",
+      "requirement": "Lead content in dyes must not exceed 90 ppm per EU REACH alignment.",
+      "category": "CHEMICAL",
+      "metric": "lead_in_dyes",
+      "numerical_limit": 90.0,
+      "unit": "ppm",
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "Annex III"
+    }
+  ]
+}

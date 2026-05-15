@@ -1,0 +1,33 @@
+{
+  "factory_id": "cfw_lhe_002",
+  "factory_name": "Chenab Fabric Works",
+  "city": "Lahore",
+  "primary_products": ["Bed linen", "Towels", "Cotton apparel"],
+  "annual_export_pkr": 6800000000,
+  "exports_by_buyer_pkr": {
+    "EuroThread SA": 2500000000,
+    "NordStyle Group": 2100000000,
+    "M&S": 1400000000,
+    "Mango": 800000000
+  },
+  "primary_buyers": ["EuroThread SA", "NordStyle Group", "M&S", "Mango"],
+  "certifications": [
+    {"name": "SA8000", "status": "VALID", "expiry_date": "2027-04-30", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-02-15", "issuer": "CertVerify Pakistan"},
+    {"name": "GOTS", "status": "VALID", "expiry_date": "2026-11-20", "issuer": "Control Union"},
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-10-01", "issuer": "OEKO-TEX Institute"}
+  ],
+  "claims": [
+    {"claim": "CBAM quarterly declarations filed on time", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Modern Slavery Act statement published 2026", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Average weekly working hours: 52", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": 52}
+  ],
+  "audit_evidence": [
+    {"metric": "water_effluent_discharge", "value": 6.5, "unit": "ppm", "source": "bureau_veritas_water_apr26.pdf", "measured_on": "2026-04-08"},
+    {"metric": "weekly_working_hours", "value": 53, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-15"},
+    {"metric": "co2_per_unit", "value": 3.1, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
+    {"metric": "lead_in_dyes", "value": 60.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "supply_chain_due_diligence_report", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-01"}
+  ],
+  "notes": "Chenab Fabric Works is mostly clean; one outstanding gap is the EU Supply Chain Due Diligence Directive narrative still being in draft."
+}

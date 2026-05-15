@@ -1,0 +1,22 @@
+month,factory_id,buyer,destination_country,value_pkr
+2025-06,fwi_fsd_001,NordStyle Group,Germany,180000000
+2025-07,fwi_fsd_001,NordStyle Group,Germany,160000000
+2025-08,fwi_fsd_001,BritMart Retail,UK,140000000
+2025-09,fwi_fsd_001,BritMart Retail,UK,120000000
+2025-10,fwi_fsd_001,EuroThread SA,Spain,90000000
+2025-11,fwi_fsd_001,Tesco,UK,40000000
+2025-12,fwi_fsd_001,NordStyle Group,Germany,200000000
+2026-01,fwi_fsd_001,NordStyle Group,Germany,210000000
+2026-02,fwi_fsd_001,BritMart Retail,UK,150000000
+2026-03,fwi_fsd_001,EuroThread SA,Spain,110000000
+2026-04,fwi_fsd_001,Tesco,UK,30000000
+2025-06,cfw_lhe_002,EuroThread SA,Spain,210000000
+2025-07,cfw_lhe_002,NordStyle Group,Germany,175000000
+2025-08,cfw_lhe_002,M&S,UK,120000000
+2025-09,cfw_lhe_002,Mango,Spain,70000000
+2025-10,cfw_lhe_002,EuroThread SA,Spain,200000000
+2025-11,cfw_lhe_002,NordStyle Group,Germany,180000000
+2025-12,cfw_lhe_002,M&S,UK,110000000
+2026-01,cfw_lhe_002,Mango,Spain,80000000
+2026-02,cfw_lhe_002,EuroThread SA,Spain,220000000
+2026-03,cfw_lhe_002,NordStyle Group,Germany,200000000
