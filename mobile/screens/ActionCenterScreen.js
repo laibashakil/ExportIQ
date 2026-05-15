@@ -149,12 +149,13 @@ export default function ActionCenterScreen({ route, navigation }) {
 
       {merged.length === 0 && (
         <EmptyState
-          emoji="⚡"
+          icon="flash"
+          iconColor={colors.primary}
           title="No actions yet"
           message="Run a full compliance analysis to generate a prioritized 3-5 action plan ranked by PKR impact and deadline urgency."
           cta={{
             label: 'Run Analysis',
-            icon: 'play',
+            icon: 'play-circle',
             onPress: async () => {
               try {
                 const r = await api.analyze(factoryId);

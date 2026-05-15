@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 
 import {
   colors,
@@ -19,26 +20,27 @@ import { subscribeReport } from '../services/firebase';
 import { api } from '../services/api';
 import { formatRelativeTime } from '../services/format';
 import EmptyState from '../components/EmptyState';
+import { markdownStyles } from '../components/MarkdownStyles';
 
 // Each document `kind` is grouped under a section and rendered with a kind-
 // specific icon. New kinds are auto-bucketed into "Other" so the screen
 // degrades gracefully if the backend invents a new kind tomorrow.
 const KIND_META = {
-  CBAM_FORM:           { group: 'Compliance Forms',   emoji: '📄', icon: 'document-text', color: colors.compliant },
-  CBAM_DECLARATION:    { group: 'Compliance Forms',   emoji: '📄', icon: 'document-text', color: colors.compliant },
-  CERTIFICATION_APP:   { group: 'Compliance Forms',   emoji: '📜', icon: 'ribbon',        color: colors.primary },
-  MSA_STATEMENT:       { group: 'Compliance Forms',   emoji: '📑', icon: 'document',      color: colors.primary },
-  EMISSIONS_REPORT:    { group: 'Compliance Forms',   emoji: '🌱', icon: 'leaf',          color: colors.compliant },
-  BUYER_EMAIL:         { group: 'Buyer Emails',       emoji: '📧', icon: 'mail',          color: colors.primary },
-  AUDIT_CHECKLIST:     { group: 'Remediation Checklists', emoji: '✅', icon: 'list-circle', color: colors.warning },
-  REMEDIATION_PLAN:    { group: 'Remediation Checklists', emoji: '🛠️', icon: 'construct',  color: colors.warning },
-  BOOKING_TEMPLATE:    { group: 'Remediation Checklists', emoji: '🗓️', icon: 'calendar',   color: colors.warning },
+  CBAM_FORM:           { group: 'Compliance Forms',       icon: 'document-text', color: colors.compliant },
+  CBAM_DECLARATION:    { group: 'Compliance Forms',       icon: 'document-text', color: colors.compliant },
+  CERTIFICATION_APP:   { group: 'Compliance Forms',       icon: 'ribbon',        color: colors.primary },
+  MSA_STATEMENT:       { group: 'Compliance Forms',       icon: 'document',      color: colors.primary },
+  EMISSIONS_REPORT:    { group: 'Compliance Forms',       icon: 'leaf',          color: colors.compliant },
+  BUYER_EMAIL:         { group: 'Buyer Emails',           icon: 'mail',          color: colors.primary },
+  AUDIT_CHECKLIST:     { group: 'Remediation Checklists', icon: 'checkbox',      color: colors.warning },
+  REMEDIATION_PLAN:    { group: 'Remediation Checklists', icon: 'construct',     color: colors.warning },
+  BOOKING_TEMPLATE:    { group: 'Remediation Checklists', icon: 'calendar',      color: colors.warning },
 };
 
 const GROUP_ORDER = ['Compliance Forms', 'Buyer Emails', 'Remediation Checklists', 'Other'];
 
 function metaFor(kind) {
-  return KIND_META[kind] || { group: 'Other', emoji: '📄', icon: 'document', color: colors.textDim };
+  return KIND_META[kind] || { group: 'Other', icon: 'document', color: colors.textDim };
 }
 
 function approxSize(body) {
@@ -79,12 +81,13 @@ export default function DocumentVaultScreen({ route }) {
     return (
       <View style={styles.bg}>
         <EmptyState
-          emoji="📁"
+          icon="folder-open"
+          iconColor={colors.primary}
           title="No documents yet"
           message="When you run a full analysis, the Execution Simulator generates buyer emails, CBAM declarations, and remediation checklists — all listed here."
           cta={{
             label: 'Run Analysis',
-            icon: 'play',
+            icon: 'play-circle',
             onPress: async () => {
               try {
                 const r = await api.analyze(factoryId);
@@ -132,7 +135,7 @@ export default function DocumentVaultScreen({ route }) {
               >
                 <View style={styles.cardHead}>
                   <View style={[styles.iconCircle, { backgroundColor: m.color + '22' }]}>
-                    <Text style={styles.iconEmoji}>{m.emoji}</Text>
+                    <Ionicons name={m.icon} size={20} color={m.color} />
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.cardTitle} numberOfLines={2}>{d.title || d.kind}</Text>
@@ -161,7 +164,7 @@ export default function DocumentVaultScreen({ route }) {
                 </View>
                 {isOpen && d.body && (
                   <View style={styles.body}>
-                    <Text style={styles.bodyText}>{d.body}</Text>
+                    <Markdown style={markdownStyles}>{String(d.body)}</Markdown>
                   </View>
                 )}
               </TouchableOpacity>
@@ -223,7 +226,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
   },
-  iconEmoji: { fontSize: 20 },
   cardTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
   cardKind: { fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },

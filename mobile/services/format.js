@@ -72,6 +72,11 @@ export const BUYER_COUNTRY = {
   'Mango': 'ES',
 };
 
+/**
+ * Country flag emoji for a buyer.
+ * Returns null when the buyer has no known HQ — callers should render an
+ * `<Ionicons name="globe" />` in that case rather than a placeholder emoji.
+ */
 export function buyerFlag(buyer) {
-  return COUNTRY_FLAG[BUYER_COUNTRY[buyer]] || '🌐';
+  return COUNTRY_FLAG[BUYER_COUNTRY[buyer]] || null;
 }

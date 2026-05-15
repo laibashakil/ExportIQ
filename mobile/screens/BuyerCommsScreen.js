@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 
 import {
   colors,
@@ -19,6 +20,7 @@ import { subscribeReport } from '../services/firebase';
 import { api } from '../services/api';
 import { formatPkr, buyerFlag } from '../services/format';
 import EmptyState from '../components/EmptyState';
+import { markdownStyles } from '../components/MarkdownStyles';
 
 export default function BuyerCommsScreen({ route }) {
   const { factoryId } = route.params;
@@ -58,12 +60,13 @@ export default function BuyerCommsScreen({ route }) {
     return (
       <View style={styles.bg}>
         <EmptyState
-          emoji="🤝"
+          icon="briefcase"
+          iconColor={colors.primary}
           title="No buyer comms yet"
           message="Once you run an analysis, ExportIQ auto-drafts a buyer email per affected buyer, citing the specific gap and remediation timeline."
           cta={{
             label: 'Run Analysis',
-            icon: 'play',
+            icon: 'play-circle',
             onPress: async () => {
               try {
                 const r = await api.analyze(factoryId);
@@ -109,6 +112,7 @@ export default function BuyerCommsScreen({ route }) {
 
       {Object.values(buyersMap).map(({ buyer, email, share }) => {
         const isOpen = expanded === buyer;
+        const flag = buyerFlag(buyer);
         return (
           <View key={buyer} style={styles.card}>
             <TouchableOpacity
@@ -116,7 +120,11 @@ export default function BuyerCommsScreen({ route }) {
               onPress={() => email && setExpanded(isOpen ? null : buyer)}
               activeOpacity={email ? 0.8 : 1}
             >
-              <Text style={styles.flag}>{buyerFlag(buyer)}</Text>
+              {flag ? (
+                <Text style={styles.flag}>{flag}</Text>
+              ) : (
+                <Ionicons name="globe" size={24} color={colors.textDim} />
+              )}
               <View style={{ flex: 1, minWidth: 0, marginLeft: 10 }}>
                 <Text style={styles.buyerName}>{buyer}</Text>
                 <Text style={styles.buyerSub}>
@@ -162,7 +170,7 @@ export default function BuyerCommsScreen({ route }) {
 
             {isOpen && email && (
               <View style={styles.emailBody}>
-                <Text style={styles.emailBodyText}>{email.body}</Text>
+                <Markdown style={markdownStyles}>{String(email.body || '')}</Markdown>
               </View>
             )}
           </View>
@@ -178,7 +186,7 @@ export default function BuyerCommsScreen({ route }) {
             .map((e, i) => (
               <View key={e.document_id || i} style={styles.card}>
                 <Text style={styles.buyerName}>{e.title}</Text>
-                <Text style={styles.emailBodyText}>{e.body}</Text>
+                <Markdown style={markdownStyles}>{String(e.body || '')}</Markdown>
               </View>
             ))}
         </>

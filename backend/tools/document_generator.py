@@ -11,24 +11,51 @@ from datetime import datetime
 from .gemini_client import call_gemini
 
 
-BUYER_EMAIL_PROMPT = """You are a Pakistani textile exporter's compliance officer
+# Naming constraint shared by every prompt: this is a fictional product for a
+# hackathon submission, so any third-party audit firm referenced must be
+# "CertVerify Pakistan". Gemini's default vocabulary leans on real audit
+# brands (SGS, Bureau Veritas, Intertek, TÜV) — the constraint below blocks
+# those names from leaking into the generated document bodies.
+_NAMING_CONSTRAINT = (
+    "\n\nNAMING RULES (strict):\n"
+    "- The third-party audit / certification firm in this scenario is "
+    "  'CertVerify Pakistan'. Use that name whenever you reference an auditor.\n"
+    "- Do NOT mention real audit firms by name: no 'SGS', no 'Bureau Veritas', "
+    "  no 'Intertek', no 'TÜV', no 'BSI', no 'DNV'. If you need to refer to a "
+    "  generic third party, use 'CertVerify Pakistan' or 'the independent "
+    "  auditor'.\n"
+    "- Do NOT mention real buyer brands like 'H&M', 'Primark', 'Inditex', "
+    "  'Zara' — use only the buyer name passed in the user prompt verbatim.\n"
+)
+
+
+BUYER_EMAIL_PROMPT = (
+    """You are a Pakistani textile exporter's compliance officer
 drafting a status update for a European buyer. Be concise, professional, and
 honest about the gap being remediated and the timeline. End with a clear ask
 (extension, audit reschedule, etc).
 
 Output Markdown only — no preamble.
 """
+    + _NAMING_CONSTRAINT
+)
 
-CBAM_FORM_PROMPT = """Draft a CBAM (EU Carbon Border Adjustment Mechanism)
+CBAM_FORM_PROMPT = (
+    """Draft a CBAM (EU Carbon Border Adjustment Mechanism)
 quarterly declaration. Include factory name, reporting period, total embedded
 emissions (tCO2e), default vs verified emission factors used, and signatory
 block. Output Markdown.
 """
+    + _NAMING_CONSTRAINT
+)
 
-AUDIT_CHECKLIST_PROMPT = """Generate a short remediation checklist for the
+AUDIT_CHECKLIST_PROMPT = (
+    """Generate a short remediation checklist for the
 audit gap described. Each item: action, owner role, target date, evidence
 required. 5-8 items. Output Markdown.
 """
+    + _NAMING_CONSTRAINT
+)
 
 
 def _new_id(prefix: str) -> str:

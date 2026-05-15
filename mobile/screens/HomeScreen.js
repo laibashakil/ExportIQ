@@ -134,7 +134,7 @@ function FactoryCard({ item, onPress }) {
     >
       <View style={styles.cardLeft}>
         <View style={styles.factoryIconCircle}>
-          <Text style={styles.factoryEmoji}>🏭</Text>
+          <Ionicons name="business" size={24} color={c} />
         </View>
       </View>
 
@@ -259,7 +259,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  factoryEmoji: { fontSize: 20 },
   cardMid: { flex: 1, minWidth: 0 },
   cardRight: { alignItems: 'center', justifyContent: 'center', marginLeft: spacing.md },
 

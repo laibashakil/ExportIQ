@@ -21,18 +21,19 @@ import { db, subscribeJob } from '../services/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { api } from '../services/api';
 import { formatRelativeTime } from '../services/format';
+import { formatTraceEntry } from '../utils/traceFormatter';
 import EmptyState from '../components/EmptyState';
 
-// Canonical pipeline order. The execution trace contains arbitrary entries
-// for each agent; we use this list to render a clean fixed-step timeline.
+// Canonical pipeline order. Each entry maps to one agent in
+// backend/agents/orchestrator.py:AGENTS.
 const PIPELINE = [
-  { key: 'orchestrator',        label: 'Orchestrator',     icon: 'flash' },
+  { key: 'orchestrator',         label: 'Orchestrator',     icon: 'flash' },
   { key: 'regulation_ingestion', label: 'Regulation Parser', icon: 'document-text' },
-  { key: 'factory_profile',     label: 'Factory Profile',  icon: 'business' },
-  { key: 'gap_detection',       label: 'Gap Detection',    icon: 'search' },
-  { key: 'financial_impact',    label: 'Financial Impact', icon: 'cash' },
-  { key: 'action_chain',        label: 'Action Chain',     icon: 'list' },
-  { key: 'execution_simulation', label: 'Execution Sim',   icon: 'play-circle' },
+  { key: 'factory_profile',      label: 'Factory Profile',   icon: 'business' },
+  { key: 'gap_detection',        label: 'Gap Detection',     icon: 'search' },
+  { key: 'financial_impact',     label: 'Financial Impact',  icon: 'cash' },
+  { key: 'action_chain',         label: 'Action Chain',      icon: 'list' },
+  { key: 'execution_simulation', label: 'Execution Sim',     icon: 'play-circle' },
 ];
 
 export default function AgentTraceScreen({ route }) {
@@ -73,13 +74,14 @@ export default function AgentTraceScreen({ route }) {
   const current = job?.current_agent;
   const status = job?.status || 'idle';
 
-  // For each pipeline step, find its latest trace entry. Status is derived:
-  //   - if step matches `current` and pipeline is running -> 'active'
-  //   - else if step has a 'complete' entry -> 'done'
-  //   - else if step has an 'exception' entry -> 'failed'
-  //   - else if step has 'activated' from recovery agent -> 'recovering'
-  //   - else if pipeline is past this step -> 'done'
-  //   - else 'pending'
+  // Resolve each pipeline step's lifecycle state. The status hierarchy:
+  //   - pipelineDone   -> every agent that emitted any entries shows as 'done'
+  //                       (this fixes the Orchestrator showing RUNNING forever:
+  //                       orchestrator emits `pipeline_complete`, not `complete`,
+  //                       so the agent-level `complete` check missed it before)
+  //   - pipelineFailed -> failed agents are 'failed', others stay where they are
+  //   - else (running) -> isCurrentAgent → 'active', hasComplete → 'done', etc.
+  //   - recovery_active for a failed agent flips state to 'recovering'.
   const stepState = useMemo(() => {
     const byAgent = {};
     for (const t of trace) {
@@ -87,19 +89,38 @@ export default function AgentTraceScreen({ route }) {
       byAgent[t.agent] = byAgent[t.agent] || [];
       byAgent[t.agent].push(t);
     }
+    const pipelineDone = status === 'complete';
+    const pipelineFailed = status === 'failed';
     return PIPELINE.map((p) => {
       const entries = byAgent[p.key] || [];
       const hasException = entries.some((e) => e.step === 'exception');
-      const hasComplete = entries.some((e) => e.step === 'complete');
-      const isActive = status === 'running' && current === p.key;
+      const hasComplete = entries.some(
+        (e) => e.step === 'complete' || e.step === 'pipeline_complete',
+      );
+      const isCurrentAgent = current === p.key;
+
       let state = 'pending';
-      if (hasException) state = 'failed';
-      else if (isActive) state = 'active';
-      else if (hasComplete) state = 'done';
-      else if (entries.length > 0) state = 'active';
-      const recoveryActive = byAgent['recovery']?.some((e) => e.step === 'activated')
-        && entries.some((e) => e.step === 'exception');
+      if (pipelineDone) {
+        state = entries.length > 0 ? 'done' : 'pending';
+      } else if (pipelineFailed) {
+        if (hasException) state = 'failed';
+        else if (hasComplete) state = 'done';
+        else state = entries.length ? 'active' : 'pending';
+      } else if (hasException) {
+        state = 'failed';
+      } else if (status === 'running' && isCurrentAgent) {
+        state = 'active';
+      } else if (hasComplete) {
+        state = 'done';
+      } else if (entries.length > 0) {
+        state = 'active';
+      }
+
+      const recoveryActive =
+        byAgent['recovery']?.some((e) => e.step === 'activated') &&
+        entries.some((e) => e.step === 'exception');
       if (recoveryActive && state === 'failed') state = 'recovering';
+
       return { ...p, entries, state };
     });
   }, [trace, status, current]);
@@ -122,12 +143,13 @@ export default function AgentTraceScreen({ route }) {
     return (
       <View style={styles.bg}>
         <EmptyState
-          emoji="🤖"
+          icon="git-network"
+          iconColor={colors.primary}
           title="No analysis run yet"
           message="Run a compliance analysis from the Home screen to see the 6-agent pipeline trace stream live here."
           cta={{
             label: 'Run Analysis',
-            icon: 'play',
+            icon: 'play-circle',
             onPress: async () => {
               try {
                 const r = await api.analyze(factoryId);
@@ -218,7 +240,7 @@ export default function AgentTraceScreen({ route }) {
           activeOpacity={0.85}
         >
           <View style={styles.toolBtnLeft}>
-            <Ionicons name="bug" size={18} color={colors.warning} />
+            <Ionicons name="bug" size={20} color={colors.warning} />
             <View style={{ marginLeft: 10 }}>
               <Text style={styles.toolBtnTitle}>Demo: Inject Failure</Text>
               <Text style={styles.toolBtnSub}>
@@ -269,6 +291,8 @@ function TimelineStep({ step, isLast }) {
 
   const lastEntry = entries[entries.length - 1];
   const lastTs = lastEntry?.ts ? lastEntry.ts.split('T')[1]?.slice(0, 8) : null;
+  // Latest line, humanised. Shown as a teaser when collapsed; expand to see all.
+  const lastFormatted = lastEntry ? formatTraceEntry(lastEntry) : null;
 
   return (
     <View style={styles.stepRow}>
@@ -313,23 +337,28 @@ function TimelineStep({ step, isLast }) {
           <Text style={styles.stepLabel}>{label}</Text>
           <Text style={[styles.stepState, { color: cfg.color }]}>{cfg.text}</Text>
         </View>
-        {lastTs && (
-          <Text style={styles.stepTs}>
-            <Ionicons name="time" size={10} color={colors.textMuted} /> {lastTs} · {entries.length} step{entries.length === 1 ? '' : 's'}
+        {lastFormatted && (
+          <Text style={styles.stepSummary} numberOfLines={expanded ? 0 : 2}>
+            {lastFormatted}
           </Text>
         )}
-        {expanded && entries.length > 0 && (
+        {lastTs && (
+          <View style={styles.stepTsRow}>
+            <Ionicons name="time" size={11} color={colors.textMuted} />
+            <Text style={styles.stepTs}>
+              {' '}{lastTs} · {entries.length} step{entries.length === 1 ? '' : 's'}
+              {entries.length > 1 && !expanded ? ' · tap to expand' : ''}
+            </Text>
+          </View>
+        )}
+        {expanded && entries.length > 1 && (
           <View style={styles.expand}>
-            {entries.slice(-6).map((e, i) => (
+            {entries.slice(0, -1).map((e, i) => (
               <View key={i} style={styles.traceLine}>
-                <Text style={styles.traceLineStep}>{e.step}</Text>
-                {e.detail && (
-                  <Text style={styles.traceLineDetail} numberOfLines={3}>
-                    {typeof e.detail === 'string'
-                      ? e.detail
-                      : JSON.stringify(e.detail).slice(0, 200)}
-                  </Text>
-                )}
+                <View style={styles.traceLineBullet} />
+                <Text style={styles.traceLineText} numberOfLines={4}>
+                  {formatTraceEntry(e)}
+                </Text>
               </View>
             ))}
           </View>
@@ -340,11 +369,11 @@ function TimelineStep({ step, isLast }) {
 }
 
 const STATE_CONFIG = {
-  pending:    { color: colors.textMuted,  bg: colors.surface,      icon: 'ellipse-outline', text: 'PENDING' },
-  active:     { color: colors.warning,    bg: colors.warningSoft,  icon: 'sync',            text: 'RUNNING' },
-  done:       { color: colors.primary,    bg: colors.primarySoft,  icon: 'checkmark',       text: 'DONE' },
-  failed:     { color: colors.critical,   bg: colors.criticalSoft, icon: 'close',           text: 'FAILED' },
-  recovering: { color: colors.warning,    bg: colors.warningSoft,  icon: 'refresh',         text: 'RECOVERING' },
+  pending:    { color: colors.textMuted,  bg: colors.surface,      icon: 'time',             text: 'PENDING' },
+  active:     { color: colors.warning,    bg: colors.warningSoft,  icon: 'sync',             text: 'RUNNING' },
+  done:       { color: colors.primary,    bg: colors.primarySoft,  icon: 'checkmark-circle', text: 'COMPLETE' },
+  failed:     { color: colors.critical,   bg: colors.criticalSoft, icon: 'close-circle',     text: 'FAILED' },
+  recovering: { color: colors.warning,    bg: colors.warningSoft,  icon: 'refresh-circle',   text: 'RECOVERING' },
 };
 
 const styles = StyleSheet.create({
@@ -425,23 +454,37 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   stepCardActive: { borderColor: colors.warning },
-  stepHead: { flexDirection: 'row', alignItems: 'center' },
+  stepHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   stepLabel: { color: colors.text, fontWeight: '700', fontSize: 13, marginLeft: 8, flex: 1 },
   stepState: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8 },
-  stepTs: { color: colors.textDim, fontSize: 11, marginTop: 6 },
+  stepSummary: {
+    color: colors.text,
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 6,
+  },
+  stepTsRow: { flexDirection: 'row', alignItems: 'center' },
+  stepTs: { color: colors.textDim, fontSize: 11 },
   expand: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  traceLine: { marginBottom: 8 },
-  traceLineStep: { color: colors.primary, fontSize: 11, fontWeight: '700', marginBottom: 2 },
-  traceLineDetail: {
+  traceLine: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
+  traceLineBullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+    marginTop: 7,
+    marginRight: 8,
+  },
+  traceLineText: {
     color: colors.textDim,
     fontSize: 11,
-    fontFamily: 'monospace',
     lineHeight: 15,
+    flex: 1,
   },
 
   toolBtn: {

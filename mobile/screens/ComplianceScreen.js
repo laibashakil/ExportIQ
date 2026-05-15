@@ -146,7 +146,8 @@ export default function ComplianceScreen({ route, navigation }) {
         {hasData ? (
           gaps.length === 0 ? (
             <EmptyState
-              emoji="✅"
+              icon="checkmark-circle"
+              iconColor={colors.compliant}
               title="No open gaps"
               message="This factory currently meets every applicable EU and UK requirement."
             />
@@ -161,12 +162,13 @@ export default function ComplianceScreen({ route, navigation }) {
           )
         ) : (
           <EmptyState
-            emoji="📊"
+            icon="bar-chart"
+            iconColor={colors.primary}
             title="No analysis run yet"
             message="Run a full compliance analysis to see gaps, contradictions, and PKR risk for this factory."
             cta={{
               label: analyzing ? 'Starting…' : 'Run Analysis',
-              icon: 'play',
+              icon: 'play-circle',
               onPress: analyzing ? () => {} : runAnalysis,
             }}
           />
@@ -261,9 +263,12 @@ function ContradictionCard({ contradiction }) {
           <Text style={styles.contraBody} numberOfLines={3}>
             {contradiction.claim || '—'}
           </Text>
-          <Text style={styles.contraSrc} numberOfLines={1}>
-            📄 {contradiction.source_a || '(unknown source)'}
-          </Text>
+          <View style={styles.contraSrcRow}>
+            <Ionicons name="document-text" size={11} color={colors.textDim} />
+            <Text style={styles.contraSrc} numberOfLines={1}>
+              {' '}{contradiction.source_a || '(unknown source)'}
+            </Text>
+          </View>
         </View>
         <View style={styles.contraVsCol}>
           <Text style={styles.contraVs}>VS</Text>
@@ -273,9 +278,12 @@ function ContradictionCard({ contradiction }) {
           <Text style={styles.contraBody} numberOfLines={3}>
             {contradiction.evidence || '—'}
           </Text>
-          <Text style={styles.contraSrc} numberOfLines={1}>
-            📄 {contradiction.source_b || '(unknown source)'}
-          </Text>
+          <View style={styles.contraSrcRow}>
+            <Ionicons name="document-text" size={11} color={colors.textDim} />
+            <Text style={styles.contraSrc} numberOfLines={1}>
+              {' '}{contradiction.source_b || '(unknown source)'}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -417,6 +425,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   contraBody: { color: colors.text, fontSize: 12, lineHeight: 17, marginBottom: 6 },
+  contraSrcRow: { flexDirection: 'row', alignItems: 'center' },
   contraSrc: { color: colors.textDim, fontSize: 10, fontFamily: 'monospace' },
   contraImpact: {
     color: colors.textDim,

@@ -7,16 +7,17 @@ import { colors, radii, shadow, spacing } from '../constants/colors';
 /**
  * Centred "no data yet" placeholder used by every screen.
  *
- *   emoji      single decorative emoji (or null)
+ *   icon       Ionicons name (preferred)
+ *   iconColor  optional override for the centred icon colour
  *   title      headline string
  *   message    paragraph below the title
  *   cta        { label, onPress, icon? } | null  — primary action
  */
-export default function EmptyState({ emoji = '📊', title, message, cta }) {
+export default function EmptyState({ icon = 'analytics', iconColor, title, message, cta }) {
   return (
     <View style={styles.wrap}>
       <View style={styles.iconCircle}>
-        <Text style={styles.emoji}>{emoji}</Text>
+        <Ionicons name={icon} size={36} color={iconColor || colors.textDim} />
       </View>
       {title && <Text style={styles.title}>{title}</Text>}
       {message && <Text style={styles.message}>{message}</Text>}
@@ -55,7 +56,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  emoji: { fontSize: 34 },
   title: {
     color: colors.text,
     fontSize: 17,
