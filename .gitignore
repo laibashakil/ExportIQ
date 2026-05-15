@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Secrets — NEVER commit
+.env
+.env.local
+service-account.json
+**/service-account*.json
+**/firebase-adminsdk-*.json
+# Firebase Web SDK config — both files contain real apiKey/appId/etc.
+mobile/constants/config.js
+mobile/app.json
+
+# Uploads & generated
+backend/uploads/
+*.log
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
