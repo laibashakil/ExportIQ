@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import logging
 import traceback
+from datetime import datetime
 from typing import Callable
 
 from langgraph.graph import StateGraph, END, START
@@ -173,27 +174,52 @@ def run_pipeline(*, job_id: str, factory_id: str,
     graph = get_graph()
     final_state = graph.invoke(initial)
 
-    # Persist final report
+    # Persist final report.
+    #
+    # `report.compliance_score` reflects the **current** real-world compliance
+    # state of the factory (i.e. the pre-simulation score). The simulator's
+    # what-if outputs live under `report.simulation_result` instead. This
+    # matches the mobile HomeScreen contract: the score card shows the
+    # actual factory state, not the hypothetical post-remediation state.
+    sim = final_state.get("simulation_result") or {}
+    fin = final_state.get("financial_impact") or {}
+    before_score = sim.get("before_score", 0)
+    before_risk_pkr = sim.get("risk_before_pkr") or int(fin.get("orders_at_risk_pkr") or 0)
     report = {
         "factory_id": factory_id,
         "job_id": job_id,
         "factory_name": (final_state.get("factory_data") or {}).get("factory_name"),
         "city": (final_state.get("factory_data") or {}).get("city"),
-        "compliance_score": (final_state.get("simulation_result") or {}).get("after_score", 0),
-        "before_score": (final_state.get("simulation_result") or {}).get("before_score", 0),
-        "orders_at_risk_pkr": (final_state.get("simulation_result") or {}).get("risk_after_pkr", 0),
-        "risk_reduction_pkr": (final_state.get("simulation_result") or {}).get("risk_reduction_pkr", 0),
+        "compliance_score": before_score,
+        "before_score": before_score,
+        "after_score": sim.get("after_score", 0),
+        "orders_at_risk_pkr": before_risk_pkr,
+        "risk_reduction_pkr": sim.get("risk_reduction_pkr", 0),
         "gaps": final_state.get("gaps", []),
         "contradictions": final_state.get("contradictions", []),
         "action_chain": final_state.get("action_chain", []),
-        "simulation_result": final_state.get("simulation_result", {}),
+        "simulation_result": sim,
         "documents": final_state.get("documents", []),
-        "financial_impact": final_state.get("financial_impact", {}),
+        "financial_impact": fin,
         "recovery_used": final_state.get("recovery_used", False),
+        "updated_at": datetime.utcnow().isoformat(),
     }
     set_doc(f"factories/{factory_id}/reports/latest", report)
+
+    # Reset the live /factories/{id} doc to the pre-simulation real-world state.
+    # The execution_simulation step animates the score upward via repeated
+    # update_compliance_score() calls; without this reset the doc would be left
+    # at the post-simulation `after_score`, masking the factory's real risk.
+    try:
+        from tools.compliance_scorer import risk_level as _risk_level
+        from tools.firestore_client import update_compliance_score as _ucs
+        _ucs(factory_id, before_score, _risk_level(before_score), before_risk_pkr)
+    except Exception:  # noqa: BLE001
+        log.exception("post-pipeline factory reset failed")
+
     update_job_progress(job_id, status="complete", progress=100,
                        current_agent="orchestrator")
     append_trace(job_id, {"agent": "orchestrator", "step": "pipeline_complete",
-                          "detail": {"compliance_score": report["compliance_score"]}})
+                          "detail": {"compliance_score": before_score,
+                                     "simulated_after": sim.get("after_score", 0)}})
     return final_state
