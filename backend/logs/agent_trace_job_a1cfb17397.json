@@ -1,0 +1,344 @@
+[
+  {
+    "timestamp": "2026-05-17T19:14:38.100847Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003",
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.676158Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.822562Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.964849Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.227470Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "uk_modern_slavery",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.394490Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Ravi Garments Ltd",
+      "certifications": 5,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.505890Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_supply_chain_directive",
+      "rule_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.923979Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1094.0
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.106022Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 8
+      }
+    },
+    "duration_ms": 1422.0
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.638512Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.898925Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:32.676788Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:53.231573Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:53.512096Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 6
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:54.054404Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 6,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 73421.0
+  },
+  {
+    "timestamp": "2026-05-17T19:15:54.587808Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:01.975479Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 1520000000,
+        "buyers_affected": [
+          "EuroThread SA",
+          "NordStyle Group"
+        ]
+      }
+    },
+    "duration_ms": 7390.0
+  },
+  {
+    "timestamp": "2026-05-17T19:16:02.527091Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:28.795686Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 5,
+        "total_impact_pkr": 1520000000
+      }
+    },
+    "duration_ms": 26266.0
+  },
+  {
+    "timestamp": "2026-05-17T19:16:29.080234Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "```json\n{\n  \"action_chain\": [\n    {\n      \"action\": \"Develop and implement a comprehensive EU CBAM compliance strategy, including emissions data collection and reporting protocols.\",\n      \"gap_ids\": [\n        \"gap_cbam_critical\",\n        \"gap_cbam_high\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-07-31\",\n      \"pkr_impact\": 760000000\n    },\n    {\n      \"action\": \"Conduct a root cause analysis and develop a corrective action plan for the two unidentified High-risk compliance gaps.\",\n      \"gap_ids\": [\n        \"gap_unspec_high_1\",\n        \"gap_unspec_high_2\"\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-07-15\",\n      \"pkr_impact\": 456000000\n    },\n    {\n      \"action\": \"Investigate and document the unspecified Medium-risk gap to assess its financial impact and define necessary controls.\",\n      \"gap_ids\": [\n        \"gap_unspec_medium\"\n      ],\n      \"effort\": \"Low\",\n      \"deadline\": \"2024-08-15\",\n      \"pkr_impact\": 152000000\n    }\n  ],\n  \"rationale\": \"This plan prioritizes immediate compliance with EU CBAM regulations to prevent catastrophic market access loss, as this represents the single largest and most time-sensitive financial risk. Subsequently, it systematically addresses the remaining high and medium-risk gaps through targeted analysis, ensuring the most efficient allocation of resources to mitigate the majority of the remaining financial exposure.\"\n}\n```"
+  },
+  {
+    "timestamp": "2026-05-17T19:16:29.643118Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 5
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:30.190774Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 63,
+      "risk_pkr": 1520000000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:55.905325Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:07.936108Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_84d11547",
+      "title": "File EU CBAM: File quarterly CBAM declaration covering embedde",
+      "score_delta": 10,
+      "risk_reduction_pkr": 475000000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:55.749108Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_789f8acc",
+      "title": "File EU CBAM: Embedded emissions per unit must use verified fa",
+      "score_delta": 7,
+      "risk_reduction_pkr": 332500000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:19:31.620059Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_467ea5ec",
+      "title": "Address Compliance: All electrical panels must be clear of obstructi",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:19:47.715414Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_535b202d",
+      "title": "Address Compliance: A designated, labeled storage area for chemical ",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:20:04.553807Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_ef2760bb",
+      "title": "Address Compliance: All fire extinguishers must be inspected annuall",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:20:06.321003Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 95,
+        "risk_reduction_pkr": 1520000000
+      }
+    },
+    "duration_ms": 216672.0
+  },
+  {
+    "timestamp": "2026-05-17T19:20:07.864580Z",
+    "job_id": "job_a1cfb17397",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 63,
+        "simulated_after_score": 95,
+        "gap_count": 6,
+        "contradiction_count": 0,
+        "action_count": 5,
+        "documents_count": 9,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 329766.0
+  }
+]

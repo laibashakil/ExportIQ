@@ -37,6 +37,7 @@ from typing import Callable
 from langgraph.graph import StateGraph, END, START
 
 from tools.firestore_client import update_job_progress, append_trace, set_doc
+from tools.agent_logger import agent_log, agent_start, agent_end, error as agent_error
 from .state import AgentState
 from . import (
     regulation_agent,
@@ -79,6 +80,7 @@ def _wrap_with_recovery(agent_name: str, fn: Callable[[AgentState], dict]) -> Ca
                 "step": "exception",
                 "detail": {"error": str(exc), "trace": tb},
             })
+            agent_error(state.get("job_id"), agent_name, exc, detail={"trace": tb})
             # Hand off to recovery, then run a minimal fallback for THIS agent
             recovery_patch = recovery_agent.run(state)
             fallback_patch = _fallback_for(agent_name, state)
@@ -171,8 +173,18 @@ def run_pipeline(*, job_id: str, factory_id: str,
     append_trace(job_id, {"agent": "orchestrator", "step": "pipeline_start",
                           "detail": {"factory_id": factory_id,
                                      "regulation_ids": initial["regulation_ids"]}})
+    agent_start(job_id, "orchestrator", input_summary={
+        "factory_id": factory_id,
+        "regulation_ids": initial["regulation_ids"],
+        "inject_failure_in": inject_failure_in,
+        "inject_failure_type": inject_failure_type,
+    })
     graph = get_graph()
-    final_state = graph.invoke(initial)
+    try:
+        final_state = graph.invoke(initial)
+    except Exception as exc:  # noqa: BLE001
+        agent_error(job_id, "orchestrator", exc)
+        raise
 
     # Persist final report.
     #
@@ -222,4 +234,22 @@ def run_pipeline(*, job_id: str, factory_id: str,
     append_trace(job_id, {"agent": "orchestrator", "step": "pipeline_complete",
                           "detail": {"compliance_score": before_score,
                                      "simulated_after": sim.get("after_score", 0)}})
+
+    # Auto-export the markdown trace for Antigravity Manager / hackathon
+    # submission. We do this here so every analysis writes a fresh
+    # antigravity_trace_<job>.md without a manual CLI step.
+    try:
+        from tools.trace_exporter import export_trace
+        export_trace(job_id, factory_id)
+    except Exception:  # noqa: BLE001
+        log.exception("trace export failed (non-fatal)")
+    agent_end(job_id, "orchestrator", output_summary={
+        "compliance_score": before_score,
+        "simulated_after_score": sim.get("after_score", 0),
+        "gap_count": len(final_state.get("gaps", [])),
+        "contradiction_count": len(final_state.get("contradictions", [])),
+        "action_count": len(final_state.get("action_chain", [])),
+        "documents_count": len(final_state.get("documents", [])),
+        "recovery_used": final_state.get("recovery_used", False),
+    })
     return final_state

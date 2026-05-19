@@ -12,16 +12,18 @@ from datetime import datetime
 from typing import Any
 
 from tools.firestore_client import append_trace, update_job_progress
+from tools.agent_logger import agent_log, agent_start, agent_end
 
 log = logging.getLogger("exportiq.agents")
 
 
 def log_step(state: dict, agent: str, step: str, detail: Any = None,
              *, progress: int | None = None) -> dict:
-    """Append a reasoning step to both LangGraph state and Firestore.
+    """Append a reasoning step to LangGraph state, Firestore, AND the JSON
+    log file at `backend/logs/agent_trace_{job_id}.json`.
 
-    Returns a state patch the agent can spread into its return dict so LangGraph
-    accumulates the trace via its `add` reducer.
+    The JSON file is the Antigravity trace deliverable — every meaningful
+    reasoning step shows up there with a timestamp.
     """
     entry = {
         "agent": agent,
@@ -40,6 +42,20 @@ def log_step(state: dict, agent: str, step: str, detail: Any = None,
                 update_job_progress(job_id, current_agent=agent, progress=progress)
             except Exception:  # noqa: BLE001
                 log.exception("failed to update progress")
+
+        # Structured JSON record — independent of Firestore. The orchestrator
+        # also calls agent_start/agent_end at the bookends of each node so
+        # durations are captured.
+        try:
+            if step == "started":
+                agent_start(job_id, agent, input_summary=detail)
+            elif step in ("complete", "pipeline_complete"):
+                agent_end(job_id, agent, output_summary=detail)
+            else:
+                agent_log(job_id, agent, f"step:{step}", detail)
+        except Exception:  # noqa: BLE001
+            log.exception("agent_logger flush failed")
+
     log.info("[%s] %s :: %s", agent, step, detail)
     return {"agent_trace": [entry]}
 

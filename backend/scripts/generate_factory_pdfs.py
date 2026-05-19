@@ -92,7 +92,7 @@ def _audit_header(factory: dict, audit_date: str, auditor: str) -> list:
     elems.append(Spacer(1, 4))
     meta = [
         ["Legal entity", factory["factory_name"]],
-        ["City / Site", f"{factory['city']}, Punjab, Pakistan" if factory["city"] != "Karachi" else f"{factory['city']}, Sindh, Pakistan"],
+        ["City / Site", f"{factory['city']}, {'Sindh' if factory['city'] == 'Karachi' else 'Punjab'}, Pakistan"],
         ["Factory ID", factory["factory_id"]],
         ["Primary products", ", ".join(factory["primary_products"])],
         ["Audit scope", "EU CBAM (Reg 2023/956), UK Modern Slavery Act 2015 §54, EU CSDDD (Dir 2024/1760), ISO 14001 surveillance, SA8000 social compliance, OEKO-TEX, REACH SVHC effluent screening"],
@@ -433,6 +433,25 @@ PROFILES = {
             "3.2 ppm is well within the 8 ppm REACH ceiling; weekly working hours at 47 are below the SA8000 60-hour cap; CO2 per garment at 2.4 kgCO2 is the best "
             "in this audit cycle and positions Ideal favourably under the 2027 CBAM free-allowance phase-out. A single advisory: continue to monitor lead-in-dye "
             "measurements (currently 22 ppm vs OEKO-TEX limit 50 ppm) to maintain the current margin of safety."
+        ),
+    ),
+    "ams_skl_004": dict(
+        audit_date="2026-05-10",
+        auditor="CertVerify Pakistan (Pvt) Ltd.",
+        score=38,
+        risk_level="CRITICAL",
+        orders_at_risk_pkr=520_000_000,
+        summary=(
+            "<b>CRITICAL.</b> Al-Madina Sportswear (Pvt) Ltd presents multiple critical compliance failures that jeopardise continued shipment to EU and UK buyers. "
+            "The primary risks are: (i) GOTS certification expired November 2025 — six months lapsed without renewal, affecting organic-cotton product lines shipped "
+            "to NordStyle Group and M&amp;S; (ii) no EU CBAM declarant registration or quarterly filing exists despite 71% of exports going to EU jurisdictions "
+            "(NordStyle Group + EuroThread SA); (iii) water effluent at 11.5 ppm exceeds the EU REACH SVHC ceiling of 8 ppm by 44%, contradicting the factory's "
+            "self-reported claim of REACH compliance; (iv) weekly working hours measured at 62 exceed the SA8000 60-hour cap and contradict the self-reported figure "
+            "of 49 hours — a discrepancy of 13 hours; (v) lead-in-dyes at 78 ppm exceeds the OEKO-TEX Standard 100 limit of 50 ppm; (vi) the EU Corporate "
+            "Sustainability Due Diligence Directive (CSDDD) supply-chain narrative remains in DRAFT status. BSCI certification is not held, which is required "
+            "by BritMart Retail's Code of Conduct. Without immediate remediation, estimated revenue at risk is PKR 52 crore across NordStyle Group, EuroThread SA, "
+            "M&amp;S, and BritMart Retail order books. The auditor recommends a hold on all EU/UK shipment authorisations until the GOTS renewal audit is completed, "
+            "CBAM registration is filed, and effluent remediation is verified by re-sampling."
         ),
     ),
 }

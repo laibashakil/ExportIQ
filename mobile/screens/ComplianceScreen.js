@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,13 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   colors,
   riskColor,
-  riskSoftColor,
   radii,
   spacing,
   shadow,
 } from '../constants/colors';
 import { subscribeFactory, subscribeReport } from '../services/firebase';
-import { formatPkr, formatRelativeTime } from '../services/format';
+import { plainRegulation, plainRequirement } from '../services/format';
 import { api } from '../services/api';
-import RiskBadge from '../components/RiskBadge';
 import CircularScore from '../components/CircularScore';
 import EmptyState from '../components/EmptyState';
 
@@ -30,6 +28,19 @@ const SEV_TO_RISK = {
   MEDIUM: 'WARNING',
   LOW: 'COMPLIANT',
 };
+
+function plainStatusLine(risk, gaps, contradictions) {
+  if (risk === 'COMPLIANT' && gaps === 0) {
+    return 'Your factory meets EU export requirements';
+  }
+  if (risk === 'CRITICAL') {
+    return 'Your factory is at HIGH RISK of losing EU export orders';
+  }
+  if (risk === 'WARNING' || gaps > 0) {
+    return 'Your factory has some issues that need to be fixed before your next buyer audit';
+  }
+  return 'Run a new analysis to check your factory status';
+}
 
 export default function ComplianceScreen({ route, navigation }) {
   const { factoryId } = route.params;
@@ -48,26 +59,16 @@ export default function ComplianceScreen({ route, navigation }) {
 
   const score = factory?.compliance_score ?? report?.compliance_score ?? 0;
   const risk = factory?.risk_level ?? 'CRITICAL';
-  const pkr = factory?.orders_at_risk_pkr ?? report?.orders_at_risk_pkr ?? 0;
   const gaps = report?.gaps || [];
   const contradictions = report?.contradictions || [];
-
-  const lastAnalyzedAt = useMemo(() => {
-    return (
-      factory?.updated_at ||
-      report?.simulation_result?.updated_at ||
-      report?.financial_impact?.updated_at ||
-      null
-    );
-  }, [factory, report]);
 
   const runAnalysis = useCallback(async () => {
     try {
       setAnalyzing(true);
       const res = await api.analyze(factoryId);
       Alert.alert(
-        'Analysis started',
-        `Job ${res.job_id}\nTake ~6 minutes on Gemini 2.5 Pro. Score will update live.`,
+        'New analysis started',
+        `We'll check your factory against the latest EU and UK rules. This takes a few minutes — your status will update automatically.`,
       );
     } catch (e) {
       Alert.alert('Could not start analysis', String(e.message));
@@ -85,49 +86,26 @@ export default function ComplianceScreen({ route, navigation }) {
         <View style={styles.scoreCard}>
           <View style={styles.scoreCenter}>
             <CircularScore
-              size={160}
-              stroke={12}
+              size={170}
+              stroke={13}
               score={Math.max(0, Math.min(100, Math.round(score)))}
               risk={risk}
             />
           </View>
-          <View style={styles.scoreMeta}>
-            <RiskBadge level={risk} />
-            <Text style={styles.lastAnalyzed}>
-              Last analyzed {formatRelativeTime(lastAnalyzedAt)}
-            </Text>
-          </View>
-          <View style={styles.scoreFooter}>
-            <View style={styles.scoreFooterCell}>
-              <Text style={styles.scoreFooterValue}>{formatPkr(pkr)}</Text>
-              <Text style={styles.scoreFooterLabel}>AT RISK</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.scoreFooterCell}>
-              <Text style={styles.scoreFooterValue}>{gaps.length}</Text>
-              <Text style={styles.scoreFooterLabel}>GAPS</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.scoreFooterCell}>
-              <Text
-                style={[
-                  styles.scoreFooterValue,
-                  contradictions.length > 0 && { color: colors.critical },
-                ]}
-              >
-                {contradictions.length}
-              </Text>
-              <Text style={styles.scoreFooterLabel}>CONFLICTS</Text>
-            </View>
-          </View>
+          <Text
+            style={[styles.statusLine, { color: riskColor(risk) }]}
+          >
+            {plainStatusLine(risk, gaps.length, contradictions.length)}
+          </Text>
         </View>
 
         {/* Contradictions */}
         {contradictions.length > 0 && (
           <>
-            <Text style={styles.section}>
-              <Ionicons name="warning" size={14} color={colors.critical} />
-              {'  '}Contradictions ({contradictions.length})
+            <Text style={styles.section}>Conflicting Information Found</Text>
+            <Text style={styles.sectionSub}>
+              Our AI found information in your documents that does not match.
+              This could cause problems during a buyer audit.
             </Text>
             {contradictions.map((c, i) => (
               <ContradictionCard key={i} contradiction={c} />
@@ -138,8 +116,7 @@ export default function ComplianceScreen({ route, navigation }) {
         {/* Gaps */}
         {hasData && (
           <Text style={styles.section}>
-            <Ionicons name="alert-circle" size={14} color={colors.warning} />
-            {'  '}Compliance Gaps ({gaps.length})
+            Issues Found{gaps.length > 0 ? ` (${gaps.length})` : ''}
           </Text>
         )}
 
@@ -148,15 +125,15 @@ export default function ComplianceScreen({ route, navigation }) {
             <EmptyState
               icon="checkmark-circle"
               iconColor={colors.compliant}
-              title="No open gaps"
-              message="This factory currently meets every applicable EU and UK requirement."
+              title="No issues right now"
+              message="This factory currently meets every EU and UK rule we check."
             />
           ) : (
             gaps.map((g, i) => (
               <GapCard
                 key={i}
                 gap={g}
-                onFix={() => navigation.navigate('Actions')}
+                onFix={() => navigation.navigate('Fix It')}
               />
             ))
           )
@@ -165,34 +142,34 @@ export default function ComplianceScreen({ route, navigation }) {
             icon="bar-chart"
             iconColor={colors.primary}
             title="No analysis run yet"
-            message="Run a full compliance analysis to see gaps, contradictions, and PKR risk for this factory."
+            message="Run a check to see what EU and UK rules apply to your factory and what needs attention."
             cta={{
-              label: analyzing ? 'Starting…' : 'Run Analysis',
+              label: analyzing ? 'Starting…' : 'Check My Factory',
               icon: 'play-circle',
               onPress: analyzing ? () => {} : runAnalysis,
             }}
           />
         )}
-      </ScrollView>
 
-      {/* Floating action button */}
-      {hasData && (
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={runAnalysis}
-          disabled={analyzing}
-          activeOpacity={0.85}
-        >
-          <Ionicons
-            name={analyzing ? 'time' : 'refresh'}
-            size={20}
-            color={colors.bg}
-          />
-          <Text style={styles.fabText}>
-            {analyzing ? 'Starting…' : 'Re-run Analysis'}
-          </Text>
-        </TouchableOpacity>
-      )}
+        {/* Bottom text link replaces the floating button */}
+        {hasData && (
+          <TouchableOpacity
+            style={styles.bottomLink}
+            onPress={runAnalysis}
+            disabled={analyzing}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={analyzing ? 'time' : 'refresh'}
+              size={15}
+              color={colors.primary}
+            />
+            <Text style={styles.bottomLinkText}>
+              {analyzing ? 'Starting new analysis…' : 'Run new analysis'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -201,102 +178,67 @@ function GapCard({ gap, onFix }) {
   const sev = gap.severity || 'MEDIUM';
   const riskBucket = SEV_TO_RISK[sev] || 'WARNING';
   const c = riskColor(riskBucket);
+  const reg = plainRegulation(gap.regulation);
+  // Backend now attaches a plain-English `display_title` to every gap.
+  // Prefer it; fall back to the mobile-side humaniser for older data.
+  const plainTitle =
+    (gap.display_title && String(gap.display_title).trim())
+    || plainRequirement(gap.requirement, gap.regulation, gap.status);
   const days = gap.days_remaining;
   const dueText = (() => {
-    if (days == null) return gap.deadline ? `Due ${gap.deadline}` : 'Continuous obligation';
-    if (days < 0) return `Overdue by ${Math.abs(days)}d`;
-    if (days < 30) return `${days}d left`;
+    if (days == null) return gap.deadline ? `Due ${gap.deadline}` : 'Ongoing';
+    if (days < 0) return `Overdue by ${Math.abs(days)} days`;
+    if (days < 30) return `${days} days left`;
     if (days < 365) return `${Math.round(days / 30)} months left`;
-    return `${Math.round(days / 365)}y left`;
+    return `${Math.round(days / 365)} year${Math.round(days / 365) === 1 ? '' : 's'} left`;
   })();
   return (
     <View style={[styles.gap, { borderLeftColor: c }]}>
-      <View style={styles.gapHead}>
-        <View style={styles.gapBadge}>
-          <Text style={styles.gapBadgeText}>{gap.regulation || 'REGULATION'}</Text>
-        </View>
-        <RiskBadge level={riskBucket} />
-      </View>
-      <Text style={styles.gapReq} numberOfLines={3}>
-        {gap.requirement || 'Compliance requirement'}
-      </Text>
+      <Text style={styles.gapTitle}>{plainTitle}</Text>
+      {reg.ref && (
+        <Text style={styles.gapRef}>Reference: {reg.ref}</Text>
+      )}
       <View style={styles.gapMetaRow}>
         <View style={styles.gapMetaCell}>
-          <Ionicons name="alert" size={12} color={colors.textDim} />
-          <Text style={styles.gapMetaText}>{gap.status || 'OPEN'}</Text>
-        </View>
-        <View style={styles.gapMetaCell}>
-          <Ionicons name="time" size={12} color={colors.textDim} />
-          <Text
-            style={[
-              styles.gapMetaText,
-              days != null && days < 30 && { color: colors.critical },
-            ]}
-          >
-            {dueText}
-          </Text>
+          <Ionicons name="time" size={14} color={c} />
+          <Text style={[styles.gapMetaText, { color: c }]}>{dueText}</Text>
         </View>
       </View>
       <TouchableOpacity style={[styles.fixBtn, { borderColor: c }]} onPress={onFix} activeOpacity={0.85}>
-        <Ionicons name="construct" size={14} color={c} />
-        <Text style={[styles.fixBtnText, { color: c }]}>Fix This</Text>
+        <Ionicons name="flash" size={15} color={c} />
+        <Text style={[styles.fixBtnText, { color: c }]}>See how to fix</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 function ContradictionCard({ contradiction }) {
-  const conf = Math.round((Number(contradiction.confidence) || 0) * 100);
+  const claim = contradiction.claim || 'Information in your documents';
+  // Backend now emits plain-English evidence_text. Fall back to the legacy
+  // evidence field for older reports.
+  const evidence =
+    contradiction.evidence_text || contradiction.evidence || 'Audit evidence';
   return (
     <View style={styles.contra}>
       <View style={styles.contraHead}>
-        <View style={styles.contraIcon}>
-          <Ionicons name="warning" size={16} color={colors.critical} />
-        </View>
-        <Text style={styles.contraTitle}>Conflicting source signals</Text>
-        <Text style={styles.contraConf}>{conf}% conf</Text>
+        <Ionicons name="warning" size={18} color={colors.critical} />
+        <Text style={styles.contraTitle}>Mismatch between your documents</Text>
       </View>
-
-      <View style={styles.contraSplit}>
-        <View style={styles.contraSide}>
-          <Text style={styles.contraLabel}>FACTORY CLAIMS</Text>
-          <Text style={styles.contraBody} numberOfLines={3}>
-            {contradiction.claim || '—'}
-          </Text>
-          <View style={styles.contraSrcRow}>
-            <Ionicons name="document-text" size={11} color={colors.textDim} />
-            <Text style={styles.contraSrc} numberOfLines={1}>
-              {' '}{contradiction.source_a || '(unknown source)'}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.contraVsCol}>
-          <Text style={styles.contraVs}>VS</Text>
-        </View>
-        <View style={styles.contraSide}>
-          <Text style={styles.contraLabel}>AUDIT EVIDENCE</Text>
-          <Text style={styles.contraBody} numberOfLines={3}>
-            {contradiction.evidence || '—'}
-          </Text>
-          <View style={styles.contraSrcRow}>
-            <Ionicons name="document-text" size={11} color={colors.textDim} />
-            <Text style={styles.contraSrc} numberOfLines={1}>
-              {' '}{contradiction.source_b || '(unknown source)'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {contradiction.impact && (
-        <Text style={styles.contraImpact}>{contradiction.impact}</Text>
-      )}
+      <Text style={styles.contraBody}>
+        Your documents say <Text style={styles.contraStrong}>{claim}</Text>
+        {' '}but audit evidence shows{' '}
+        <Text style={styles.contraStrong}>{evidence}</Text>.
+      </Text>
+      <Text style={styles.contraFooter}>
+        This needs to be resolved before your next buyer audit.
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing.lg, paddingBottom: 110 },
+  content: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xl },
 
   // Score card
   scoreCard: {
@@ -304,43 +246,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.lg,
-    padding: spacing.xl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
     ...shadow,
   },
   scoreCenter: { alignItems: 'center' },
-  scoreMeta: { alignItems: 'center', marginTop: spacing.md },
-  lastAnalyzed: { color: colors.textDim, fontSize: 12, marginTop: 8 },
-  scoreFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xl,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    width: '100%',
-  },
-  scoreFooterCell: { flex: 1, alignItems: 'center' },
-  scoreFooterValue: { color: colors.text, fontSize: 17, fontWeight: '800' },
-  scoreFooterLabel: {
-    color: colors.textMuted,
-    fontSize: 10,
+  statusLine: {
+    fontSize: 15,
     fontWeight: '700',
-    letterSpacing: 1,
-    marginTop: 4,
+    textAlign: 'center',
+    marginTop: spacing.lg,
+    lineHeight: 22,
+    paddingHorizontal: spacing.md,
   },
-  divider: { width: 1, height: 28, backgroundColor: colors.border },
 
   // Section header
   section: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '800',
     marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  sectionSub: {
+    color: '#C9D1D9',
+    fontSize: 15,
+    lineHeight: 24,
     marginBottom: spacing.md,
-    letterSpacing: 0.3,
   },
 
   // Gap card
@@ -354,38 +288,31 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     ...shadow,
   },
-  gapHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+  gapTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
+    marginBottom: 4,
   },
-  gapBadge: {
-    backgroundColor: colors.surfaceAlt,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radii.sm,
+  gapRef: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginBottom: spacing.sm,
   },
-  gapBadgeText: {
-    color: colors.primary,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  gapReq: { color: colors.text, fontSize: 14, lineHeight: 20, marginBottom: spacing.md },
   gapMetaRow: { flexDirection: 'row', marginBottom: spacing.md },
   gapMetaCell: { flexDirection: 'row', alignItems: 'center', marginRight: spacing.lg },
-  gapMetaText: { color: colors.textDim, fontSize: 12, marginLeft: 6, fontWeight: '600' },
+  gapMetaText: { fontSize: 14, marginLeft: 6, fontWeight: '600' },
   fixBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderRadius: radii.md,
-    paddingVertical: 8,
+    paddingVertical: 10,
     backgroundColor: 'transparent',
   },
-  fixBtnText: { marginLeft: 6, fontWeight: '700', fontSize: 13 },
+  fixBtnText: { marginLeft: 6, fontWeight: '700', fontSize: 14 },
 
   // Contradiction card
   contra: {
@@ -396,59 +323,40 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  contraHead: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
-  contraIcon: { marginRight: 8 },
-  contraTitle: { color: colors.critical, fontWeight: '800', fontSize: 13, flex: 1 },
-  contraConf: {
+  contraHead: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
+  contraTitle: {
     color: colors.critical,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-    fontSize: 10,
     fontWeight: '800',
+    fontSize: 15,
+    marginLeft: 8,
   },
-  contraSplit: { flexDirection: 'row', alignItems: 'stretch' },
-  contraSide: { flex: 1 },
-  contraVsCol: { paddingHorizontal: 6, justifyContent: 'center' },
-  contraVs: {
+  contraBody: {
+    color: '#C9D1D9',
+    fontSize: 15,
+    lineHeight: 24,
+    marginBottom: spacing.sm,
+  },
+  contraStrong: { color: colors.text, fontWeight: '700' },
+  contraFooter: {
     color: colors.critical,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  contraLabel: {
-    color: colors.textMuted,
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  contraBody: { color: colors.text, fontSize: 12, lineHeight: 17, marginBottom: 6 },
-  contraSrcRow: { flexDirection: 'row', alignItems: 'center' },
-  contraSrc: { color: colors.textDim, fontSize: 10, fontFamily: 'monospace' },
-  contraImpact: {
-    color: colors.textDim,
-    fontSize: 12,
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(239,68,68,0.3)',
-    fontStyle: 'italic',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
   },
 
-  // FAB
-  fab: {
-    position: 'absolute',
-    right: 16,
-    bottom: 20,
-    backgroundColor: colors.primary,
-    borderRadius: radii.pill,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+  // Bottom run-new link (replaces the floating button)
+  bottomLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    ...shadow,
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+    marginTop: spacing.lg,
   },
-  fabText: { color: colors.bg, fontWeight: '800', fontSize: 13, marginLeft: 8 },
+  bottomLinkText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 15,
+    marginLeft: 8,
+    textDecorationLine: 'underline',
+  },
 });

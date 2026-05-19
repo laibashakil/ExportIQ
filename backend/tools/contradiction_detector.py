@@ -75,8 +75,89 @@ def detect_contradictions(claims: list[dict], evidence: list[dict]) -> list[dict
         if key in seen:
             continue
         seen.add(key)
+        # Always emit an `evidence_text` field in plain English. If the LLM
+        # produced one with raw variable names (e.g. "weekly_working_hours =
+        # 68 (file.pdf)"), replace it with a humanised version derived from
+        # the matching evidence record.
+        ev_text = c.get("evidence_text") or c.get("evidence") or ""
+        if _looks_like_variable_dump(ev_text):
+            matched_metric = _extract_metric_from_dump(ev_text)
+            if matched_metric:
+                stub = {"metric": matched_metric}
+                value_match = _NUMERIC_RE.search(ev_text)
+                if value_match:
+                    try:
+                        stub["value"] = float(value_match.group(0))
+                    except ValueError:
+                        pass
+                ev_text = _humanise_evidence(stub)
+        c["evidence_text"] = ev_text
+        c.setdefault("evidence", ev_text)
         out.append(c)
     return out
+
+
+import re  # noqa: E402  — used by the helpers below
+
+_NUMERIC_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+def _looks_like_variable_dump(s: str) -> bool:
+    """Detect strings shaped like `metric_name = 12.0 (source.pdf)` — i.e.
+    raw variable names instead of plain English."""
+    if not s or not isinstance(s, str):
+        return False
+    return bool(re.search(r"\b[a-z][a-z0-9]*_[a-z0-9_]+\s*=", s.lower()))
+
+
+def _extract_metric_from_dump(s: str) -> str | None:
+    m = re.search(r"\b([a-z][a-z0-9]*_[a-z0-9_]+)\s*=", s.lower())
+    return m.group(1) if m else None
+
+
+# Plain-English templates for evidence metrics. Maps a (metric, unit) hint
+# to a sentence template with {value} and {limit} placeholders. The templates
+# are intentionally factory-owner-friendly — no variable names, no jargon.
+_METRIC_TEMPLATES = {
+    "water_effluent_discharge": "Water discharge measured at {value} {unit} (EU limit: {limit} {unit})",
+    "water_discharge":          "Water discharge measured at {value} {unit} (EU limit: {limit} {unit})",
+    "effluent_discharge":       "Effluent discharge measured at {value} {unit} (EU limit: {limit} {unit})",
+    "weekly_working_hours":     "Workers doing {value} hours/week (SA8000 maximum: {limit} hours)",
+    "overtime_hours":           "Overtime measured at {value} {unit} (SA8000 maximum: 12 hours/week)",
+    "co2_per_unit":             "Carbon footprint measured at {value} {unit} (industry benchmark: {limit} {unit})",
+    "lead_in_dyes":             "Lead content measured at {value} {unit} (EU REACH limit: 90 {unit})",
+}
+
+_METRIC_LIMITS = {
+    "water_effluent_discharge": "8.0",
+    "water_discharge":          "8.0",
+    "effluent_discharge":       "8.0",
+    "weekly_working_hours":     "60",
+    "overtime_hours":           "12",
+    "co2_per_unit":             "3.5",
+    "lead_in_dyes":             "90",
+}
+
+
+def _humanise_evidence(ev: dict) -> str:
+    """Render an evidence record as a plain-English sentence.
+
+    Falls back to "{metric description} measured at {value} {unit}" if we
+    don't have a template for this specific metric.
+    """
+    metric = (ev.get("metric") or "").lower().strip()
+    value = ev.get("value")
+    unit = ev.get("unit") or ""
+    template = _METRIC_TEMPLATES.get(metric)
+    if template:
+        return template.format(
+            value=value,
+            unit=unit,
+            limit=_METRIC_LIMITS.get(metric, "—"),
+        ).strip()
+    # Generic fallback — never just the variable name.
+    pretty_metric = metric.replace("_", " ").strip().capitalize() or "Audit metric"
+    return f"{pretty_metric} measured at {value}{(' ' + unit) if unit else ''}"
 
 
 def _rule_based_pass(claims: list[dict], evidence: list[dict]) -> list[dict]:
@@ -95,12 +176,16 @@ def _rule_based_pass(claims: list[dict], evidence: list[dict]) -> list[dict]:
             if water:
                 conflicts.append({
                     "claim": claim.get("claim"),
-                    "evidence": f"{water.get('metric')} = {water.get('value')} {water.get('unit') or ''} "
-                                f"({water.get('source')})",
+                    "evidence": _humanise_evidence(water),
+                    "evidence_text": _humanise_evidence(water),
                     "source_a": claim.get("source"),
                     "source_b": water.get("source"),
                     "confidence": 0.91,
-                    "impact": "ISO 14001 mandates effluent control; the audit value contradicts the claim.",
+                    "impact": (
+                        "ISO 14001 requires effluent discharge to stay within EU "
+                        "environmental limits. The audit measurement exceeds the limit, "
+                        "so the factory's compliance claim does not hold up to evidence."
+                    ),
                 })
         # SA8000 claim vs working-hour evidence
         if "sa8000" in claim_text or "sa 8000" in claim_text:
@@ -108,11 +193,16 @@ def _rule_based_pass(claims: list[dict], evidence: list[dict]) -> list[dict]:
             if hours and isinstance(hours.get("value"), (int, float)) and hours["value"] > 60:
                 conflicts.append({
                     "claim": claim.get("claim"),
-                    "evidence": f"weekly_working_hours = {hours['value']} ({hours.get('source')})",
+                    "evidence": _humanise_evidence(hours),
+                    "evidence_text": _humanise_evidence(hours),
                     "source_a": claim.get("source"),
                     "source_b": hours.get("source"),
                     "confidence": 0.87,
-                    "impact": "SA8000 caps weekly hours at 60 incl. overtime.",
+                    "impact": (
+                        "SA8000 caps weekly working hours at 60 including overtime. "
+                        "The audit shows the factory exceeds this cap, contradicting "
+                        "the self-reported claim of compliance."
+                    ),
                 })
     return conflicts
 

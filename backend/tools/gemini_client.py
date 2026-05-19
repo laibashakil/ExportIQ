@@ -21,6 +21,19 @@ from config import get_settings
 log = logging.getLogger("exportiq.gemini")
 
 
+# Circuit breaker: once an LLM call fails with PermissionDenied / billing-style
+# errors, skip the LLM for the rest of the process so the pipeline doesn't
+# spend ~60s per agent retrying the same 403.
+_LLM_DISABLED: bool = False
+
+
+def _disable_llm(reason: str) -> None:
+    global _LLM_DISABLED
+    if not _LLM_DISABLED:
+        log.warning("Gemini circuit breaker tripped: %s — stub responses for the rest of this process", reason)
+    _LLM_DISABLED = True
+
+
 @lru_cache(maxsize=1)
 def get_llm():
     settings = get_settings()
@@ -33,6 +46,7 @@ def get_llm():
                 location=settings.google_cloud_location,
                 temperature=0.1,
                 max_output_tokens=4096,
+                max_retries=1,
             )
             log.info("Gemini: ChatVertexAI initialised (%s)", settings.gemini_model)
             return llm
@@ -45,6 +59,7 @@ def get_llm():
                 model=settings.gemini_model,
                 google_api_key=settings.gemini_api_key,
                 temperature=0.1,
+                max_retries=1,
             )
             log.info("Gemini: ChatGoogleGenerativeAI initialised (%s)", settings.gemini_model)
             return llm
@@ -71,6 +86,11 @@ def call_gemini(system_prompt: str, user_prompt: str, *,
     `stub_response` is what we return if no LLM is available — required for
     deterministic local demos.
     """
+    if _LLM_DISABLED:
+        if stub_response is None:
+            return {} if expect_json else ""
+        return stub_response
+
     llm = get_llm()
     if llm is None:
         if stub_response is None:
@@ -78,10 +98,29 @@ def call_gemini(system_prompt: str, user_prompt: str, *,
         return stub_response
 
     from langchain_core.messages import SystemMessage, HumanMessage
-    msg = llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_prompt),
-    ])
+    try:
+        msg = llm.invoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ])
+    except Exception as exc:  # noqa: BLE001
+        # Vertex AI billing disabled, rate limits, transient network — any
+        # LLM failure should never break the pipeline. Fall back to the
+        # caller-supplied stub so deterministic logic still ships output.
+        log.warning("Gemini invoke failed (%s); using stub response", type(exc).__name__)
+        exc_name = type(exc).__name__
+        msg_text = str(exc).lower()
+        if (
+            exc_name in {"PermissionDenied", "Unauthenticated", "ResourceExhausted"}
+            or "billing" in msg_text
+            or "permission" in msg_text
+            or "quota" in msg_text
+        ):
+            _disable_llm(f"{exc_name}: {str(exc)[:120]}")
+        if stub_response is None:
+            return {} if expect_json else ""
+        return stub_response
+
     text = getattr(msg, "content", str(msg))
     if not expect_json:
         return text

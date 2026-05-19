@@ -105,22 +105,73 @@ def run(state: AgentState) -> dict:
 
 
 def _action_title(gap: dict) -> str:
-    reg = gap.get("regulation", "Compliance")
-    req = (gap.get("requirement") or "").strip().rstrip(".")
-    if gap.get("status") == "EXPIRED":
-        return f"Renew {reg} certification"
-    if gap.get("status") == "MISSING":
-        return f"File {reg}: {req[:48]}"
-    if gap.get("status") == "NON_CONFORMANT":
-        return f"Remediate {reg} non-conformance: {req[:48]}"
-    return f"Address {reg}: {req[:48]}"
+    """Use the gap's plain-English display_title verbatim — this is already
+    an imperative ≤6-word phrase set by the gap_detection agent (e.g.
+    "File EU Carbon Tax Report"). Falls back to a status-derived verb plus
+    a humanised regulation name if no display_title is present."""
+    display = (gap.get("display_title") or "").strip()
+    if display:
+        return display
+    reg = gap.get("regulation") or "Compliance Issue"
+    reg_short = " ".join(reg.split()[:4])
+    verb = {
+        "EXPIRED": "Renew",
+        "MISSING": "File",
+        "NON_CONFORMANT": "Fix",
+        "PARTIAL": "Complete",
+    }.get((gap.get("status") or "").upper(), "Address")
+    return f"{verb} {reg_short}".strip()
+
+
+# Friendly imperative phrasing for each gap status — used in the action
+# description so the mobile UI never shows raw status enums like "MISSING"
+# or labels like "Severity: CRITICAL".
+_STATUS_PHRASE = {
+    "MISSING":         "is not yet on file with the buyer",
+    "EXPIRED":         "is past its renewal date",
+    "NON_CONFORMANT":  "currently exceeds the buyer's published limit",
+    "PARTIAL":         "is only partially documented",
+}
+
+_DEADLINE_PHRASE = {
+    None:   "as soon as practical",
+}
 
 
 def _action_description(gap: dict) -> str:
-    return (
-        f"Close gap on {gap.get('regulation')}: {gap.get('requirement')}. "
-        f"Current status: {gap.get('status')}. "
-        f"Severity: {gap.get('severity')}. "
-        f"Deadline: {gap.get('deadline') or 'rolling'}. "
-        f"Evidence cited: {'; '.join(gap.get('evidence', []))[:240]}"
+    """Plain-English action description aimed at a factory owner.
+
+    No internal labels ("Severity:", "Current status:", "Close gap on"),
+    no raw regulation IDs as the first words. We weave the regulation
+    name, the human-friendly status phrase, and the deadline into one
+    or two natural sentences.
+    """
+    reg = (gap.get("regulation") or "the buyer regulation").strip()
+    status_phrase = _STATUS_PHRASE.get(
+        (gap.get("status") or "").upper(),
+        "needs documentation refreshed",
     )
+    deadline = gap.get("deadline")
+    days_remaining = gap.get("days_remaining")
+    if deadline and isinstance(days_remaining, int) and days_remaining >= 0:
+        timing = f"before the {deadline} deadline ({days_remaining} days remaining)"
+    elif deadline:
+        timing = f"before the {deadline} deadline"
+    else:
+        timing = "before the next buyer audit cycle"
+
+    # Evidence sentence — only if we have meaningful evidence
+    evidence_items = [e for e in (gap.get("evidence") or []) if e]
+    if evidence_items:
+        evidence_sentence = (
+            f" The audit on file shows {evidence_items[0].rstrip('.')}, "
+            f"which is what the buyer's compliance team will flag."
+        )
+    else:
+        evidence_sentence = ""
+
+    return (
+        f"The factory's {reg} documentation {status_phrase}. "
+        f"Submit the updated paperwork, evidence, and any required "
+        f"third-party verification {timing}.{evidence_sentence}"
+    ).strip()

@@ -16,44 +16,69 @@ import {
   shadow,
   spacing,
 } from '../constants/colors';
-import { subscribeReport } from '../services/firebase';
+import { subscribeReport, markDocumentSent } from '../services/firebase';
 import { api } from '../services/api';
-import { formatRelativeTime } from '../services/format';
+import { buyerFlag, formatRelativeTime } from '../services/format';
 import EmptyState from '../components/EmptyState';
 import { markdownStyles } from '../components/MarkdownStyles';
+import { transformMarkdownTables } from '../utils/markdownTransform';
 
-// Each document `kind` is grouped under a section and rendered with a kind-
-// specific icon. New kinds are auto-bucketed into "Other" so the screen
-// degrades gracefully if the backend invents a new kind tomorrow.
-const KIND_META = {
-  CBAM_FORM:           { group: 'Compliance Forms',       icon: 'document-text', color: colors.compliant },
-  CBAM_DECLARATION:    { group: 'Compliance Forms',       icon: 'document-text', color: colors.compliant },
-  CERTIFICATION_APP:   { group: 'Compliance Forms',       icon: 'ribbon',        color: colors.primary },
-  MSA_STATEMENT:       { group: 'Compliance Forms',       icon: 'document',      color: colors.primary },
-  EMISSIONS_REPORT:    { group: 'Compliance Forms',       icon: 'leaf',          color: colors.compliant },
-  BUYER_EMAIL:         { group: 'Buyer Emails',           icon: 'mail',          color: colors.primary },
-  AUDIT_CHECKLIST:     { group: 'Remediation Checklists', icon: 'checkbox',      color: colors.warning },
-  REMEDIATION_PLAN:    { group: 'Remediation Checklists', icon: 'construct',     color: colors.warning },
-  BOOKING_TEMPLATE:    { group: 'Remediation Checklists', icon: 'calendar',      color: colors.warning },
-};
+// Documents split into two friendly buckets:
+//   - "Ready to Send"   = anything addressed to a buyer / external party
+//   - "Forms to File"   = CBAM declarations, checklists, internal forms
+const READY_TO_SEND_KINDS = new Set(['BUYER_EMAIL']);
 
-const GROUP_ORDER = ['Compliance Forms', 'Buyer Emails', 'Remediation Checklists', 'Other'];
-
-function metaFor(kind) {
-  return KIND_META[kind] || { group: 'Other', icon: 'document', color: colors.textDim };
+function plainDocTitle(d) {
+  if (d.title) return d.title;
+  switch (d.kind) {
+    case 'CBAM_FORM':
+    case 'CBAM_DECLARATION':
+      return 'EU Carbon Tax Filing';
+    case 'CERTIFICATION_APP':
+      return 'Certification Application';
+    case 'MSA_STATEMENT':
+      return 'Modern Slavery Statement';
+    case 'EMISSIONS_REPORT':
+      return 'Emissions Report';
+    case 'AUDIT_CHECKLIST':
+      return 'Audit Checklist';
+    case 'REMEDIATION_PLAN':
+      return 'Remediation Plan';
+    case 'BOOKING_TEMPLATE':
+      return 'Booking Template';
+    default:
+      return 'Document';
+  }
 }
 
-function approxSize(body) {
-  if (!body) return '—';
-  const bytes = new TextEncoder().encode(body).length;
-  if (bytes < 1024) return `${bytes} B`;
-  return `${(bytes / 1024).toFixed(1)} KB`;
+function extractEmailSubject(d) {
+  // Try to pull a subject line out of a markdown email body. Falls back
+  // to the document title.
+  const body = d.body || '';
+  const m = body.match(/^\s*(?:\*\*)?Subject(?:\*\*)?\s*:?\s*(.+)$/im);
+  if (m && m[1]) return m[1].trim().replace(/\*\*/g, '');
+  return d.title || 'Update on your order';
+}
+
+function extractBuyerName(d) {
+  // Try a few common patterns: "To: BuyerName", "Dear BuyerName,", or
+  // the document title contains the buyer name.
+  const body = d.body || '';
+  const to = body.match(/^\s*(?:\*\*)?To(?:\*\*)?\s*:?\s*(.+)$/im);
+  if (to && to[1]) return to[1].trim().replace(/\*\*/g, '');
+  const dear = body.match(/Dear\s+([A-Z][A-Za-z0-9 .&'-]+)\s*[,:]/);
+  if (dear && dear[1]) return dear[1].trim();
+  return d.title || 'Buyer';
 }
 
 export default function DocumentVaultScreen({ route }) {
   const { factoryId } = route.params;
   const [report, setReport] = useState(null);
-  const [open, setOpen] = useState(null);
+  const [openId, setOpenId] = useState(null);
+  // Optimistic Sent set — Firestore is the source of truth (doc.sent === true),
+  // this is just the local tick that flips immediately on tap so the user sees
+  // feedback before the round-trip completes.
+  const [optimisticSent, setOptimisticSent] = useState({});
 
   useEffect(() => {
     const u = subscribeReport(factoryId, setReport);
@@ -62,20 +87,15 @@ export default function DocumentVaultScreen({ route }) {
 
   const docs = report?.documents || [];
 
-  const grouped = useMemo(() => {
-    const out = {};
+  const { readyToSend, formsToFile } = useMemo(() => {
+    const r = [];
+    const f = [];
     for (const d of docs) {
-      const m = metaFor(d.kind);
-      out[m.group] = out[m.group] || [];
-      out[m.group].push({ ...d, _meta: m });
+      if (READY_TO_SEND_KINDS.has(d.kind)) r.push(d);
+      else f.push(d);
     }
-    return out;
+    return { readyToSend: r, formsToFile: f };
   }, [docs]);
-
-  const totalSize = useMemo(
-    () => docs.reduce((acc, d) => acc + (d.body ? new TextEncoder().encode(d.body).length : 0), 0),
-    [docs],
-  );
 
   if (docs.length === 0) {
     return (
@@ -84,9 +104,9 @@ export default function DocumentVaultScreen({ route }) {
           icon="folder-open"
           iconColor={colors.primary}
           title="No documents yet"
-          message="When you run a full analysis, the Execution Simulator generates buyer emails, CBAM declarations, and remediation checklists — all listed here."
+          message="Once we check your factory, we'll prepare buyer emails and the forms you need to file. They'll show up here, ready to send."
           cta={{
-            label: 'Run Analysis',
+            label: 'Check My Factory',
             icon: 'play-circle',
             onPress: async () => {
               try {
@@ -102,157 +122,284 @@ export default function DocumentVaultScreen({ route }) {
     );
   }
 
+  const sendEmail = async (id, buyer) => {
+    setOptimisticSent((s) => ({ ...s, [id]: true }));
+    Alert.alert(
+      'Email sent (simulated)',
+      `Your message to ${buyer} has been queued for sending. In the real app this would deliver via your email account.`,
+    );
+    try {
+      await markDocumentSent(factoryId, id);
+    } catch (e) {
+      // Roll back the optimistic tick if Firestore rejected.
+      setOptimisticSent((s) => {
+        const { [id]: _, ...rest } = s;
+        return rest;
+      });
+      Alert.alert('Could not save send state', String(e.message));
+    }
+  };
+
   return (
     <ScrollView style={styles.bg} contentContainerStyle={styles.content}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.h1}>Document Vault</Text>
-          <Text style={styles.h2}>
-            {docs.length} artifact{docs.length === 1 ? '' : 's'} · {(totalSize / 1024).toFixed(1)} KB total
-          </Text>
-        </View>
-        <View style={styles.counter}>
-          <Ionicons name="folder-open" size={20} color={colors.primary} />
-          <Text style={styles.counterValue}>{docs.length}</Text>
-        </View>
-      </View>
+      <Text style={styles.subtitle}>
+        Emails ready to send and forms ready to file
+      </Text>
 
-      {GROUP_ORDER.filter((g) => grouped[g]?.length).map((groupName) => (
-        <View key={groupName} style={{ marginBottom: spacing.lg }}>
-          <Text style={styles.section}>
-            {groupName} <Text style={styles.sectionCount}>({grouped[groupName].length})</Text>
-          </Text>
-          {grouped[groupName].map((d, i) => {
-            const isOpen = open === (d.document_id || `${groupName}-${i}`);
-            const m = d._meta;
+      {readyToSend.length > 0 && (
+        <View style={{ marginBottom: spacing.xl }}>
+          <View style={styles.sectionHead}>
+            <Ionicons name="mail" size={18} color={colors.primary} />
+            <Text style={styles.section}>Ready to Send</Text>
+            <Text style={styles.sectionCount}>{readyToSend.length}</Text>
+          </View>
+
+          {readyToSend.map((d, i) => {
+            const id = d.document_id || `email-${i}`;
+            const buyer = extractBuyerName(d);
+            const subject = extractEmailSubject(d);
+            const flag = buyerFlag(buyer);
+            const isOpen = openId === id;
+            const isSent = !!d.sent || !!optimisticSent[id];
             return (
-              <TouchableOpacity
-                key={d.document_id || i}
-                style={styles.card}
-                onPress={() => setOpen(isOpen ? null : (d.document_id || `${groupName}-${i}`))}
-                activeOpacity={0.85}
-              >
-                <View style={styles.cardHead}>
-                  <View style={[styles.iconCircle, { backgroundColor: m.color + '22' }]}>
-                    <Ionicons name={m.icon} size={20} color={m.color} />
+              <View key={id} style={styles.emailCard}>
+                <TouchableOpacity
+                  style={styles.emailHead}
+                  onPress={() => setOpenId(isOpen ? null : id)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.buyerIcon}>
+                    {flag ? (
+                      <Text style={styles.flagText}>{flag}</Text>
+                    ) : (
+                      <Ionicons name="briefcase" size={22} color={colors.primary} />
+                    )}
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>{d.title || d.kind}</Text>
-                    <View style={styles.cardMetaRow}>
-                      <Text style={[styles.cardKind, { color: m.color }]}>{d.kind}</Text>
-                      <Text style={styles.cardMetaDot}>·</Text>
-                      <Text style={styles.cardMeta}>{approxSize(d.body)}</Text>
-                      {d.generated_at && (
-                        <>
-                          <Text style={styles.cardMetaDot}>·</Text>
-                          <Text style={styles.cardMeta}>{formatRelativeTime(d.generated_at)}</Text>
-                        </>
-                      )}
-                    </View>
-                  </View>
-                  <View style={[styles.viewBtn, isOpen && styles.viewBtnActive]}>
-                    <Ionicons
-                      name={isOpen ? 'chevron-up' : 'eye'}
-                      size={14}
-                      color={isOpen ? colors.bg : colors.primary}
-                    />
-                    <Text style={[styles.viewBtnText, isOpen && { color: colors.bg }]}>
-                      {isOpen ? 'Close' : 'View'}
+                    <Text style={styles.buyerName} numberOfLines={1}>
+                      To: {buyer}
+                    </Text>
+                    <Text style={styles.subjectLine} numberOfLines={2}>
+                      {subject}
                     </Text>
                   </View>
-                </View>
+                  <Ionicons
+                    name={isOpen ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={colors.textDim}
+                    style={{ marginLeft: 8 }}
+                  />
+                </TouchableOpacity>
+
                 {isOpen && d.body && (
                   <View style={styles.body}>
-                    <Markdown style={markdownStyles}>{String(d.body)}</Markdown>
+                    <Markdown style={markdownStyles}>
+                      {transformMarkdownTables(String(d.body))}
+                    </Markdown>
                   </View>
                 )}
-              </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.sendBtn,
+                    isSent && { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                  ]}
+                  onPress={() => !isSent && sendEmail(id, buyer)}
+                  activeOpacity={0.85}
+                  disabled={isSent}
+                >
+                  <Ionicons
+                    name={isSent ? 'checkmark-circle' : 'send'}
+                    size={18}
+                    color={isSent ? colors.compliant : colors.bg}
+                  />
+                  <Text
+                    style={[
+                      styles.sendBtnText,
+                      isSent && { color: colors.compliant },
+                    ]}
+                  >
+                    {isSent ? 'Sent' : 'Send'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
-      ))}
+      )}
+
+      {formsToFile.length > 0 && (
+        <View>
+          <View style={styles.sectionHead}>
+            <Ionicons name="document-text" size={18} color={colors.warning} />
+            <Text style={styles.section}>Forms to File</Text>
+            <Text style={styles.sectionCount}>{formsToFile.length}</Text>
+          </View>
+
+          {formsToFile.map((d, i) => {
+            const id = d.document_id || `form-${i}`;
+            const isOpen = openId === id;
+            const title = plainDocTitle(d);
+            return (
+              <View key={id} style={styles.formCard}>
+                <TouchableOpacity
+                  style={styles.formHead}
+                  onPress={() => setOpenId(isOpen ? null : id)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.formIcon}>
+                    <Ionicons name="document-text" size={22} color={colors.warning} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={styles.formTitle} numberOfLines={2}>
+                      {title}
+                    </Text>
+                    {d.generated_at && (
+                      <Text style={styles.formMeta}>
+                        Prepared {formatRelativeTime(d.generated_at)}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={[styles.viewBtn, isOpen && styles.viewBtnActive]}>
+                    <Text
+                      style={[
+                        styles.viewBtnText,
+                        isOpen && { color: colors.bg },
+                      ]}
+                    >
+                      {isOpen ? 'Close' : 'View'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {isOpen && d.body && (
+                  <View style={styles.body}>
+                    <Markdown style={markdownStyles}>
+                      {transformMarkdownTables(String(d.body))}
+                    </Markdown>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing.lg, paddingBottom: 80 },
+  content: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xl },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  subtitle: {
+    color: '#C9D1D9',
+    fontSize: 15,
+    lineHeight: 22,
     marginBottom: spacing.lg,
   },
-  h1: { color: colors.text, fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
-  h2: { color: colors.textDim, fontSize: 12, marginTop: 2 },
-  counter: {
+
+  sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primarySoft,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radii.pill,
+    marginBottom: spacing.md,
   },
-  counterValue: { color: colors.primary, fontWeight: '800', fontSize: 14, marginLeft: 6 },
-
   section: {
     color: colors.text,
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: '800',
-    letterSpacing: 0.6,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
+    marginLeft: 8,
+    flex: 1,
   },
-  sectionCount: { color: colors.textMuted, fontWeight: '700' },
+  sectionCount: {
+    color: colors.textDim,
+    fontSize: 14,
+    fontWeight: '700',
+  },
 
-  card: {
+  // Email card (Ready to Send)
+  emailCard: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
     ...shadow,
   },
-  cardHead: { flexDirection: 'row', alignItems: 'center' },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  cardTitle: { color: colors.text, fontSize: 13, fontWeight: '700' },
-  cardMetaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, flexWrap: 'wrap' },
-  cardKind: { fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  cardMetaDot: { color: colors.textMuted, marginHorizontal: 6 },
-  cardMeta: { color: colors.textDim, fontSize: 11 },
-  viewBtn: {
+  emailHead: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  buyerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  flagText: { fontSize: 26 },
+  buyerName: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  subjectLine: { color: '#C9D1D9', fontSize: 14, marginTop: 4, lineHeight: 20 },
+
+  sendBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: 14,
+  },
+  sendBtnText: {
+    color: colors.bg,
+    fontWeight: '800',
+    fontSize: 15,
+    marginLeft: 8,
+  },
+
+  // Form card (Forms to File)
+  formCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    ...shadow,
+  },
+  formHead: { flexDirection: 'row', alignItems: 'center' },
+  formIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.warningSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  formTitle: { color: colors.text, fontSize: 15, fontWeight: '700', lineHeight: 22 },
+  formMeta: { color: colors.textDim, fontSize: 13, marginTop: 4 },
+  viewBtn: {
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: radii.pill,
     marginLeft: 8,
   },
   viewBtnActive: { backgroundColor: colors.primary },
-  viewBtnText: { color: colors.primary, fontWeight: '800', fontSize: 11, marginLeft: 4 },
+  viewBtnText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
 
+  // Expanded body (shared by both card types)
   body: {
     backgroundColor: colors.surfaceAlt,
     borderRadius: radii.md,
-    padding: spacing.md,
+    padding: spacing.lg,
     marginTop: spacing.md,
-  },
-  bodyText: {
-    color: colors.text,
-    fontFamily: 'monospace',
-    fontSize: 11,
-    lineHeight: 17,
+    marginBottom: spacing.md,
   },
 });

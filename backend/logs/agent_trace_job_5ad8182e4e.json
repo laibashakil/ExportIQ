@@ -1,0 +1,285 @@
+[
+  {
+    "timestamp": "2026-05-19T11:14:01.533085Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "cfw_lhe_002",
+        "regulation_ids": [
+          "eu_cbam"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:02.278297Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:02.344492Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "cfw_lhe_002"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:02.555427Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:02.894347Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Chenab Fabric Works",
+      "certifications": 4,
+      "claims": 3,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:03.090832Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 2
+      }
+    },
+    "duration_ms": 813.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:03.496707Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1156.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:04.055842Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:04.324156Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:22.222377Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:22.562118Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:22.866463Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:23.579786Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 2,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 19515.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:24.165599Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:24.728644Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 4320000000,
+        "buyers_affected": [
+          "EuroThread SA",
+          "NordStyle Group",
+          "Mango"
+        ]
+      }
+    },
+    "duration_ms": 562.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:25.740696Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:26.475046Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 2,
+        "total_impact_pkr": 4319999999
+      }
+    },
+    "duration_ms": 734.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:26.958157Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "These 2 actions target the highest-severity, soonest-deadline gaps first, recovering an estimated PKR 4,319,999,999 of at-risk orders."
+  },
+  {
+    "timestamp": "2026-05-19T11:14:27.778233Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 2
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:28.378293Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 83,
+      "risk_pkr": 4320000000
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:28.730301Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 3
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:29.012176Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_723549a9",
+      "title": "File EU CBAM: File quarterly CBAM declaration covering embedde",
+      "score_delta": 10,
+      "risk_reduction_pkr": 2541176470
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:30.446557Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_623111d2",
+      "title": "File EU CBAM: Embedded emissions per unit must use verified fa",
+      "score_delta": 7,
+      "risk_reduction_pkr": 1778823529
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:14:32.871024Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 100,
+        "risk_reduction_pkr": 4319999999
+      }
+    },
+    "duration_ms": 5094.0
+  },
+  {
+    "timestamp": "2026-05-19T11:14:34.409331Z",
+    "job_id": "job_5ad8182e4e",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 83,
+        "simulated_after_score": 100,
+        "gap_count": 2,
+        "contradiction_count": 0,
+        "action_count": 2,
+        "documents_count": 7,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 32875.0
+  }
+]

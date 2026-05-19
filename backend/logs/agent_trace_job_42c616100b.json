@@ -1,0 +1,284 @@
+[
+  {
+    "timestamp": "2026-05-19T15:28:38.440647Z",
+    "job_id": "job_42c616100b",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003",
+        "regulation_ids": [
+          "eu_cbam"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:38.976372Z",
+    "job_id": "job_42c616100b",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:38.996557Z",
+    "job_id": "job_42c616100b",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:39.241293Z",
+    "job_id": "job_42c616100b",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:39.542456Z",
+    "job_id": "job_42c616100b",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Ravi Garments Ltd",
+      "certifications": 5,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:39.772904Z",
+    "job_id": "job_42c616100b",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 2
+      }
+    },
+    "duration_ms": 797.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:40.061473Z",
+    "job_id": "job_42c616100b",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1063.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:40.616669Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:40.886652Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:41.154358Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:41.416980Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:41.705527Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:42.236061Z",
+    "job_id": "job_42c616100b",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 2,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 1609.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:42.777408Z",
+    "job_id": "job_42c616100b",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:43.308908Z",
+    "job_id": "job_42c616100b",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 1520000000,
+        "buyers_affected": [
+          "EuroThread SA",
+          "NordStyle Group"
+        ]
+      }
+    },
+    "duration_ms": 532.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:43.823413Z",
+    "job_id": "job_42c616100b",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:44.346402Z",
+    "job_id": "job_42c616100b",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 2,
+        "total_impact_pkr": 1519999999
+      }
+    },
+    "duration_ms": 516.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:44.644438Z",
+    "job_id": "job_42c616100b",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "These 2 actions target the highest-severity, soonest-deadline gaps first, recovering an estimated PKR 1,519,999,999 of at-risk orders."
+  },
+  {
+    "timestamp": "2026-05-19T15:28:45.192195Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 2
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:45.706873Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 83,
+      "risk_pkr": 1520000000
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:45.980401Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:46.262367Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_c352a77d",
+      "title": "File EU Carbon Tax Report",
+      "score_delta": 10,
+      "risk_reduction_pkr": 894117647
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:47.524247Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_6604ef69",
+      "title": "Verify Emissions Data Sources",
+      "score_delta": 7,
+      "risk_reduction_pkr": 625882352
+    }
+  },
+  {
+    "timestamp": "2026-05-19T15:28:49.510171Z",
+    "job_id": "job_42c616100b",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 100,
+        "risk_reduction_pkr": 1519999999
+      }
+    },
+    "duration_ms": 4313.0
+  },
+  {
+    "timestamp": "2026-05-19T15:28:51.370777Z",
+    "job_id": "job_42c616100b",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 83,
+        "simulated_after_score": 100,
+        "gap_count": 2,
+        "contradiction_count": 0,
+        "action_count": 2,
+        "documents_count": 6,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 12937.0
+  }
+]

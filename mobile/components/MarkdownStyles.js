@@ -5,11 +5,11 @@
 import { colors, radii } from '../constants/colors';
 
 export const markdownStyles = {
-  body:        { color: '#E6EDF3', fontSize: 14, lineHeight: 22 },
-  heading1:    { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold', marginBottom: 8, marginTop: 4 },
-  heading2:    { color: '#00D4AA', fontSize: 16, fontWeight: '600', marginBottom: 6, marginTop: 8 },
-  heading3:    { color: '#00D4AA', fontSize: 14, fontWeight: '700', marginBottom: 4, marginTop: 6 },
-  paragraph:   { color: '#E6EDF3', fontSize: 14, lineHeight: 22, marginBottom: 8 },
+  body:        { color: '#C9D1D9', fontSize: 15, lineHeight: 24 },
+  heading1:    { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold', marginBottom: 10, marginTop: 6 },
+  heading2:    { color: '#FFFFFF', fontSize: 17, fontWeight: '700', marginBottom: 8, marginTop: 12 },
+  heading3:    { color: '#FFFFFF', fontSize: 15, fontWeight: '700', marginBottom: 6, marginTop: 8 },
+  paragraph:   { color: '#C9D1D9', fontSize: 15, lineHeight: 24, marginBottom: 10 },
   strong:      { color: '#FFFFFF', fontWeight: 'bold' },
   em:          { fontStyle: 'italic' },
   link:        { color: '#00D4AA' },
@@ -35,11 +35,11 @@ export const markdownStyles = {
   tableCell:   { padding: 8, color: '#E6EDF3' },
 
   // Lists
-  bullet_list:  { marginLeft: 8, marginBottom: 6 },
-  ordered_list: { marginLeft: 8, marginBottom: 6 },
-  list_item:    { color: '#E6EDF3', marginBottom: 4, flexDirection: 'row' },
-  bullet_list_icon: { color: '#00D4AA', marginRight: 6 },
-  ordered_list_icon: { color: '#00D4AA', marginRight: 6, fontWeight: '700' },
+  bullet_list:  { marginLeft: 8, marginBottom: 8 },
+  ordered_list: { marginLeft: 8, marginBottom: 8 },
+  list_item:    { color: '#C9D1D9', marginBottom: 6, flexDirection: 'row' },
+  bullet_list_icon: { color: '#00D4AA', marginRight: 8 },
+  ordered_list_icon: { color: '#00D4AA', marginRight: 8, fontWeight: '700' },
 
   // Code
   code_inline: {

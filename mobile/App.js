@@ -6,12 +6,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import ComplianceScreen from './screens/ComplianceScreen';
 import ActionCenterScreen from './screens/ActionCenterScreen';
 import DocumentVaultScreen from './screens/DocumentVaultScreen';
-import BuyerCommsScreen from './screens/BuyerCommsScreen';
 import AgentTraceScreen from './screens/AgentTraceScreen';
+import UploadScreen from './screens/UploadScreen';
+import AnalysisProgressScreen from './screens/AnalysisProgressScreen';
+import HowItWorksScreen from './screens/HowItWorksScreen';
 import { colors } from './constants/colors';
 
 const Stack = createNativeStackNavigator();
@@ -26,16 +29,14 @@ const stackOptions = {
 };
 
 const TAB_ICON = {
-  Compliance: { active: 'shield-checkmark', inactive: 'shield-checkmark-outline' },
-  Actions:    { active: 'flash',             inactive: 'flash-outline' },
-  Docs:       { active: 'document-text',     inactive: 'document-text-outline' },
-  Buyers:     { active: 'briefcase',         inactive: 'briefcase-outline' },
-  Trace:      { active: 'git-network',       inactive: 'git-network-outline' },
+  Status:    { active: 'shield-checkmark', inactive: 'shield-checkmark-outline' },
+  'Fix It':  { active: 'flash',            inactive: 'flash-outline' },
+  Documents: { active: 'document-text',    inactive: 'document-text-outline' },
 };
 
 function tabIcon(routeName) {
   return ({ focused, color, size }) => {
-    const set = TAB_ICON[routeName] || TAB_ICON.Compliance;
+    const set = TAB_ICON[routeName] || TAB_ICON.Status;
     return (
       <Ionicons
         name={focused ? set.active : set.inactive}
@@ -55,11 +56,11 @@ function FactoryTabs({ route }) {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 64,
-          paddingTop: 6,
-          paddingBottom: 8,
+          height: 68,
+          paddingTop: 8,
+          paddingBottom: 10,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.3 },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
         tabBarIcon: tabIcon(r.name),
@@ -69,11 +70,9 @@ function FactoryTabs({ route }) {
         headerTitleStyle: { fontWeight: '800' },
       })}
     >
-      <Tab.Screen name="Compliance" initialParams={{ factoryId }} component={ComplianceScreen} />
-      <Tab.Screen name="Actions" initialParams={{ factoryId }} component={ActionCenterScreen} />
-      <Tab.Screen name="Docs" initialParams={{ factoryId }} component={DocumentVaultScreen} />
-      <Tab.Screen name="Buyers" initialParams={{ factoryId }} component={BuyerCommsScreen} />
-      <Tab.Screen name="Trace" initialParams={{ factoryId }} component={AgentTraceScreen} />
+      <Tab.Screen name="Status"    initialParams={{ factoryId }} component={ComplianceScreen} />
+      <Tab.Screen name="Fix It"    initialParams={{ factoryId }} component={ActionCenterScreen} />
+      <Tab.Screen name="Documents" initialParams={{ factoryId }} component={DocumentVaultScreen} />
     </Tab.Navigator>
   );
 }
@@ -97,6 +96,11 @@ export default function App() {
         <StatusBar style="light" />
         <Stack.Navigator screenOptions={stackOptions}>
           <Stack.Screen
+            name="Splash"
+            component={SplashScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="Home"
             component={HomeScreen}
             options={{ headerShown: false }}
@@ -105,6 +109,28 @@ export default function App() {
             name="Factory"
             component={FactoryTabs}
             options={({ route }) => ({ title: route.params?.factoryName || 'Factory' })}
+          />
+          <Stack.Screen
+            name="DevTrace"
+            component={AgentTraceScreen}
+            options={{ title: 'Agent Trace (Dev)' }}
+          />
+          <Stack.Screen
+            name="Upload"
+            component={UploadScreen}
+            options={({ route }) => ({
+              title: route.params?.factoryName || 'Upload',
+            })}
+          />
+          <Stack.Screen
+            name="AnalysisProgress"
+            component={AnalysisProgressScreen}
+            options={{ title: 'Checking your factory', headerBackVisible: false }}
+          />
+          <Stack.Screen
+            name="HowItWorks"
+            component={HowItWorksScreen}
+            options={{ title: 'How it works' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

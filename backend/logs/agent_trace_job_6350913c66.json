@@ -1,0 +1,304 @@
+[
+  {
+    "timestamp": "2026-05-17T19:14:37.789098Z",
+    "job_id": "job_6350913c66",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "cfw_lhe_002",
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.613433Z",
+    "job_id": "job_6350913c66",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.620044Z",
+    "job_id": "job_6350913c66",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "cfw_lhe_002"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:38.865735Z",
+    "job_id": "job_6350913c66",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.138779Z",
+    "job_id": "job_6350913c66",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "uk_modern_slavery",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.215704Z",
+    "job_id": "job_6350913c66",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Chenab Fabric Works",
+      "certifications": 4,
+      "claims": 3,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.405464Z",
+    "job_id": "job_6350913c66",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_supply_chain_directive",
+      "rule_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:39.759842Z",
+    "job_id": "job_6350913c66",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1141.0
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.018828Z",
+    "job_id": "job_6350913c66",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 8
+      }
+    },
+    "duration_ms": 1406.0
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.538712Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:14:40.806191Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:33.728303Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:52.996923Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:53.287661Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 3
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:15:54.005572Z",
+    "job_id": "job_6350913c66",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 3,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 73469.0
+  },
+  {
+    "timestamp": "2026-05-17T19:15:54.542780Z",
+    "job_id": "job_6350913c66",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:06.035948Z",
+    "job_id": "job_6350913c66",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 4320000000,
+        "buyers_affected": [
+          "EuroThread SA",
+          "NordStyle Group",
+          "Mango"
+        ]
+      }
+    },
+    "duration_ms": 11500.0
+  },
+  {
+    "timestamp": "2026-05-17T19:16:06.581703Z",
+    "job_id": "job_6350913c66",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:33.119474Z",
+    "job_id": "job_6350913c66",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 3,
+        "total_impact_pkr": 4319999998
+      }
+    },
+    "duration_ms": 26531.0
+  },
+  {
+    "timestamp": "2026-05-17T19:16:33.392308Z",
+    "job_id": "job_6350913c66",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "```json\n{\n  \"rationale\": \"These actions prioritize the most immediate, legally-binding threat\u2014EU CBAM compliance\u2014which places the entire PKR 4.32B order value at immediate risk of being blocked. Concurrently, we initiate an urgent investigation into the undefined critical gap to prevent operational shutdown, while launching a permanent data system to eliminate recurring CBAM risks in future quarters.\",\n  \"action_chain\": [\n    {\n      \"action\": \"Submit Q2 2024 EU CBAM transitional period report to prevent shipment blockage at the EU border.\",\n      \"gap_ids\": [\n        1\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-07-31\",\n      \"pkr_impact\": 4320000000\n    },\n    {\n      \"action\": \"Conduct root cause analysis of the unidentified 'Critical' operational gap and define an immediate containment plan.\",\n      \"gap_ids\": [\n        3\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-07-12\",\n      \"pkr_impact\": 2160000000\n    },\n    {\n      \"action\": \"Implement an automated system for ongoing carbon emissions data collection and verification to ensure future CBAM compliance.\",\n      \"gap_ids\": [\n        1,\n        2\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-09-30\",\n      \"pkr_impact\": 4320000000\n    }\n  ]\n}\n```"
+  },
+  {
+    "timestamp": "2026-05-17T19:16:33.925862Z",
+    "job_id": "job_6350913c66",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 3
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:16:34.443805Z",
+    "job_id": "job_6350913c66",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 78,
+      "risk_pkr": 4320000000
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:17:38.035969Z",
+    "job_id": "job_6350913c66",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 3
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:24.014496Z",
+    "job_id": "job_6350913c66",
+    "agent": "execution_simulation",
+    "event": "error",
+    "data": {
+      "type": "ResourceExhausted",
+      "message": "429 Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.",
+      "detail": {
+        "trace": "Traceback (most recent call last):\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\google\\api_core\\grpc_helpers.py\", line 75, in error_remapped_callable\n    return callable_(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\grpc\\_channel.py\", line 1166, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.RESOURCE_EXHAUSTED\n\tdetails = \"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:142.250.187.42:443 {grpc_message:\"Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\", grpc_status:8}\"\n>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\orchestrator.py\", line 74, in node\n    return fn(state)\n           ^^^^^^^^^\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\execution_agent.py\", line 90, in run\n    action_docs = _docs_for_action(factory, action, gaps)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngoogle.api_core.exceptions.ResourceExhausted: 429 Resource exhausted. Please try again later. Please refer to https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429 for more details.\n"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:24.279968Z",
+    "job_id": "job_6350913c66",
+    "agent": "recovery",
+    "event": "step:activated",
+    "data": {
+      "failed_agent": "unknown_agent",
+      "failure_type": "unknown"
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:24.546010Z",
+    "job_id": "job_6350913c66",
+    "agent": "recovery",
+    "event": "step:fallback_artifact_generated",
+    "data": {
+      "document_id": "fallback_unknown_agent"
+    }
+  },
+  {
+    "timestamp": "2026-05-17T19:18:25.648064Z",
+    "job_id": "job_6350913c66",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 0,
+        "simulated_after_score": 0,
+        "gap_count": 3,
+        "contradiction_count": 0,
+        "action_count": 3,
+        "documents_count": 1,
+        "recovery_used": true
+      }
+    },
+    "duration_ms": 227859.0
+  }
+]

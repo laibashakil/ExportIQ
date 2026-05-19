@@ -1,0 +1,292 @@
+[
+  {
+    "timestamp": "2026-05-19T11:16:05.835709Z",
+    "job_id": "job_18df44458c",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001",
+        "regulation_ids": [
+          "eu_cbam"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:06.482727Z",
+    "job_id": "job_18df44458c",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:06.488663Z",
+    "job_id": "job_18df44458c",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:06.847861Z",
+    "job_id": "job_18df44458c",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:07.135391Z",
+    "job_id": "job_18df44458c",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Faisal Weave Industries",
+      "certifications": 4,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:07.495619Z",
+    "job_id": "job_18df44458c",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 2
+      }
+    },
+    "duration_ms": 1016.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:07.828758Z",
+    "job_id": "job_18df44458c",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1328.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:08.416452Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:08.691309Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:08.961697Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:09.266542Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 2,
+      "first": {
+        "claim": "Factory is ISO 14001 compliant \u2014 effluent fully within legal limits",
+        "evidence": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "evidence_text": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "source_a": "faisal_weave_self_report_q1_2026.csv",
+        "source_b": "water_audit_march25.pdf",
+        "confidence": 0.91,
+        "impact": "ISO 14001 requires effluent discharge to stay within EU environmental limits. The audit measurement exceeds the limit, so the factory's compliance claim does not hold up to evidence."
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:09.588617Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:10.188921Z",
+    "job_id": "job_18df44458c",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 2,
+        "contradiction_count": 2
+      }
+    },
+    "duration_ms": 1766.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:10.755033Z",
+    "job_id": "job_18df44458c",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:11.320150Z",
+    "job_id": "job_18df44458c",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 2080000000,
+        "buyers_affected": [
+          "NordStyle Group",
+          "EuroThread SA"
+        ]
+      }
+    },
+    "duration_ms": 562.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:11.953958Z",
+    "job_id": "job_18df44458c",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:12.542378Z",
+    "job_id": "job_18df44458c",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 2,
+        "total_impact_pkr": 2079999999
+      }
+    },
+    "duration_ms": 594.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:12.854956Z",
+    "job_id": "job_18df44458c",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "These 2 actions target the highest-severity, soonest-deadline gaps first, recovering an estimated PKR 2,079,999,999 of at-risk orders."
+  },
+  {
+    "timestamp": "2026-05-19T11:16:13.484089Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 2
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:14.146773Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 75,
+      "risk_pkr": 2080000000
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:14.446808Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:14.851693Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_14463bb2",
+      "title": "File EU CBAM: File quarterly CBAM declaration covering embedde",
+      "score_delta": 10,
+      "risk_reduction_pkr": 1223529411
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:16.220140Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_254e97b7",
+      "title": "File EU CBAM: Embedded emissions per unit must use verified fa",
+      "score_delta": 7,
+      "risk_reduction_pkr": 856470588
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:16:18.111796Z",
+    "job_id": "job_18df44458c",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 92,
+        "risk_reduction_pkr": 2079999999
+      }
+    },
+    "duration_ms": 4625.0
+  },
+  {
+    "timestamp": "2026-05-19T11:16:19.385587Z",
+    "job_id": "job_18df44458c",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 75,
+        "simulated_after_score": 92,
+        "gap_count": 2,
+        "contradiction_count": 2,
+        "action_count": 2,
+        "documents_count": 6,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 13547.0
+  }
+]

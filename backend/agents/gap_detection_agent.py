@@ -79,6 +79,12 @@ def run(state: AgentState) -> dict:
          "first": contradictions[0] if contradictions else None},
     ))
 
+    # Generate plain-English display_title for every gap (≤6 words). This is
+    # what the mobile Status screen renders as the card header.
+    gaps = _attach_display_titles(gaps)
+    patches.update(log_step(state, AGENT_NAME, "display_titles_attached",
+                            {"count": len(gaps)}))
+
     patches["gaps"] = gaps
     patches["contradictions"] = contradictions
     patches.update(log_step(state, AGENT_NAME, "complete",
@@ -86,6 +92,130 @@ def run(state: AgentState) -> dict:
                              "contradiction_count": len(contradictions)},
                             progress=55))
     return patches
+
+
+# Heuristic plain-English titles — used as both the deterministic source of
+# truth AND as the stub for Gemini in offline mode. We never want to render
+# a raw `requirement` field on the mobile UI; every gap must have a clean
+# imperative phrase under 6 words.
+_TITLE_RULES: list[tuple[str, str]] = [
+    # (regex against `requirement` or `regulation`, plain-English title)
+    (r"verified.*emission factor|q1\s*2027|embedded emissions.*default",
+     "Verify Emissions Data Sources"),
+    (r"quarterly cbam|cbam declaration|carbon border adjustment",
+     "File EU Carbon Tax Report"),
+    (r"carbon emissions report|emissions report",
+     "Submit Quarterly Emissions Report"),
+    (r"modern slavery statement|msa statement",
+     "Publish Modern Slavery Statement"),
+    (r"supply chain.*(audit|due diligence)|csddd",
+     "Complete Supply Chain Audit"),
+    (r"sa[\s-]?8000|social accountability",
+     "Renew Social Accountability Certificate"),
+    (r"labour|labor.*(standard|cert)|certverify.*labour",
+     "Renew Labour Standards Certificate"),
+    (r"iso[\s-]?45001|worker safety",
+     "Renew Worker Safety Certificate"),
+    (r"working hours|paper logs|time tracking",
+     "Digitise Worker Time Records"),
+    (r"chemical discharge|effluent|water audit|water.*discharge",
+     "Fix Water Discharge Levels"),
+    (r"lead in dyes|heavy metal",
+     "Reduce Heavy Metal Levels"),
+    (r"iso[\s-]?14001|environmental management",
+     "Fix Environmental Management Issues"),
+    (r"zdhc|zero discharge",
+     "Meet Chemical Discharge Rules"),
+    (r"reach",
+     "Meet EU Chemical Safety Rules"),
+    (r"gots|organic textile",
+     "Get Organic Textile Certificate"),
+    (r"oeko[\s-]?tex",
+     "Renew Textile Safety Standard"),
+]
+
+
+def _heuristic_title(gap: dict) -> str:
+    """Plain-English ≤6-word title derived from requirement + regulation + status.
+
+    Never returns the bare word "Regulation" — falls back to a status verb
+    (Renew/File/Fix) plus a humanised regulation name.
+    """
+    import re
+
+    req = (gap.get("requirement") or "").lower()
+    reg = (gap.get("regulation") or "").lower()
+    haystack = f"{req} {reg}"
+    for pattern, title in _TITLE_RULES:
+        if re.search(pattern, haystack):
+            return title
+    # Status-derived verb + regulation name
+    status = (gap.get("status") or "").upper()
+    verb = {
+        "EXPIRED": "Renew",
+        "MISSING": "File",
+        "NON_CONFORMANT": "Fix",
+        "PARTIAL": "Complete",
+    }.get(status, "Address")
+    reg_short = (gap.get("regulation") or "Compliance Issue")
+    # Trim long reg names to ≤4 words so verb + reg ≤6 total.
+    reg_words = [w for w in reg_short.split() if w][:4]
+    return f"{verb} {' '.join(reg_words)}"[:80]
+
+
+def _attach_display_titles(gaps: list[dict]) -> list[dict]:
+    """Use Gemini to produce a ≤6-word imperative title for every gap.
+
+    Falls back to the deterministic heuristic when Gemini is offline or
+    returns garbage (which is what the stub also returns).
+    """
+    if not gaps:
+        return gaps
+
+    # Always compute the heuristic title first — it's our floor.
+    for g in gaps:
+        if not g.get("display_title"):
+            g["display_title"] = _heuristic_title(g)
+
+    # Then ask Gemini for nicer phrasing. We pass the whole batch in one call
+    # to keep latency down.
+    payload = [
+        {
+            "gap_id": g.get("gap_id"),
+            "regulation": g.get("regulation"),
+            "requirement": g.get("requirement"),
+            "status": g.get("status"),
+            "heuristic_title": g.get("display_title"),
+        }
+        for g in gaps
+    ]
+    sys_prompt = (
+        "You produce SHORT plain-English titles for compliance gaps. "
+        "Each title must be an imperative verb phrase (e.g. 'File ...', "
+        "'Renew ...', 'Fix ...') of AT MOST 6 words. No acronyms unless "
+        "they are universally known (EU is fine, CBAM/CSDDD/ISO are not — "
+        "spell them out as 'Carbon Tax', 'Supply Chain', 'Environmental'). "
+        "Return ONLY valid JSON: {\"titles\": [{\"gap_id\": ..., \"title\": "
+        "\"...\"}, ...]}. If unsure, copy the heuristic_title verbatim."
+    )
+    try:
+        out = call_gemini(
+            sys_prompt, str(payload), expect_json=True,
+            stub_response={"titles": [{"gap_id": g.get("gap_id"),
+                                         "title": g.get("display_title")} for g in gaps]},
+        )
+        if isinstance(out, dict):
+            by_id = {t.get("gap_id"): t.get("title") for t in (out.get("titles") or [])}
+            for g in gaps:
+                t = by_id.get(g.get("gap_id"))
+                if t and isinstance(t, str):
+                    # Enforce 6-word cap defensively.
+                    words = t.strip().split()
+                    if 0 < len(words) <= 8:
+                        g["display_title"] = " ".join(words[:6])
+    except Exception:  # noqa: BLE001
+        log.exception("display_title LLM pass failed — heuristic titles kept")
+    return gaps
 
 
 def _deterministic_gaps(factory: dict, rules: list[dict]) -> list[dict]:

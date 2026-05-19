@@ -1,0 +1,37 @@
+{
+  "factory_id": "ams_skl_004",
+  "factory_name": "Al-Madina Sportswear (Pvt) Ltd",
+  "city": "Sialkot",
+  "primary_products": ["Sportswear", "Athleisure", "Performance knits"],
+  "annual_export_pkr": 5200000000,
+  "exports_by_buyer_pkr": {
+    "NordStyle Group": 2100000000,
+    "EuroThread SA": 1600000000,
+    "M&S": 900000000,
+    "BritMart Retail": 600000000
+  },
+  "primary_buyers": ["NordStyle Group", "EuroThread SA", "M&S", "BritMart Retail"],
+  "certifications": [
+    {"name": "SA8000", "status": "VALID", "expiry_date": "2027-02-28", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-07-15", "issuer": "CertVerify Pakistan"},
+    {"name": "GOTS", "status": "EXPIRED", "expiry_date": "2025-11-30", "issuer": "Control Union"},
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-12-10", "issuer": "OEKO-TEX Institute"},
+    {"name": "BSCI", "status": "MISSING", "expiry_date": null, "issuer": null}
+  ],
+  "claims": [
+    {"claim": "GOTS certification current and under surveillance", "source": "almadina_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Factory is ISO 14001 compliant — effluent fully within legal limits", "source": "almadina_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Chemical discharge meets EU REACH standards", "source": "almadina_compliance_q1_2026.pdf", "value": true},
+    {"claim": "Average weekly working hours: 49", "source": "almadina_compliance_q1_2026.pdf", "value": 49},
+    {"claim": "Modern Slavery Act statement published 2026", "source": "almadina_compliance_q1_2026.pdf", "value": true}
+  ],
+  "audit_evidence": [
+    {"metric": "water_effluent_discharge", "value": 11.5, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
+    {"metric": "weekly_working_hours", "value": 62, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
+    {"metric": "overtime_hours", "value": 18, "unit": "hours/week", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
+    {"metric": "co2_per_unit", "value": 3.9, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
+    {"metric": "lead_in_dyes", "value": 78.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "supply_chain_due_diligence_report", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-05"}
+  ],
+  "notes": "Al-Madina Sportswear is a mid-risk factory for demo purposes: GOTS expired, no CBAM filing, high effluent, working hours contradiction, CSDDD still in DRAFT. Designed to produce multiple gaps and contradictions when processed by ExportIQ."
+}

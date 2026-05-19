@@ -36,6 +36,14 @@ class AuditEvidence(BaseModel):
 class Gap(BaseModel):
     regulation: str = Field(..., description="e.g. 'EU CBAM', 'UK Modern Slavery Act'")
     requirement: str
+    display_title: str | None = Field(
+        None,
+        description=(
+            "Plain-English title for the gap, max 6 words. Used by the mobile "
+            "UI on the Status screen. Examples: 'File EU Carbon Tax Report', "
+            "'Renew Worker Safety Certificate', 'Fix Water Discharge Levels'."
+        ),
+    )
     status: Literal["MISSING", "NON_CONFORMANT", "EXPIRED", "PARTIAL"]
     severity: Severity
     deadline: str | None = None

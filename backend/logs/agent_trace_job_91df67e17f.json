@@ -1,0 +1,289 @@
+[
+  {
+    "timestamp": "2026-05-19T10:57:37.085745Z",
+    "job_id": "job_91df67e17f",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003",
+        "regulation_ids": [
+          "eu_cbam"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:37.693544Z",
+    "job_id": "job_91df67e17f",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:37.719804Z",
+    "job_id": "job_91df67e17f",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:38.127176Z",
+    "job_id": "job_91df67e17f",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:38.483553Z",
+    "job_id": "job_91df67e17f",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Ravi Garments Ltd",
+      "certifications": 5,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:38.704129Z",
+    "job_id": "job_91df67e17f",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 2
+      }
+    },
+    "duration_ms": 1000.0
+  },
+  {
+    "timestamp": "2026-05-19T10:57:39.100526Z",
+    "job_id": "job_91df67e17f",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1390.0
+  },
+  {
+    "timestamp": "2026-05-19T10:57:39.696591Z",
+    "job_id": "job_91df67e17f",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:57:39.978603Z",
+    "job_id": "job_91df67e17f",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:00.911719Z",
+    "job_id": "job_91df67e17f",
+    "agent": "gap_detection",
+    "event": "error",
+    "data": {
+      "type": "PermissionDenied",
+      "message": "403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]",
+      "detail": {
+        "trace": "Traceback (most recent call last):\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\google\\api_core\\grpc_helpers.py\", line 75, in error_remapped_callable\n    return callable_(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\grpc\\_channel.py\", line 1166, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.PERMISSION_DENIED\n\tdetails = \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:142.250.202.10:443 {grpc_message:\"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\", grpc_status:7}\"\n>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\orchestrator.py\", line 74, in node\n    return fn(state)\n           ^^^^^^^^^\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\gap_detection_agent.py\", line 65, in run\n    llm_gaps = _llm_gaps(factory, rules)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\ngoogle.api_core.exceptions.PermissionDenied: 403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]\n"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:01.198621Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:activated",
+    "data": {
+      "failed_agent": "unknown_agent",
+      "failure_type": "unknown"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:01.511063Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:fallback_artifact_generated",
+    "data": {
+      "document_id": "fallback_unknown_agent"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:02.276696Z",
+    "job_id": "job_91df67e17f",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:37.146880Z",
+    "job_id": "job_91df67e17f",
+    "agent": "financial_impact_agent",
+    "event": "error",
+    "data": {
+      "type": "PermissionDenied",
+      "message": "403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]",
+      "detail": {
+        "trace": "Traceback (most recent call last):\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\google\\api_core\\grpc_helpers.py\", line 75, in error_remapped_callable\n    return callable_(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\grpc\\_channel.py\", line 1166, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.PERMISSION_DENIED\n\tdetails = \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:142.250.202.10:443 {grpc_message:\"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\", grpc_status:7}\"\n>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\orchestrator.py\", line 74, in node\n    return fn(state)\n           ^^^^^^^^^\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\financial_impact_agent.py\", line 102, in run\n    commentary = call_gemini(\n                 ^^^^^^^^^^^^\ngoogle.api_core.exceptions.PermissionDenied: 403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]\n"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:37.446606Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:activated",
+    "data": {
+      "failed_agent": "unknown_agent",
+      "failure_type": "unknown"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:37.822590Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:fallback_artifact_generated",
+    "data": {
+      "document_id": "fallback_unknown_agent"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T10:59:38.461514Z",
+    "job_id": "job_91df67e17f",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:11.303948Z",
+    "job_id": "job_91df67e17f",
+    "agent": "action_chain_agent",
+    "event": "error",
+    "data": {
+      "type": "PermissionDenied",
+      "message": "403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]",
+      "detail": {
+        "trace": "Traceback (most recent call last):\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\google\\api_core\\grpc_helpers.py\", line 75, in error_remapped_callable\n    return callable_(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\grpc\\_channel.py\", line 1166, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.PERMISSION_DENIED\n\tdetails = \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:142.250.202.10:443 {grpc_status:7, grpc_message:\"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"}\"\n>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\orchestrator.py\", line 74, in node\n    return fn(state)\n           ^^^^^^^^^\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\action_chain_agent.py\", line 83, in run\n    rationale = call_gemini(\n                ^^^^^^^^^^^^\ngoogle.api_core.exceptions.PermissionDenied: 403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]\n"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:11.583622Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:activated",
+    "data": {
+      "failed_agent": "unknown_agent",
+      "failure_type": "unknown"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:11.861584Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:fallback_artifact_generated",
+    "data": {
+      "document_id": "fallback_unknown_agent"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:12.472742Z",
+    "job_id": "job_91df67e17f",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:13.024036Z",
+    "job_id": "job_91df67e17f",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 100,
+      "risk_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:45.772944Z",
+    "job_id": "job_91df67e17f",
+    "agent": "execution_simulation",
+    "event": "error",
+    "data": {
+      "type": "PermissionDenied",
+      "message": "403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]",
+      "detail": {
+        "trace": "Traceback (most recent call last):\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\google\\api_core\\grpc_helpers.py\", line 75, in error_remapped_callable\n    return callable_(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\Dell\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\grpc\\_channel.py\", line 1166, in __call__\n    return _end_unary_response_blocking(state, call, False, None)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngrpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:\n\tstatus = StatusCode.PERMISSION_DENIED\n\tdetails = \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:142.250.202.10:443 {grpc_status:7, grpc_message:\"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"}\"\n>\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\orchestrator.py\", line 74, in node\n    return fn(state)\n           ^^^^^^^^^\n  File \"C:\\laiba\\personal-projects\\ExportIQ\\backend\\agents\\execution_agent.py\", line 68, in run\n    proactive_emails = _generate_proactive_buyer_emails(factory, financial)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ngoogle.api_core.exceptions.PermissionDenied: 403 This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"BILLING_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"aiplatform.googleapis.com\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"exportiq-496416\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/exportiq-496416\"\n}\nmetadata {\n  key: \"consoleUrl\"\n  value: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n, locale: \"en-US\"\nmessage: \"This API method requires billing to be enabled. Please enable billing on project #exportiq-496416 by visiting https://console.developers.google.com/billing/enable?project=exportiq-496416 then retry. If you enabled billing for this project recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console billing\"\n  url: \"https://console.developers.google.com/billing/enable?project=exportiq-496416\"\n}\n]\n"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:46.116530Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:activated",
+    "data": {
+      "failed_agent": "unknown_agent",
+      "failure_type": "unknown"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:46.478408Z",
+    "job_id": "job_91df67e17f",
+    "agent": "recovery",
+    "event": "step:fallback_artifact_generated",
+    "data": {
+      "document_id": "fallback_unknown_agent"
+    }
+  },
+  {
+    "timestamp": "2026-05-19T11:00:47.954754Z",
+    "job_id": "job_91df67e17f",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 0,
+        "simulated_after_score": 0,
+        "gap_count": 0,
+        "contradiction_count": 0,
+        "action_count": 0,
+        "documents_count": 4,
+        "recovery_used": true
+      }
+    },
+    "duration_ms": 190859.0
+  }
+]
