@@ -13,8 +13,9 @@ ExportIQ is a **stateful multi-agent compliance system** that processes EU/UK re
 ┌────────────────────────────────────────────────────────────────┐
 │                    MOBILE APP (Expo React Native)              │
 │                                                                │
-│  HomeScreen ─── ComplianceScreen ─── ActionCenter ─── DocVault │
-│  UploadScreen ── AnalysisProgress ── AgentTrace ── BuyerComms  │
+│  Splash → Home → Factory tabs (Compliance · ActionCenter · DocVault) │
+│  Upload · AnalysisProgress · HowItWorks · EditEmail · Settings · Deadlines │
+│  AgentTrace (hidden dev route — 5-tap easter egg on the brand text)        │
 │                                                                │
 │          ▲ Firestore onSnapshot()        ▲ REST POST/GET       │
 └──────────┼───────────────────────────────┼─────────────────────┘
@@ -427,4 +428,4 @@ Three document types, all with strict naming constraints (no real audit firm nam
 
 ---
 
-*Generated May 18, 2026 — AISeekho 2026 Google Antigravity Hackathon*
+*Generated May 18, 2026 — refreshed May 20, 2026 (factual fields aligned with shipped code). AISeekho 2026 Google Antigravity Hackathon.*

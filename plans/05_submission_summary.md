@@ -85,7 +85,7 @@ The system works with zero credentials (deterministic stubs), with an AI Studio 
 
 | Layer | Technology |
 |---|---|
-| Mobile | Expo (React Native) — 9 screens, dark theme |
+| Mobile | Expo (React Native) — 12 screens, dark theme |
 | Backend | FastAPI + LangGraph StateGraph |
 | LLM | Gemini 2.5 Pro via Vertex AI (+ AI Studio fallback) |
 | Orchestration | Google Antigravity (6 agents visible in Manager view) |
@@ -136,7 +136,7 @@ ExportIQ/
 │   ├── models/              4 Pydantic schemas
 │   └── mock_data/           3 factories + 3 regulations
 ├── mobile/                  Expo React Native
-│   ├── screens/             9 screens
+│   ├── screens/             12 screens
 │   ├── components/          8 reusable components
 │   └── services/            API + Firebase + formatting
 ├── antigravity/.agent/      8 skills + 2 workflows

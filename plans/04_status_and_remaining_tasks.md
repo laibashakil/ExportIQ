@@ -1,8 +1,8 @@
 # ExportIQ — Current Status & Remaining Work
 
-> **Current Date:** May 18, 2026 (Saturday, 00:31 AM PKT)  
-> **Deadline:** May 20, 2026 (Monday)  
-> **Time Remaining:** ~48 hours
+> **Current Date:** May 20, 2026 (submission day)  
+> **Deadline:** May 20, 2026  
+> **Status:** Demo-ready — see `SUBMISSION_STATUS.md` for the live QA snapshot.
 
 ---
 
@@ -14,16 +14,16 @@
 
 | Component | Status | Verdict |
 |---|---|---|
-| **Backend — FastAPI** | ✅ Fully built | All 8 endpoints, config, CORS, Docker |
+| **Backend — FastAPI** | ✅ Fully built | All 10 endpoints (9 routers + healthz), config, CORS, Docker |
 | **Backend — 6 AI Agents** | ✅ Fully built | All agents implemented with trace logging |
 | **Backend — Recovery Agent** | ✅ Fully built | Wrap + fallback + injection support |
 | **Backend — Orchestrator** | ✅ Fully built | LangGraph DAG, parallel start, `run_pipeline()` |
 | **Backend — Tools** | ✅ Fully built | 10 tools: Gemini, Firestore, PDF, CSV, contradiction, scorer, docgen, logger, trace exporter |
 | **Backend — Models** | ✅ Fully built | 4 Pydantic models |
 | **Backend — Mock Data** | ✅ Fully built | 3 factories (JSON+PDF) + 3 regulations (JSON+PDF) + CSV |
-| **Mobile — Expo App** | ✅ Fully built | 9 screens, 8 components, 4 services, dark theme |
+| **Mobile — Expo App** | ✅ Fully built | 12 screens, 10+ components, 5 services, dark theme |
 | **Mobile — Firestore Listeners** | ✅ Fully built | Factory, report, job, actions subscriptions |
-| **Mobile — API Integration** | ✅ Fully built | All 8 endpoints wrapped |
+| **Mobile — API Integration** | ✅ Fully built | All 10 endpoints wrapped |
 | **Antigravity — Skills** | ✅ Fully built | 8 skill.md files |
 | **Antigravity — Workflows** | ✅ Fully built | 2 workflow files |
 | **Documentation** | ✅ Fully built | README, architecture.md, demo_script.md, agent_trace_example.md, CLAUDE.md |
@@ -40,21 +40,32 @@
 
 ### Backend (100% code complete)
 
-- **`main.py`** — FastAPI app with 8 routers, CORS, healthcheck
+- **`main.py`** — FastAPI app with 9 routers (`upload`, `analyze`, `status`,
+  `report`, `actions`, `simulate`, `documents`, `failure-test`,
+  `export-summary`) + `/healthz`, CORS, request logging
 - **`config.py`** — Pydantic settings from `.env` with property helpers
 - **All 6 agents** — Each with `run()`, `log_step()`, `maybe_inject_failure()`, stub responses
 - **Recovery agent** — Fallback artifact + injection flag clearing
 - **Orchestrator** — LangGraph `StateGraph`, parallel branches, `_wrap_with_recovery()`, `_fallback_for()`, `run_pipeline()` with full Firestore persistence
 - **10 tools** — gemini_client (3-tier fallback), firestore_client (real + in-memory), pdf_parser, csv_processor, contradiction_detector (rule + LLM + grounding), compliance_scorer, document_generator (3 doc types with naming constraints), agent_logger (disk + Firestore), trace_exporter (Antigravity markdown format)
-- **8 API endpoints** — upload, analyze, status, report, actions, simulate, documents, failure-test
+- **10 API endpoints** — upload, analyze, status, report, actions, simulate,
+  documents, documents/audit-ready, failure-test, export-summary
 - **4 Pydantic models** — factory, regulation, gap_report, action_chain
 - **Mock data** — 3 factory JSON+PDFs (CRITICAL/WARNING/COMPLIANT), 3 regulation JSON+PDFs (CBAM, Modern Slavery, CSDDD), export CSV
 
 ### Mobile App (100% code complete)
 
-- **9 screens**: Home, Compliance, ActionCenter, DocumentVault, BuyerComms, AgentTrace, Upload, AnalysisProgress, HowItWorks
-- **8 components**: CircularScore, ComplianceScoreCard, ActionItem, RiskBadge, AgentStatusBar, ContradictionAlert, EmptyState, MarkdownStyles
-- **4 services**: api.js (fetch wrapper), firebase.js (Firestore listeners), format.js, notifications.js
+- **12 active screens**: Splash, Home, Compliance, ActionCenter, DocumentVault,
+  AgentTrace, Upload, AnalysisProgress, HowItWorks, EditEmail, Settings,
+  Deadlines. (`BuyerCommsScreen.js` exists but is no longer routed —
+  buyer-email composition moved into EditEmailScreen + DocumentVault.)
+- **Components**: CircularScore, ComplianceScoreCard, ActionItem, RiskBadge,
+  AgentStatusBar, ContradictionAlert, EmptyState, MarkdownStyles,
+  DashedEmptyScore, InfoTooltip, InteractiveChecklist, SimulationReveal.
+- **5 services**: api.js (fetch wrapper, 10 endpoints), firebase.js
+  (subscribe + mutate helpers, checklist persistence,
+  simulation-reveal flag), format.js, notifications.js,
+  notificationsRead.js (AsyncStorage read-set for the Deadlines badge).
 - **Navigation**: Stack → Tab navigator with dark theme
 - **Firebase config**: Real project credentials in `constants/config.js`
 - **Demo factories**: 3 seeded factories + 1 upload demo card
@@ -84,7 +95,7 @@
 
 | # | Task | Est. Time | Details |
 |---|------|-----------|---------|
-| **1** | **Deploy backend to Cloud Run** | 1 hour | `Dockerfile` is ready. Run `gcloud builds submit` + `gcloud run deploy`. Verify all 8 endpoints respond. Set env vars on Cloud Run. |
+| **1** | **Deploy backend to Cloud Run** | 1 hour | `Dockerfile` is ready. Run `gcloud builds submit` + `gcloud run deploy`. Verify all 10 endpoints respond. Set env vars on Cloud Run. |
 | **2** | **Seed 3 demo factories into Firestore** | 30 min | Write a one-shot script or use Firebase console to create `/factories/fwi_fsd_001`, `/factories/cfw_lhe_002`, `/factories/rgl_khi_003` with initial scores. Run `/analyze` once per factory to populate reports. |
 | **3** | **End-to-end test with real Gemini** | 1 hour | Run the full pipeline against Vertex AI (or AI Studio fallback). Verify: Gemini returns valid JSON, gaps detected, contradictions found, documents generated. Check `.env` has `GEMINI_MODEL=gemini-2.5-pro` (currently `gemini-1.5-pro`). |
 | **4** | **Record 90-second backup video** | 1 hour | Follow `docs/demo_script.md` backup video section: HomeScreen → Faisal Weave → contradiction → Run Analysis → AgentTrace → ActionCenter → Simulate all → score climb → tagline. |
@@ -191,4 +202,4 @@ python -m tools.trace_exporter --job-id JOB_ID
 
 ---
 
-*Generated May 18, 2026 — 48 hours before deadline*
+*Generated May 18, 2026 — refreshed May 20, 2026 (submission day). Live QA state lives in `SUBMISSION_STATUS.md`.*

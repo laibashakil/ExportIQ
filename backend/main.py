@@ -1,14 +1,17 @@
 """ExportIQ FastAPI entry point.
 
-Exposes 6 endpoints used by the Expo mobile app + Antigravity Manager view:
+Exposes 9 routers used by the Expo mobile app + Antigravity Manager view:
 
-    POST /upload                — ingest PDFs / CSVs
-    POST /analyze               — kick off the 6-agent LangGraph pipeline
-    GET  /status/{job_id}       — poll progress + live agent trace
-    GET  /report/{factory_id}   — final compliance report
-    POST /simulate/{factory_id} — run execution-simulation for chosen actions
-    GET  /documents/{factory_id}— list generated artifacts (buyer emails, CBAM forms)
-    POST /failure-test/{job_id} — inject a controlled failure for demo recovery
+    POST /upload                          — ingest PDFs / CSVs
+    POST /analyze                         — kick off the 6-agent LangGraph pipeline
+    GET  /status/{job_id}                 — poll progress + live agent trace
+    GET  /report/{factory_id}             — final compliance report
+    GET  /actions/{factory_id}            — prioritised action chain only
+    POST /simulate/{factory_id}           — run execution-simulation for chosen actions
+    GET  /documents/{factory_id}          — list generated artifacts (buyer emails, CBAM forms)
+    POST /documents/{factory_id}/audit-ready — bundle the audit-ready document set
+    POST /failure-test/{job_id}           — inject a controlled failure for demo recovery
+    GET  /export-summary                  — CSV/markdown export of every factory's status
 """
 from __future__ import annotations
 

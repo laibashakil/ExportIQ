@@ -87,7 +87,7 @@ hackathon demo exercises this via `POST /failure-test/{job_id}`.
 ```
 ┌──────────────────────────┐
 │  Expo (React Native) app │   ← runs in Expo Go via QR code
-│  8 screens, live Firestore│
+│ 12 screens, live Firestore│
 │  subscriptions            │
 └────────────┬──────────────┘
              │  REST + Firestore listeners
@@ -226,7 +226,9 @@ To run with real cloud services (required for the hackathon demo):
 | `GET`  | `/actions/{factory_id}` | Just the prioritised action chain |
 | `POST` | `/simulate/{factory_id}` | Re-run execution simulation on a chosen subset of actions |
 | `GET`  | `/documents/{factory_id}` | All generated documents (buyer emails, CBAM forms, checklists) |
+| `POST` | `/documents/{factory_id}/audit-ready` | Bundle the audit-ready document set into a single artifact |
 | `POST` | `/failure-test/{job_id}` | Inject a controlled failure in a chosen agent — used for the demo recovery moment |
+| `GET`  | `/export-summary` | Cross-factory CSV/markdown export — risk, gaps, and action chains in one file |
 
 All endpoints return JSON. CORS is open for the Expo dev server and Expo Go
 LAN ranges.

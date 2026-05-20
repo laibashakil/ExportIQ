@@ -11,7 +11,8 @@ in Manager view, while the underlying compute is FastAPI on Cloud Run.
 
 ### Backend (`backend/`)
 
-- **`main.py`** — FastAPI app, mounts 8 routers.
+- **`main.py`** — FastAPI app, mounts 9 routers (upload, analyze, status,
+  report, actions, simulate, documents, failure-test, export-summary).
 - **`agents/orchestrator.py`** — builds the LangGraph DAG. Both the
   Regulation Ingestion and Factory Profile agents run **in parallel** from
   `START`; both feed into Gap Detection. Then Financial → Action Chain →
@@ -30,13 +31,29 @@ in Manager view, while the underlying compute is FastAPI on Cloud Run.
 
 ### Mobile (`mobile/`)
 
-- **`App.js`** — Stack ⇨ Tabs navigator. Tab order matches CLAUDE.md.
-- **6 screens** — Home, Compliance, ActionCenter, DocumentVault, BuyerComms,
-  AgentTrace.
-- **`services/firebase.js`** — Firestore listeners. `subscribeFactory()`,
-  `subscribeReport()`, `subscribeJob()`, `subscribeActions()` are the four
-  subscriptions the screens depend on.
-- **`services/api.js`** — fetch wrapper around the 8 backend endpoints.
+- **`App.js`** — Stack ⇨ Tabs navigator. Stack hosts Splash, Home,
+  AnalysisProgress, Upload, EditEmail, HowItWorks, Settings, Deadlines, and
+  the dev-only AgentTrace route; the Factory route nests a bottom-tab
+  navigator with Status / Fix It / Documents (Compliance, ActionCenter,
+  DocumentVault).
+- **12 active screens** — Splash, Home, Compliance, ActionCenter,
+  DocumentVault, AgentTrace, Upload, AnalysisProgress, HowItWorks,
+  EditEmail, Settings, Deadlines. (`BuyerCommsScreen.js` still exists as a
+  file but is no longer routed; buyer emails surface through DocumentVault
+  and EditEmail.)
+- **`services/firebase.js`** — Firestore listeners + helpers.
+  `subscribeFactory()`, `subscribeReport()`, `subscribeJob()`,
+  `subscribeActions()`, and `subscribeChecklistItems()` are the live
+  subscriptions; `markDocumentSent()`, `updateDocument()`,
+  `setSimulationRevealed()`, `seedChecklistItems()`, and
+  `toggleChecklistItem()` write back from the UI.
+- **`services/api.js`** — fetch wrapper around the 10 backend endpoints
+  (`upload`, `analyze`, `status`, `report`, `actions`, `simulate`,
+  `documents`, `documents/{id}/audit-ready`, `failure-test`,
+  `export-summary`).
+- **`services/notificationsRead.js`** — AsyncStorage-backed read-set that
+  tracks which deadline notifications the user has already seen so the
+  HomeScreen badge clears on revisit.
 
 ### Antigravity (`antigravity/.agent/`)
 

@@ -90,44 +90,46 @@ ExportIQ/
 │   ├── App.js
 │   │
 │   ├── screens/
-│   │   ├── HomeScreen.js              # Compliance score dashboard
-│   │   ├── ComplianceScreen.js        # Per-regulation breakdown
-│   │   ├── ActionCenterScreen.js      # Agent-generated action items
-│   │   ├── DocumentVaultScreen.js     # Upload PDFs, view generated docs
-│   │   ├── BuyerCommsScreen.js        # Auto-drafted buyer emails
-│   │   └── AgentTraceScreen.js        # Live Antigravity reasoning trace log
+│   │   ├── SplashScreen.js             # First-launch splash
+│   │   ├── HomeScreen.js               # Compliance score dashboard + deadlines badge
+│   │   ├── ComplianceScreen.js         # Per-regulation breakdown (Status tab)
+│   │   ├── ActionCenterScreen.js       # Agent-generated action items (Fix It tab)
+│   │   ├── DocumentVaultScreen.js      # Upload PDFs, view generated docs (Documents tab)
+│   │   ├── AgentTraceScreen.js         # Live Antigravity reasoning trace log (dev route)
+│   │   ├── UploadScreen.js             # PDF upload + auto-trigger analysis
+│   │   ├── AnalysisProgressScreen.js   # Animated progress while pipeline runs
+│   │   ├── HowItWorksScreen.js         # Scoring + compliance explainer
+│   │   ├── EditEmailScreen.js          # Compose/edit a generated buyer email
+│   │   ├── SettingsScreen.js           # User preferences + cross-factory export
+│   │   ├── DeadlinesScreen.js          # Upcoming gap deadlines across factories
+│   │   └── BuyerCommsScreen.js         # (legacy file, not routed in App.js)
 │   │
-│   ├── components/
-│   │   ├── ComplianceScoreCard.js     # Big red/amber/green score widget
-│   │   ├── ActionItem.js              # Single action card with simulate button
-│   │   ├── RiskBadge.js               # PKR risk amount badge
-│   │   ├── AgentStatusBar.js          # Shows which agents are running
-│   │   └── ContradictionAlert.js      # Highlighted contradiction card
+│   ├── components/                     # Score cards, action items, risk badge, agent
+│   │                                   # status bar, contradiction alert, dashed empty
+│   │                                   # score, info tooltip, interactive checklist,
+│   │                                   # simulation reveal, etc.
 │   │
 │   ├── services/
 │   │   ├── api.js                     # Calls to FastAPI backend
-│   │   ├── firebase.js                # Firestore real-time listeners
-│   │   └── notifications.js           # Expo push notifications
+│   │   ├── firebase.js                # Firestore real-time listeners + writes
+│   │   ├── notifications.js           # Expo push notifications
+│   │   └── notificationsRead.js       # AsyncStorage read-set for deadline badges
 │   │
 │   └── constants/
 │       ├── colors.js
-│       └── config.js                  # Backend URL, Firebase config
+│       └── config.js                  # Backend URL, Firebase config, DEMO_FACTORIES
 │
 ├── antigravity/                       # Antigravity agent definitions
 │   └── .agent/
-│       ├── skills/
-│       │   ├── regulation_parser/
-│       │   │   └── skill.md           # Skill: parse EU regulation PDFs
-│       │   ├── gap_detector/
-│       │   │   └── skill.md           # Skill: detect compliance gaps
-│       │   ├── financial_impact/
-│       │   │   └── skill.md           # Skill: calculate PKR risk
-│       │   ├── action_chain_generator/
-│       │   │   └── skill.md           # Skill: generate prioritized actions
-│       │   ├── contradiction_detector/
-│       │   │   └── skill.md           # Skill: find conflicting claims
-│       │   └── document_drafter/
-│       │       └── skill.md           # Skill: generate buyer emails/reports
+│       ├── skills/                    # 8 skill.md files (one per Antigravity skill)
+│       │   ├── regulation_parser/skill.md       # Parse EU/UK regulation PDFs
+│       │   ├── factory_profile/skill.md         # Parse factory audit data
+│       │   ├── gap_detector/skill.md            # Detect compliance gaps
+│       │   ├── contradiction_detector/skill.md  # Find conflicting claims
+│       │   ├── financial_impact/skill.md        # Calculate PKR risk
+│       │   ├── action_chain_generator/skill.md  # Generate prioritized actions
+│       │   ├── execution_simulator/skill.md     # Simulate action execution
+│       │   └── document_drafter/skill.md        # Generate buyer emails/reports
 │       └── workflows/
 │           ├── full_compliance_analysis.md   # End-to-end analysis workflow
 │           └── daily_regulatory_scan.md      # Daily new regulation check workflow
@@ -310,12 +312,21 @@ POST /simulate/{factory_id}
   Body: { action_ids: [str] }  # Which actions to simulate
   Returns: { before_score, after_score, risk_reduction_pkr, documents_generated: [str] }
 
+GET /actions/{factory_id}
+  Returns: Just the prioritised action chain (action_chain[])
+
 GET /documents/{factory_id}
   Returns: List of generated documents (buyer emails, checklists, CBAM forms)
+
+POST /documents/{factory_id}/audit-ready
+  Returns: Bundled audit-ready document set for a single factory
 
 POST /failure-test/{job_id}
   Body: { agent: str, failure_type: "api_timeout"|"missing_data"|"contradiction" }
   Returns: Recovery agent trace — FOR DEMO FAILURE INJECTION
+
+GET /export-summary?factory_ids=fwi_fsd_001,cfw_lhe_002
+  Returns: Cross-factory CSV/markdown export — risk + gaps + actions in one file
 ```
 
 ---

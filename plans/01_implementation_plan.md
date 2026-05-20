@@ -1,7 +1,7 @@
 # ExportIQ — Full Implementation Plan
 
 > **AISeekho 2026 Google Antigravity Hackathon** · Challenge 1: Autonomous Content-to-Action Agent  
-> **Deadline:** May 20, 2026 · **Current Date:** May 18, 2026
+> **Deadline:** May 20, 2026 · **Current Date:** May 20, 2026 (submission day)
 
 ---
 
@@ -23,10 +23,10 @@ ExportIQ is an agentic AI system that protects Pakistani textile factories from 
 
 | Layer | Technology | Rationale |
 |---|---|---|
-| **Mobile App** | Expo (React Native) | QR-scan demo via Expo Go, 9 screens built |
+| **Mobile App** | Expo (React Native) | QR-scan demo via Expo Go, 12 screens built |
 | **Backend** | Python 3.11 + FastAPI | Async-friendly, fast to build |
 | **Agent Orchestration** | LangGraph StateGraph | Multi-agent DAG with parallel branches + recovery |
-| **LLM** | Gemini 1.5 Pro (Vertex AI) | Required for Antigravity; PDF/doc understanding |
+| **LLM** | Gemini 2.5 Pro (Vertex AI) | Required for Antigravity; PDF/doc understanding |
 | **LLM Fallback** | Gemini via AI Studio API key | Backup if Vertex quota exhausted during demo |
 | **Stub Mode** | Deterministic stubs | Pipeline runs end-to-end with zero credentials |
 | **Database** | Firebase Firestore | Real-time listeners → mobile score animation |
@@ -180,7 +180,7 @@ graph TD
 | `components/ContradictionAlert.js` | Contradiction card |
 | `components/EmptyState.js` | Empty state placeholder |
 | `components/MarkdownStyles.js` | Markdown rendering styles |
-| `services/api.js` | Fetch wrapper for 8 backend endpoints |
+| `services/api.js` | Fetch wrapper for 10 backend endpoints |
 | `services/firebase.js` | Firestore real-time listeners |
 | `services/format.js` | Number/date formatting utilities |
 | `services/notifications.js` | Expo push notifications |
@@ -289,4 +289,4 @@ graph TD
 
 ---
 
-*Generated May 18, 2026 — AISeekho 2026 Google Antigravity Hackathon*
+*Generated May 18, 2026 — refreshed May 20, 2026 (factual fields aligned with shipped code). AISeekho 2026 Google Antigravity Hackathon.*

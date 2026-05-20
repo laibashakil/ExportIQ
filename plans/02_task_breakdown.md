@@ -2,7 +2,7 @@
 
 > **Status Legend:** ✅ DONE · 🔨 IN PROGRESS · ⬜ TODO  
 > **Priority:** 🔴 Critical (blocks demo) · 🟡 Important · 🟢 Nice-to-have  
-> **Current Date:** May 18, 2026 · **Deadline:** May 20, 2026
+> **Current Date:** May 20, 2026 (submission day) · **Deadline:** May 20, 2026
 
 ---
 
@@ -185,7 +185,7 @@
 | 11.13 | `ActionItem` component | ✅ DONE | 🔴 | — |
 | 11.14 | `RiskBadge` component | ✅ DONE | 🔴 | — |
 | 11.15 | `ContradictionAlert` component | ✅ DONE | 🔴 | — |
-| 11.16 | `services/api.js` — fetch wrapper for 8 endpoints | ✅ DONE | 🔴 | — |
+| 11.16 | `services/api.js` — fetch wrapper for 10 endpoints | ✅ DONE | 🔴 | — |
 | 11.17 | `services/firebase.js` — Firestore real-time listeners | ✅ DONE | 🔴 | — |
 | 11.18 | Firebase config with real project credentials | ✅ DONE | 🔴 | — |
 | 11.19 | Demo factory seed data in `constants/config.js` | ✅ DONE | 🔴 | — |
@@ -259,4 +259,4 @@
 
 ---
 
-*Generated May 18, 2026*
+*Generated May 18, 2026 — refreshed May 20, 2026 to reflect demo-day state.*

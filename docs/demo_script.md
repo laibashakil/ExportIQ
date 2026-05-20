@@ -20,7 +20,7 @@ mobile phone (Expo Go) AND the laptop (Antigravity Manager view) on screen.
 
 | Time  | Action |
 |------:|--------|
-| 0:00  | Open mobile app. HomeScreen shows 3 factories — Faisal Weave Industries (43, RED), Chenab Fabric Works (78, AMBER), Ideal (91, GREEN). |
+| 0:00  | Open mobile app. HomeScreen shows 3 seeded factories plus a 4th "New Factory (Demo Upload)" empty card — Faisal Weave Industries (43, RED), Chenab Fabric Works (78, AMBER), Ravi Garments Ltd (91, GREEN), and the upload-demo card. |
 | 0:20  | Tap **Faisal Weave Industries**. ComplianceScreen opens: score card shows 43/100 in red, PKR 340M at risk, 4 gaps + 1 contradiction visible. |
 | 0:40  | Scroll to the contradiction card: "Factory claims ISO 14001 compliance" vs "water_effluent_discharge = 12 ppm" — sources `faisal_weave_self_report_q1_2026.csv` and `water_audit_march25.pdf` cited. |
 | 1:00  | Switch to laptop. Antigravity Manager view: 6 agents visible, each with its Skill markdown. Point out the parallel start (Regulation + Factory Profile) and the recovery wiring. |

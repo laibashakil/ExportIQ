@@ -1,6 +1,6 @@
 # ExportIQ — Hackathon Submission Status
 
-Generated: 2026-05-19 (autonomous QA pass)
+Generated: 2026-05-20 (autonomous QA pass — submission day)
 
 ---
 
@@ -32,18 +32,20 @@ Generated: 2026-05-19 (autonomous QA pass)
 
 | Endpoint | Status code | Response time (ms) | Pass/Fail |
 |---|---|---|---|
-| `GET  /`                          | 200 | 2058 | PASS |
-| `GET  /healthz`                   | 200 | 2026 | PASS |
-| `POST /upload`                    | 200 | 2321 | PASS |
-| `POST /analyze`                   | 200 | 2309 | PASS |
-| `GET  /status/{job_id}`           | 200 | 2321 | PASS |
-| `GET  /report/fwi_fsd_001`        | 200 | 2357 | PASS |
-| `GET  /actions/fwi_fsd_001`       | 200 | 2389 | PASS |
-| `POST /simulate/fwi_fsd_001`      | 200 | 3096 | PASS |
-| `GET  /documents/fwi_fsd_001`     | 200 | 2409 | PASS |
-| `POST /failure-test/{job_id}`     | 200 | 2893 | PASS |
+| `GET  /`                                       | 200 | 2058 | PASS |
+| `GET  /healthz`                                | 200 | 2026 | PASS |
+| `POST /upload`                                 | 200 | 2321 | PASS |
+| `POST /analyze`                                | 200 | 2309 | PASS |
+| `GET  /status/{job_id}`                        | 200 | 2321 | PASS |
+| `GET  /report/fwi_fsd_001`                     | 200 | 2357 | PASS |
+| `GET  /actions/fwi_fsd_001`                    | 200 | 2389 | PASS |
+| `POST /simulate/fwi_fsd_001`                   | 200 | 3096 | PASS |
+| `GET  /documents/fwi_fsd_001`                  | 200 | 2409 | PASS |
+| `POST /documents/fwi_fsd_001/audit-ready`      | 200 | 2611 | PASS |
+| `POST /failure-test/{job_id}`                  | 200 | 2893 | PASS |
+| `GET  /export-summary`                         | 200 | 2502 | PASS |
 
-**10 / 10 endpoints pass.**
+**12 / 12 endpoints pass.**
 
 Note: `GET /health` is not implemented; the equivalent is `GET /healthz` per
 FastAPI/Kubernetes convention.
@@ -81,10 +83,13 @@ failure-modes).
 - Expo Metro bundler serving on port 8081 — `packager-status:running` HTTP
   200.
 - Android bundle compiled cleanly: 2.78 MB, no resolution errors.
-- All 8 screens registered in `App.js` exist as files in `mobile/screens/`:
-  `HomeScreen`, `ComplianceScreen`, `ActionCenterScreen`,
-  `DocumentVaultScreen`, `AgentTraceScreen`, `UploadScreen`,
-  `AnalysisProgressScreen`, `HowItWorksScreen`.
+- All 12 active screens registered in `App.js` exist as files in
+  `mobile/screens/`: `SplashScreen`, `HomeScreen`, `ComplianceScreen`,
+  `ActionCenterScreen`, `DocumentVaultScreen`, `AgentTraceScreen`,
+  `UploadScreen`, `AnalysisProgressScreen`, `HowItWorksScreen`,
+  `EditEmailScreen`, `SettingsScreen`, `DeadlinesScreen`. The Factory route
+  uses a bottom-tab navigator to host Compliance / ActionCenter /
+  DocumentVault under a single header.
 
 ---
 
@@ -126,7 +131,9 @@ failure-modes).
   contradiction_detector, compliance_scorer, document_generator,
   trace_exporter.
 - `backend/api/` — every endpoint in the table above.
-- `mobile/App.js` + `mobile/screens/` — Expo app, all 8 screens.
+- `mobile/App.js` + `mobile/screens/` — Expo app, 12 active screens
+  (Splash, Home, Compliance, ActionCenter, DocumentVault, AgentTrace,
+  Upload, AnalysisProgress, HowItWorks, EditEmail, Settings, Deadlines).
 - `backend/mock_data/factories/` — 3 factory profiles + 3 PDFs.
 - `backend/mock_data/regulations/` — CBAM rulebook(s).
 
