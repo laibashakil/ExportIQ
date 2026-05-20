@@ -26,7 +26,6 @@
     "android": {
       "package": "com.exportiq.app",
       "versionCode": 1,
-      "navigationBarColor": "#0D1117",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1117"
