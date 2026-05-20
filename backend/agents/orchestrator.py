@@ -197,22 +197,45 @@ def run_pipeline(*, job_id: str, factory_id: str,
     fin = final_state.get("financial_impact") or {}
     before_score = sim.get("before_score", 0)
     before_risk_pkr = sim.get("risk_before_pkr") or int(fin.get("orders_at_risk_pkr") or 0)
+
+    # Link every gap to its corresponding action_id so mobile "See how to fix"
+    # buttons can deep-link to the specific action card in Fix It. Each
+    # action carries `addresses_gap_ids`; we invert that map here.
+    gaps_list = list(final_state.get("gaps", []))
+    actions_list = list(final_state.get("action_chain", []))
+    gap_to_action: dict[str, str] = {}
+    for a in actions_list:
+        for gid in a.get("addresses_gap_ids") or []:
+            if gid and gid not in gap_to_action:
+                gap_to_action[gid] = a.get("action_id")
+    for g in gaps_list:
+        gid = g.get("gap_id")
+        if gid and gid in gap_to_action:
+            g["linked_action_id"] = gap_to_action[gid]
+
     report = {
         "factory_id": factory_id,
         "job_id": job_id,
         "factory_name": (final_state.get("factory_data") or {}).get("factory_name"),
         "city": (final_state.get("factory_data") or {}).get("city"),
+        # `compliance_score` and `original_compliance_score` are both the
+        # pre-simulation real-world score; the mobile app always shows
+        # original_compliance_score on the score gauge by default and only
+        # reveals the post-sim score after the user explicitly opts in.
         "compliance_score": before_score,
+        "original_compliance_score": before_score,
         "before_score": before_score,
         "after_score": sim.get("after_score", 0),
+        "simulation_revealed": False,
         "orders_at_risk_pkr": before_risk_pkr,
         "risk_reduction_pkr": sim.get("risk_reduction_pkr", 0),
-        "gaps": final_state.get("gaps", []),
+        "gaps": gaps_list,
         "contradictions": final_state.get("contradictions", []),
-        "action_chain": final_state.get("action_chain", []),
+        "action_chain": actions_list,
         "simulation_result": sim,
         "documents": final_state.get("documents", []),
         "financial_impact": fin,
+        "factory_profile": final_state.get("factory_data") or {},
         "recovery_used": final_state.get("recovery_used", False),
         "updated_at": datetime.utcnow().isoformat(),
     }

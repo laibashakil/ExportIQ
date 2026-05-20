@@ -12,7 +12,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -181,7 +180,7 @@ function StepRow({ step }) {
       <Text style={[styles.stepLabel, step.state === 'pending' && { color: colors.textDim }]} numberOfLines={1}>
         {step.label}
       </Text>
-      {step.state === 'running' && <ActivityIndicator size="small" color={colors.warning} />}
+      {step.state === 'running' && <LogoSpinner size={18} />}
     </View>
   );
 }

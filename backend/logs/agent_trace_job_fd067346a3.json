@@ -1,0 +1,329 @@
+[
+  {
+    "timestamp": "2026-05-20T00:20:48.707483Z",
+    "job_id": "job_fd067346a3",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "demo_factory_upload_test",
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:49.303370Z",
+    "job_id": "job_fd067346a3",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "demo_factory_upload_test"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:49.460297Z",
+    "job_id": "job_fd067346a3",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:49.787704Z",
+    "job_id": "job_fd067346a3",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:49.948474Z",
+    "job_id": "job_fd067346a3",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "demo_factory_upload_test",
+      "certifications": 0,
+      "claims": 0,
+      "evidence_items": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:50.142352Z",
+    "job_id": "job_fd067346a3",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "uk_modern_slavery",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:50.441069Z",
+    "job_id": "job_fd067346a3",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_supply_chain_directive",
+      "rule_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:50.704475Z",
+    "job_id": "job_fd067346a3",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1390.0
+  },
+  {
+    "timestamp": "2026-05-20T00:20:51.263280Z",
+    "job_id": "job_fd067346a3",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 8
+      }
+    },
+    "duration_ms": 1797.0
+  },
+  {
+    "timestamp": "2026-05-20T00:20:51.789433Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:52.056342Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:52.326141Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:52.599710Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:52.855963Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:53.412526Z",
+    "job_id": "job_fd067346a3",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 4,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 1625.0
+  },
+  {
+    "timestamp": "2026-05-20T00:20:53.925435Z",
+    "job_id": "job_fd067346a3",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:54.476219Z",
+    "job_id": "job_fd067346a3",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 0,
+        "buyers_affected": []
+      }
+    },
+    "duration_ms": 562.0
+  },
+  {
+    "timestamp": "2026-05-20T00:20:55.030978Z",
+    "job_id": "job_fd067346a3",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:55.561958Z",
+    "job_id": "job_fd067346a3",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 4,
+        "total_impact_pkr": 0
+      }
+    },
+    "duration_ms": 532.0
+  },
+  {
+    "timestamp": "2026-05-20T00:20:55.830502Z",
+    "job_id": "job_fd067346a3",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "These 4 actions target the highest-severity, soonest-deadline gaps first, recovering an estimated PKR 0 of at-risk orders."
+  },
+  {
+    "timestamp": "2026-05-20T00:20:56.366554Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 4
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:56.919342Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 69,
+      "risk_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:57.186882Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:57.719923Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_6110650e",
+      "title": "File EU Carbon Tax Report",
+      "score_delta": 10,
+      "risk_reduction_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:20:58.932355Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_66450689",
+      "title": "Complete Supply Chain Audit",
+      "score_delta": 10,
+      "risk_reduction_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:21:00.448239Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_5e083b06",
+      "title": "Verify Emissions Data Sources",
+      "score_delta": 7,
+      "risk_reduction_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:21:01.738061Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_ed398102",
+      "title": "Complete Supply Chain Audit",
+      "score_delta": 4,
+      "risk_reduction_pkr": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:21:03.513743Z",
+    "job_id": "job_fd067346a3",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 100,
+        "risk_reduction_pkr": 0
+      }
+    },
+    "duration_ms": 7141.0
+  },
+  {
+    "timestamp": "2026-05-20T00:21:08.539349Z",
+    "job_id": "job_fd067346a3",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 69,
+        "simulated_after_score": 100,
+        "gap_count": 4,
+        "contradiction_count": 0,
+        "action_count": 4,
+        "documents_count": 6,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 19828.0
+  }
+]

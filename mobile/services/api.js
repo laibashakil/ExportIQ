@@ -68,6 +68,19 @@ export const api = {
       body: JSON.stringify({ action_ids: actionIds, job_id: jobId }),
     }),
   documents: (factoryId) => req(`/documents/${factoryId}`),
+  generateAuditReady: (factoryId) =>
+    req(`/documents/${factoryId}/audit-ready`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  exportSummaryUrl: (factoryIds) => {
+    // Returned as a URL string so the caller can hand it to expo-sharing
+    // or Linking.openURL directly.
+    const q = factoryIds && factoryIds.length
+      ? `?factory_ids=${encodeURIComponent(factoryIds.join(','))}`
+      : '';
+    return `${API_BASE_URL}/export-summary${q}`;
+  },
   failureTest: (jobId, agent, failureType) =>
     req(`/failure-test/${jobId}`, {
       method: 'POST',

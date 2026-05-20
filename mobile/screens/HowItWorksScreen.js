@@ -72,6 +72,36 @@ export default function HowItWorksScreen() {
           </View>
         ))}
 
+        <Text style={styles.sectionHeader}>How We Calculate Your Score</Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoBody}>
+            Your compliance score reflects how well your factory's documentation
+            aligns with EU and UK export rules. Critical missing requirements
+            weigh more heavily than minor gaps. Contradictions between your own
+            documents reduce your score because they signal audit risk.
+          </Text>
+        </View>
+
+        <Text style={styles.sectionHeader}>Why EU and UK only?</Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoBody}>
+            65% of Pakistan's textile exports go to EU and UK markets. We focus
+            on these regions for the highest-impact compliance coverage.
+            Additional jurisdictions (US, Japan, China) can be added on request.
+          </Text>
+        </View>
+
+        <Text style={styles.sectionHeader}>Handling messy real-world data</Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoBody}>
+            ExportIQ accepts multiple PDF documents per factory — audit reports,
+            certificates, lab results, self-assessments. Our agents use Google
+            Gemini's document understanding to extract structured data even
+            from inconsistently formatted files. For demo purposes one
+            consolidated audit PDF is used.
+          </Text>
+        </View>
+
         <View style={styles.tipCard}>
           <Ionicons name="bulb" size={20} color={colors.warning} />
           <Text style={styles.tipText}>
@@ -169,6 +199,31 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
   },
+  sectionHeader: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  infoCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  infoBody: {
+    color: '#C9D1D9',
+    fontSize: 15,
+    lineHeight: 24,
+  },
+
   tipCard: {
     flexDirection: 'row',
     backgroundColor: colors.warningSoft,

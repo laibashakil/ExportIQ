@@ -4,6 +4,13 @@ Each PDF mirrors the data in `backend/mock_data/factories/*.json` so the
 LangGraph pipeline sees consistent inputs whether the upstream tool ingests
 the JSON directly or runs PyMuPDF over the PDF.
 
+Layout contract (every PDF must obey this):
+- A4 page (210mm x 297mm) with 20mm margins all sides.
+- Body Helvetica 10pt; H1 18pt; H2 Helvetica-Bold 14pt.
+- ALL long-text Table cells wrapped in Paragraph() so they word-wrap.
+- Column widths sum to exactly the content width (170mm).
+- Section breaks use Spacer(1, 12).
+
 Usage:
     python scripts/generate_factory_pdfs.py
 """
@@ -11,7 +18,6 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -25,17 +31,83 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     PageBreak,
-    KeepTogether,
 )
 
 FACTORY_DIR = Path(__file__).resolve().parent.parent / "mock_data" / "factories"
 
+# Page geometry (A4 minus 20mm margins on each side)
+PAGE_WIDTH_MM = 210
+MARGIN_MM = 20
+CONTENT_WIDTH_MM = PAGE_WIDTH_MM - 2 * MARGIN_MM  # 170mm
+
+
 styles = getSampleStyleSheet()
-styles.add(ParagraphStyle(name="H1Big", parent=styles["Heading1"], fontSize=18, spaceAfter=8, textColor=colors.HexColor("#1a3a5f")))
-styles.add(ParagraphStyle(name="H2Sec", parent=styles["Heading2"], fontSize=13, spaceBefore=12, spaceAfter=6, textColor=colors.HexColor("#1a3a5f")))
-styles.add(ParagraphStyle(name="Small", parent=styles["Normal"], fontSize=8, textColor=colors.grey))
-styles.add(ParagraphStyle(name="Claim", parent=styles["Normal"], fontSize=10, leftIndent=14, textColor=colors.HexColor("#444444"), italic=True))
-styles.add(ParagraphStyle(name="Warn", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#b03030")))
+styles.add(ParagraphStyle(
+    name="H1Big",
+    parent=styles["Heading1"],
+    fontName="Helvetica-Bold",
+    fontSize=18,
+    leading=22,
+    spaceAfter=8,
+    textColor=colors.HexColor("#1a3a5f"),
+))
+styles.add(ParagraphStyle(
+    name="H2Sec",
+    parent=styles["Heading2"],
+    fontName="Helvetica-Bold",
+    fontSize=14,
+    leading=18,
+    spaceBefore=12,
+    spaceAfter=8,
+    textColor=colors.HexColor("#1a3a5f"),
+))
+styles.add(ParagraphStyle(
+    name="Body",
+    parent=styles["Normal"],
+    fontName="Helvetica",
+    fontSize=10,
+    leading=14,
+))
+styles.add(ParagraphStyle(
+    name="Cell",
+    parent=styles["Normal"],
+    fontName="Helvetica",
+    fontSize=9,
+    leading=12,
+))
+styles.add(ParagraphStyle(
+    name="CellSmall",
+    parent=styles["Normal"],
+    fontName="Helvetica",
+    fontSize=8,
+    leading=11,
+    textColor=colors.HexColor("#555555"),
+))
+styles.add(ParagraphStyle(
+    name="Small",
+    parent=styles["Normal"],
+    fontName="Helvetica",
+    fontSize=8,
+    leading=11,
+    textColor=colors.grey,
+))
+styles.add(ParagraphStyle(
+    name="Claim",
+    parent=styles["Normal"],
+    fontName="Helvetica-Oblique",
+    fontSize=10,
+    leading=14,
+    leftIndent=14,
+    textColor=colors.HexColor("#444444"),
+))
+styles.add(ParagraphStyle(
+    name="Warn",
+    parent=styles["Normal"],
+    fontName="Helvetica-Bold",
+    fontSize=10,
+    leading=14,
+    textColor=colors.HexColor("#b03030"),
+))
 
 
 def _money_pkr(x: int) -> str:
@@ -47,30 +119,36 @@ def _money_pkr(x: int) -> str:
     return f"PKR {x:,}"
 
 
-def _cert_color(status: str) -> colors.Color:
+def _cert_color(status: str) -> str:
     return {
-        "VALID": colors.HexColor("#1f7a1f"),
-        "EXPIRED": colors.HexColor("#b03030"),
-        "MISSING": colors.HexColor("#b03030"),
-        "DRAFT": colors.HexColor("#b07a00"),
-    }.get(status, colors.black)
+        "VALID": "#1f7a1f",
+        "EXPIRED": "#b03030",
+        "MISSING": "#b03030",
+        "DRAFT": "#b07a00",
+    }.get(status, "#000000")
 
 
-def _table(data, col_widths=None, header=True):
+def _p(text: str, style_name: str = "Cell") -> Paragraph:
+    """Tiny helper — every potentially long string inside a Table cell goes
+    through this so reportlab word-wraps it on the cell width."""
+    return Paragraph(text, styles[style_name])
+
+
+def _table(data, col_widths, header=True, font_size=9):
     t = Table(data, colWidths=col_widths)
     style = [
-        ("FONT", (0, 0), (-1, -1), "Helvetica", 9),
+        ("FONT", (0, 0), (-1, -1), "Helvetica", font_size),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#888888")),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f4f6fa")]),
         ("LEFTPADDING", (0, 0), (-1, -1), 5),
         ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
     ]
     if header:
         style += [
-            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 9),
+            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", font_size),
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a3a5f")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ]
@@ -89,28 +167,41 @@ def _audit_header(factory: dict, audit_date: str, auditor: str) -> list:
         f"Audited by <b>{auditor}</b> &nbsp;&nbsp; Date of issue: <b>{audit_date}</b>",
         styles["Small"],
     ))
-    elems.append(Spacer(1, 4))
+    elems.append(Spacer(1, 8))
+    # Two-column meta table: 60mm label + 110mm value = 170mm
     meta = [
-        ["Legal entity", factory["factory_name"]],
-        ["City / Site", f"{factory['city']}, {'Sindh' if factory['city'] == 'Karachi' else 'Punjab'}, Pakistan"],
-        ["Factory ID", factory["factory_id"]],
-        ["Primary products", ", ".join(factory["primary_products"])],
-        ["Audit scope", "EU CBAM (Reg 2023/956), UK Modern Slavery Act 2015 §54, EU CSDDD (Dir 2024/1760), ISO 14001 surveillance, SA8000 social compliance, OEKO-TEX, REACH SVHC effluent screening"],
-        ["Audit method", "On-site inspection, sample chain-of-custody, effluent grab samples (3 points), HR log review, management interview"],
+        [_p("<b>Legal entity</b>"), _p(factory["factory_name"])],
+        [_p("<b>City / Site</b>"), _p(f"{factory['city']}, {'Sindh' if factory['city'] == 'Karachi' else 'Punjab'}, Pakistan")],
+        [_p("<b>Factory ID</b>"), _p(factory["factory_id"])],
+        [_p("<b>Primary products</b>"), _p(", ".join(factory["primary_products"]))],
+        [_p("<b>Audit scope</b>"), _p(
+            "EU CBAM (Reg 2023/956), UK Modern Slavery Act 2015 §54, EU CSDDD "
+            "(Dir 2024/1760), ISO 14001 surveillance, SA8000 social compliance, "
+            "OEKO-TEX, REACH SVHC effluent screening"
+        )],
+        [_p("<b>Audit method</b>"), _p(
+            "On-site inspection, sample chain-of-custody, effluent grab samples "
+            "(3 points), HR log review, management interview"
+        )],
     ]
-    elems.append(_table(meta, col_widths=[42 * mm, 130 * mm], header=False))
-    elems.append(Spacer(1, 6))
+    elems.append(_table(meta, col_widths=[60 * mm, 110 * mm], header=False))
+    elems.append(Spacer(1, 12))
     return elems
 
 
 def _section_certifications(factory: dict) -> list:
     elems = [Paragraph("1. Certifications &amp; certification status", styles["H2Sec"])]
-    data = [["Certification", "Status", "Valid until", "Issuer", "Notes"]]
+    # Columns sum to 170mm: 30 + 22 + 26 + 32 + 60
+    col_widths = [30 * mm, 22 * mm, 26 * mm, 32 * mm, 60 * mm]
+    data = [[
+        _p("<b>Certification</b>", "Cell"),
+        _p("<b>Status</b>", "Cell"),
+        _p("<b>Valid until</b>", "Cell"),
+        _p("<b>Issuer</b>", "Cell"),
+        _p("<b>Notes</b>", "Cell"),
+    ]]
     for c in factory["certifications"]:
-        status_p = Paragraph(
-            f'<font color="{_cert_color(c["status"]).hexval()}"><b>{c["status"]}</b></font>',
-            styles["Normal"],
-        )
+        status_html = f'<font color="{_cert_color(c["status"])}"><b>{c["status"]}</b></font>'
         note = ""
         if c["status"] == "EXPIRED":
             note = f"Expired {c['expiry_date']}; auditor recommends immediate re-audit booking."
@@ -119,13 +210,14 @@ def _section_certifications(factory: dict) -> list:
         elif c["status"] == "VALID":
             note = "Surveillance audit on file. Valid for full scope of EU/UK shipments."
         data.append([
-            c["name"],
-            status_p,
-            c["expiry_date"] or "—",
-            c["issuer"] or "—",
-            note,
+            _p(c["name"]),
+            _p(status_html),
+            _p(c["expiry_date"] or "—"),
+            _p(c["issuer"] or "—"),
+            _p(note),
         ])
-    elems.append(_table(data, col_widths=[28 * mm, 22 * mm, 24 * mm, 30 * mm, 70 * mm]))
+    elems.append(_table(data, col_widths=col_widths, header=False))
+    elems.append(Spacer(1, 12))
     return elems
 
 
@@ -134,9 +226,17 @@ def _section_export_profile(factory: dict) -> list:
     elems.append(Paragraph(
         f"Total annual export value reported by management: <b>{_money_pkr(factory['annual_export_pkr'])}</b>. "
         f"Breakdown by purchasing buyer (FY 2025):",
-        styles["Normal"],
+        styles["Body"],
     ))
-    rows = [["Buyer", "Annual order value (PKR)", "Share of total", "Buyer HQ jurisdiction"]]
+    elems.append(Spacer(1, 6))
+    # 170mm split: 50 + 36 + 24 + 60
+    col_widths = [50 * mm, 36 * mm, 24 * mm, 60 * mm]
+    rows = [[
+        _p("<b>Buyer</b>"),
+        _p("<b>Annual order value (PKR)</b>"),
+        _p("<b>Share of total</b>"),
+        _p("<b>Buyer HQ jurisdiction</b>"),
+    ]]
     juris = {
         "NordStyle Group": "EU (Sweden)", "EuroThread SA": "EU (Spain)", "Mango": "EU (Spain)",
         "C&A": "EU", "Bestseller": "EU (Denmark)",
@@ -147,14 +247,13 @@ def _section_export_profile(factory: dict) -> list:
     for buyer, value in factory["exports_by_buyer_pkr"].items():
         share = (value / total) * 100 if total else 0
         rows.append([
-            buyer,
-            _money_pkr(value),
-            f"{share:.1f}%",
-            juris.get(buyer, "—"),
+            _p(buyer),
+            _p(_money_pkr(value)),
+            _p(f"{share:.1f}%"),
+            _p(juris.get(buyer, "—")),
         ])
-    elems.append(_table(rows, col_widths=[34 * mm, 40 * mm, 25 * mm, 60 * mm]))
-    elems.append(Spacer(1, 4))
-    # Concentration commentary
+    elems.append(_table(rows, col_widths=col_widths, header=False))
+    elems.append(Spacer(1, 8))
     top_share = max(factory["exports_by_buyer_pkr"].values()) / total
     if top_share > 0.5:
         elems.append(Paragraph(
@@ -162,36 +261,49 @@ def _section_export_profile(factory: dict) -> list:
             "A compliance suspension by that buyer would materially threaten factory revenue.",
             styles["Warn"],
         ))
+    elems.append(Spacer(1, 12))
     return elems
 
 
 def _section_self_reported(factory: dict) -> list:
     elems = [Paragraph("3. Self-reported compliance claims (factory submission)", styles["H2Sec"])]
     elems.append(Paragraph(
-        f"The following statements were provided by {factory['factory_name']}'s compliance team in the quarterly self-report (source filename in parentheses). "
-        "These statements are recorded verbatim and used as the LEFT-HAND side of the contradiction check in Section 5.",
-        styles["Normal"],
+        f"The following statements were provided by {factory['factory_name']}'s compliance team "
+        f"in the quarterly self-report (source filename in parentheses). These statements are "
+        f"recorded verbatim and used as the LEFT-HAND side of the contradiction check in Section 5.",
+        styles["Body"],
     ))
+    elems.append(Spacer(1, 6))
     for c in factory["claims"]:
         elems.append(Paragraph(
             f"&bull; \"{c['claim']}\" &nbsp; <font color=\"#888888\">(source: {c['source']})</font>",
             styles["Claim"],
         ))
+    elems.append(Spacer(1, 12))
     return elems
 
 
 def _section_audit_evidence(factory: dict) -> list:
     elems = [Paragraph("4. Independent audit evidence (third-party measurements)", styles["H2Sec"])]
-    rows = [["Metric", "Measured value", "Unit", "Date", "Source document"]]
+    # 170mm split: 50 + 28 + 24 + 28 + 40
+    col_widths = [50 * mm, 28 * mm, 24 * mm, 28 * mm, 40 * mm]
+    rows = [[
+        _p("<b>Metric</b>"),
+        _p("<b>Measured value</b>"),
+        _p("<b>Unit</b>"),
+        _p("<b>Date</b>"),
+        _p("<b>Source document</b>"),
+    ]]
     for e in factory["audit_evidence"]:
         rows.append([
-            e["metric"].replace("_", " "),
-            str(e["value"]),
-            e["unit"] or "—",
-            e["measured_on"],
-            e["source"],
+            _p(e["metric"].replace("_", " ")),
+            _p(str(e["value"])),
+            _p(e["unit"] or "—"),
+            _p(e["measured_on"]),
+            _p(e["source"]),
         ])
-    elems.append(_table(rows, col_widths=[44 * mm, 26 * mm, 22 * mm, 24 * mm, 50 * mm]))
+    elems.append(_table(rows, col_widths=col_widths, header=False))
+    elems.append(Spacer(1, 12))
     return elems
 
 
@@ -199,14 +311,13 @@ def _section_contradictions(factory: dict) -> list:
     """Walk known claim↔evidence pairs and surface conflicts inside the same PDF."""
     elems = [Paragraph("5. Auditor cross-check (claim vs evidence)", styles["H2Sec"])]
     elems.append(Paragraph(
-        "The cross-check below compares Section 3 (self-reported claims) against Section 4 (independent measurements). "
-        "Any inconsistency triggers a recommended remediation in Section 6.",
-        styles["Normal"],
+        "The cross-check below compares Section 3 (self-reported claims) against Section 4 "
+        "(independent measurements). Any inconsistency triggers a recommended remediation in Section 6.",
+        styles["Body"],
     ))
+    elems.append(Spacer(1, 6))
 
-    claim_map = {c["claim"].lower(): c for c in factory["claims"]}
     evid_map = {e["metric"]: e for e in factory["audit_evidence"]}
-
     findings = []
 
     # ISO 14001 / water effluent
@@ -241,7 +352,7 @@ def _section_contradictions(factory: dict) -> list:
             "rationale": "SA8000 §7.1.1 caps total weekly hours at 60 including overtime; observed value exceeds ceiling.",
         })
 
-    # Numeric working-hours claim vs measured working hours (excluding the bool SA8000 claim)
+    # Numeric working-hours claim vs measured working hours
     hours_numeric_claim = next(
         (c for c in factory["claims"]
          if "working hour" in c["claim"].lower()
@@ -259,9 +370,7 @@ def _section_contradictions(factory: dict) -> list:
             "rationale": "Self-reported weekly hours differ from third-party measurement by more than 4 hours.",
         })
 
-    # CBAM filing absence: only fires when factory does NOT claim CBAM is filed
-    # AND audit pack contains no CBAM filing record — i.e. a genuine omission gap,
-    # not a fabricated contradiction against a truthful claim.
+    # CBAM filing absence
     cbam_filed_claim = next(
         (c for c in factory["claims"]
          if "cbam" in c["claim"].lower() and c.get("value") is True),
@@ -283,8 +392,7 @@ def _section_contradictions(factory: dict) -> list:
             "rationale": "Factory exports to EU; CBAM scope applies; no filing record exists. This is a regulatory GAP rather than a CONTRADICTION because the factory has not made a conflicting positive claim.",
         })
 
-    # EU CSDDD draft narrative: contradiction if factory claims publication but
-    # audit evidence shows DRAFT state.
+    # EU CSDDD draft narrative
     csddd_claim = next(
         (c for c in factory["claims"]
          if ("supply chain" in c["claim"].lower() or "csddd" in c["claim"].lower() or "due diligence" in c["claim"].lower())
@@ -319,42 +427,56 @@ def _section_contradictions(factory: dict) -> list:
 
     if not findings:
         elems.append(Paragraph(
-            "&bull; All self-reported claims are consistent with the independent measurements. No contradictions found.",
-            styles["Normal"],
+            "&bull; All self-reported claims are consistent with the independent measurements. "
+            "No contradictions found.",
+            styles["Body"],
         ))
+        elems.append(Spacer(1, 12))
         return elems
 
-    rows = [["#", "Self-reported claim (source)", "Audit evidence (source)", "Confidence", "Verdict"]]
+    # 170mm split: 8 + 60 + 60 + 20 + 22
+    col_widths = [8 * mm, 60 * mm, 60 * mm, 20 * mm, 22 * mm]
+    rows = [[
+        _p("<b>#</b>"),
+        _p("<b>Self-reported claim (source)</b>"),
+        _p("<b>Audit evidence (source)</b>"),
+        _p("<b>Confidence</b>"),
+        _p("<b>Verdict</b>"),
+    ]]
     for i, f in enumerate(findings, 1):
         rows.append([
-            str(i),
-            f"{f['claim_text']}\n[{f['claim_src']}]",
-            f"{f['evidence_text']}\n[{f['evidence_src']}]",
-            f"{f['confidence']:.2f}",
-            f["verdict"],
+            _p(str(i)),
+            _p(f"{f['claim_text']}<br/><font color=\"#888888\">[{f['claim_src']}]</font>"),
+            _p(f"{f['evidence_text']}<br/><font color=\"#888888\">[{f['evidence_src']}]</font>"),
+            _p(f"{f['confidence']:.2f}"),
+            _p(f["verdict"]),
         ])
-    elems.append(_table(rows, col_widths=[8 * mm, 55 * mm, 60 * mm, 18 * mm, 25 * mm]))
-    elems.append(Spacer(1, 4))
+    elems.append(_table(rows, col_widths=col_widths, header=False))
+    elems.append(Spacer(1, 8))
     for i, f in enumerate(findings, 1):
         elems.append(Paragraph(
             f"<b>Finding {i} rationale.</b> {f['rationale']}",
-            styles["Normal"],
+            styles["Body"],
         ))
+        elems.append(Spacer(1, 4))
+    elems.append(Spacer(1, 8))
     return elems
 
 
 def _section_risk_summary(factory: dict, score: int, risk_level: str, orders_at_risk_pkr: int, summary: str) -> list:
     elems = [Paragraph("6. Auditor risk summary and recommended remediation", styles["H2Sec"])]
+    # 170mm split: 70 + 100
+    col_widths = [70 * mm, 100 * mm]
     rows = [
-        ["Compliance score (0-100)", str(score)],
-        ["Risk level", risk_level],
-        ["Estimated orders at risk", _money_pkr(orders_at_risk_pkr)],
-        ["Buyers materially affected", ", ".join([b for b in factory["primary_buyers"][:3]])],
-        ["Audit issued by", "Independent third-party (this report)"],
+        [_p("<b>Compliance score (0-100)</b>"), _p(str(score))],
+        [_p("<b>Risk level</b>"), _p(risk_level)],
+        [_p("<b>Estimated orders at risk</b>"), _p(_money_pkr(orders_at_risk_pkr))],
+        [_p("<b>Buyers materially affected</b>"), _p(", ".join([b for b in factory["primary_buyers"][:3]]))],
+        [_p("<b>Audit issued by</b>"), _p("Independent third-party (this report)")],
     ]
-    elems.append(_table(rows, col_widths=[60 * mm, 100 * mm], header=False))
-    elems.append(Spacer(1, 6))
-    elems.append(Paragraph(summary, styles["Normal"]))
+    elems.append(_table(rows, col_widths=col_widths, header=False))
+    elems.append(Spacer(1, 8))
+    elems.append(Paragraph(summary, styles["Body"]))
     return elems
 
 
@@ -363,8 +485,8 @@ def _build(factory: dict, audit_date: str, auditor: str, score: int, risk_level:
     doc = SimpleDocTemplate(
         str(out_path),
         pagesize=A4,
-        leftMargin=18 * mm, rightMargin=18 * mm,
-        topMargin=15 * mm, bottomMargin=15 * mm,
+        leftMargin=MARGIN_MM * mm, rightMargin=MARGIN_MM * mm,
+        topMargin=MARGIN_MM * mm, bottomMargin=MARGIN_MM * mm,
         title=f"{factory['factory_name']} — Compliance Audit {audit_date}",
         author=auditor,
     )
@@ -377,10 +499,10 @@ def _build(factory: dict, audit_date: str, auditor: str, score: int, risk_level:
     story += _section_audit_evidence(factory)
     story += _section_contradictions(factory)
     story += _section_risk_summary(factory, score, risk_level, orders_at_risk_pkr, summary)
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 12))
     story.append(Paragraph(
-        "<i>This report was generated for the AISeekho 2026 Google Antigravity Hackathon submission (ExportIQ). "
-        "It contains realistic but synthetic data for the named factories.</i>",
+        "<i>This report was generated for the AISeekho 2026 Google Antigravity Hackathon submission "
+        "(ExportIQ). It contains realistic but synthetic data for the named factories.</i>",
         styles["Small"],
     ))
     doc.build(story)

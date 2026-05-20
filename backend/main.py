@@ -18,7 +18,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
-from api import upload, analyze, status, actions, simulate, failure_test, documents, report
+from api import upload, analyze, status, actions, simulate, failure_test, documents, report, export_summary
 
 settings = get_settings()
 logging.basicConfig(level=settings.log_level)
@@ -74,3 +74,4 @@ app.include_router(actions.router, prefix="/actions", tags=["actions"])
 app.include_router(simulate.router, prefix="/simulate", tags=["simulate"])
 app.include_router(documents.router, prefix="/documents", tags=["documents"])
 app.include_router(failure_test.router, prefix="/failure-test", tags=["demo"])
+app.include_router(export_summary.router, prefix="/export-summary", tags=["export"])

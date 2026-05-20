@@ -1,10 +1,14 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import SplashScreen from './screens/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -15,6 +19,9 @@ import AgentTraceScreen from './screens/AgentTraceScreen';
 import UploadScreen from './screens/UploadScreen';
 import AnalysisProgressScreen from './screens/AnalysisProgressScreen';
 import HowItWorksScreen from './screens/HowItWorksScreen';
+import EditEmailScreen from './screens/EditEmailScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import DeadlinesScreen from './screens/DeadlinesScreen';
 import { colors } from './constants/colors';
 
 const Stack = createNativeStackNavigator();
@@ -49,30 +56,50 @@ function tabIcon(routeName) {
 
 function FactoryTabs({ route }) {
   const { factoryId } = route.params;
+  const insets = useSafeAreaInsets();
+  // Android nav bar consumes the bottom edge. Always reserve a real-pixel
+  // gap below the tab labels so the system bar can't overlap the icons.
+  const bottomGap = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 10);
+
   return (
     <Tab.Navigator
-      screenOptions={({ route: r }) => ({
+      screenOptions={() => ({
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 68,
+          height: 60 + bottomGap,
           paddingTop: 8,
-          paddingBottom: 10,
+          paddingBottom: bottomGap,
         },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarIcon: tabIcon(r.name),
+        tabBarIcon: tabIcon(route?.name || 'Status'),
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.text,
         headerShadowVisible: false,
         headerTitleStyle: { fontWeight: '800' },
       })}
     >
-      <Tab.Screen name="Status"    initialParams={{ factoryId }} component={ComplianceScreen} />
-      <Tab.Screen name="Fix It"    initialParams={{ factoryId }} component={ActionCenterScreen} />
-      <Tab.Screen name="Documents" initialParams={{ factoryId }} component={DocumentVaultScreen} />
+      <Tab.Screen
+        name="Status"
+        initialParams={{ factoryId }}
+        component={ComplianceScreen}
+        options={{ tabBarIcon: tabIcon('Status') }}
+      />
+      <Tab.Screen
+        name="Fix It"
+        initialParams={{ factoryId }}
+        component={ActionCenterScreen}
+        options={{ tabBarIcon: tabIcon('Fix It') }}
+      />
+      <Tab.Screen
+        name="Documents"
+        initialParams={{ factoryId }}
+        component={DocumentVaultScreen}
+        options={{ tabBarIcon: tabIcon('Documents') }}
+      />
     </Tab.Navigator>
   );
 }
@@ -93,7 +120,11 @@ export default function App() {
           },
         }}
       >
-        <StatusBar style="light" />
+        <StatusBar
+          style="light"
+          backgroundColor={colors.bg}
+          translucent={false}
+        />
         <Stack.Navigator screenOptions={stackOptions}>
           <Stack.Screen
             name="Splash"
@@ -131,6 +162,21 @@ export default function App() {
             name="HowItWorks"
             component={HowItWorksScreen}
             options={{ title: 'How it works' }}
+          />
+          <Stack.Screen
+            name="EditEmail"
+            component={EditEmailScreen}
+            options={{ title: 'Edit email' }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ title: 'Settings' }}
+          />
+          <Stack.Screen
+            name="Deadlines"
+            component={DeadlinesScreen}
+            options={{ title: 'Upcoming deadlines' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

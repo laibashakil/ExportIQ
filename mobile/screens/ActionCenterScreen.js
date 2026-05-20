@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
+  FlatList,
+  Animated,
+  Easing,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,7 +17,11 @@ import {
   spacing,
   shadow,
 } from '../constants/colors';
-import { subscribeReport, subscribeActions } from '../services/firebase';
+import {
+  subscribeReport,
+  subscribeActions,
+  setSimulationRevealed,
+} from '../services/firebase';
 import { api } from '../services/api';
 import {
   formatPkr,
@@ -25,11 +30,11 @@ import {
   plainRegulation,
 } from '../services/format';
 import EmptyState from '../components/EmptyState';
+import LogoSpinner from '../components/LogoSpinner';
+import SimulationReveal from '../components/SimulationReveal';
 
-// Hard timeout for /simulate calls so the screen never hangs on a spinner.
-// 5s ceiling matches the latest spec; after the deadline we fall back to
-// whatever simulation_output is already cached in Firestore.
 const SIMULATE_TIMEOUT_MS = 5000;
+const HIGHLIGHT_DURATION_MS = 1500;
 
 function simulateWithTimeout(factoryId, actionIds) {
   return Promise.race([
@@ -52,12 +57,15 @@ const EFFORT_COLOR = {
 };
 
 export default function ActionCenterScreen({ route, navigation }) {
-  const { factoryId } = route.params;
+  const { factoryId, highlightActionId } = route.params || {};
   const [report, setReport] = useState(null);
   const [liveActions, setLiveActions] = useState([]);
   const [busy, setBusy] = useState({});
   const [busyAll, setBusyAll] = useState(false);
-  const [lastSim, setLastSim] = useState(null);
+  const [perCardSim, setPerCardSim] = useState({}); // actionId -> sim result
+  const [fullPlanSim, setFullPlanSim] = useState(null);
+  const [highlightedId, setHighlightedId] = useState(null);
+  const listRef = useRef(null);
 
   useEffect(() => {
     const u1 = subscribeReport(factoryId, setReport);
@@ -67,22 +75,6 @@ export default function ActionCenterScreen({ route, navigation }) {
       u2 && u2();
     };
   }, [factoryId]);
-
-  // If the backend already saved a full-plan simulation_result on the report,
-  // surface it on first paint so the user sees something useful immediately
-  // without having to tap the hero button.
-  useEffect(() => {
-    if (lastSim) return;
-    const sim = report?.simulation_result;
-    if (!sim) return;
-    if (sim.before_score == null && sim.after_score == null) return;
-    setLastSim({
-      before: sim.before_score ?? 0,
-      after: sim.after_score ?? 0,
-      risk: Number(sim.risk_reduction_pkr) || 0,
-      count: Array.isArray(sim.action_ids) ? sim.action_ids.length : (report?.action_chain?.length || 0),
-    });
-  }, [report, lastSim]);
 
   const reportActions = report?.action_chain || [];
   const merged = useMemo(() => {
@@ -97,13 +89,36 @@ export default function ActionCenterScreen({ route, navigation }) {
     });
   }, [reportActions, liveActions]);
 
-  const runSimulate = async (actionIds) => {
-    // Optimistic fallback: synthesise a result from already-stored simulation
-    // outputs so the user sees something within 3s even if the backend is
-    // unreachable or slow.
+  // Scroll to and highlight the action card referenced by route param. Runs
+  // once data is ready, then clears params so it doesn't re-fire on focus.
+  useEffect(() => {
+    if (!highlightActionId || !merged.length) return;
+    const idx = merged.findIndex((a) => a.action_id === highlightActionId);
+    if (idx < 0) return;
+
+    // Defer to next tick so FlatList has measured rows.
+    const t = setTimeout(() => {
+      try {
+        listRef.current?.scrollToIndex({
+          index: idx,
+          viewPosition: 0.3,
+          animated: true,
+        });
+      } catch {
+        // scrollToIndex can throw if the row hasn't been measured yet.
+      }
+      setHighlightedId(highlightActionId);
+      setTimeout(() => setHighlightedId(null), HIGHLIGHT_DURATION_MS);
+      navigation.setParams({ highlightActionId: undefined });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [highlightActionId, merged, navigation]);
+
+  const runSimulate = async (actionIds, { full = false } = {}) => {
     const fallback = () => {
       const targets = merged.filter((a) => actionIds.includes(a.action_id));
       const before = targets[0]?.simulation_output?.before_score
+        ?? report?.original_compliance_score
         ?? report?.compliance_score
         ?? 0;
       const after = targets.reduce(
@@ -117,25 +132,60 @@ export default function ActionCenterScreen({ route, navigation }) {
           ),
         0,
       );
-      return { before, after, risk, count: actionIds.length };
+      return { before, after, risk };
     };
     try {
       const res = await simulateWithTimeout(factoryId, actionIds);
-      setLastSim({
+      return {
         before: res.before_score ?? 0,
         after: res.after_score ?? 0,
         risk: Number(res.risk_reduction_pkr) || 0,
-        count: actionIds.length,
-      });
-    } catch (e) {
-      // Timeout or network — show the precomputed result instead of hanging.
-      setLastSim(fallback());
+      };
+    } catch {
+      return fallback();
     }
   };
 
-  return (
-    <ScrollView style={styles.bg} contentContainerStyle={styles.content}>
-      {/* Header */}
+  const onSimulateOne = useCallback(async (action) => {
+    setBusy((b) => ({ ...b, [action.action_id]: true }));
+    const result = await runSimulate([action.action_id]);
+    setPerCardSim((s) => ({ ...s, [action.action_id]: result }));
+    setBusy((b) => ({ ...b, [action.action_id]: false }));
+  }, [factoryId, merged, report]);
+
+  const onShowFullPlan = useCallback(async () => {
+    setBusyAll(true);
+    const result = await runSimulate(merged.map((a) => a.action_id), { full: true });
+    setFullPlanSim(result);
+    // Flip the report-level reveal flag so the Status screen knows it
+    // can offer the post-fix view to the user.
+    try {
+      await setSimulationRevealed(factoryId, true);
+    } catch {
+      // non-fatal — the in-screen reveal still shows
+    }
+    setBusyAll(false);
+  }, [merged, factoryId]);
+
+  const buyers =
+    report?.financial_impact?.buyers_affected
+    || report?.factory_profile?.primary_buyers
+    || [];
+
+  const renderItem = ({ item, index }) => (
+    <ActionCard
+      action={item}
+      index={index}
+      busy={!!busy[item.action_id]}
+      sim={perCardSim[item.action_id]}
+      buyers={buyers}
+      highlighted={highlightedId === item.action_id}
+      onSimulate={() => onSimulateOne(item)}
+    />
+  );
+
+  const ListHeader = (
+    <View>
       <View style={styles.header}>
         <Text style={styles.h1}>Your Action Plan</Text>
         <Text style={styles.h2}>
@@ -143,20 +193,15 @@ export default function ActionCenterScreen({ route, navigation }) {
         </Text>
       </View>
 
-      {/* Simulate-all hero */}
       {merged.length > 0 && (
         <TouchableOpacity
           style={[styles.heroBtn, busyAll && { opacity: 0.6 }]}
           activeOpacity={0.85}
           disabled={busyAll || merged.length === 0}
-          onPress={async () => {
-            setBusyAll(true);
-            await runSimulate(merged.map((a) => a.action_id));
-            setBusyAll(false);
-          }}
+          onPress={onShowFullPlan}
         >
           {busyAll ? (
-            <ActivityIndicator color={colors.bg} />
+            <LogoSpinner size={20} />
           ) : (
             <Ionicons name="rocket" size={18} color={colors.bg} />
           )}
@@ -166,42 +211,32 @@ export default function ActionCenterScreen({ route, navigation }) {
         </TouchableOpacity>
       )}
 
-      {/* Before/after sim banner */}
-      {lastSim && (
-        <View style={styles.simBanner}>
-          <View style={styles.simBannerHead}>
-            <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
-            <Text style={styles.simBannerTitle}>
-              {lastSim.count === 1
-                ? "Here's what happens if you fix this"
-                : `Here's what happens if you fix all ${lastSim.count} actions`}
+      {fullPlanSim && (
+        <View style={styles.fullPlanWrap}>
+          <View style={styles.fullPlanHead}>
+            <Ionicons name="checkmark-circle" size={16} color={colors.primary} />
+            <Text style={styles.fullPlanTitle}>
+              Here's what happens if you fix all {merged.length} actions
             </Text>
           </View>
-          <View style={styles.simRow}>
-            <View style={styles.simCell}>
-              <Text style={styles.simCellLabel}>Score</Text>
-              <Text style={styles.simCellValue}>
-                <Text style={{ color: colors.critical }}>{lastSim.before}</Text>
-                {'  '}
-                <Ionicons name="arrow-forward" size={14} color={colors.textDim} />
-                {'  '}
-                <Text style={{ color: colors.primary }}>{lastSim.after}</Text>
-              </Text>
-            </View>
-            <View style={styles.simCell}>
-              <Text style={styles.simCellLabel}>Orders protected</Text>
-              <Text style={[styles.simCellValue, { color: colors.primary }]}>
-                {formatPkr(lastSim.risk)}
-              </Text>
-            </View>
-          </View>
+          <SimulationReveal
+            visible
+            before={fullPlanSim.before}
+            after={fullPlanSim.after}
+            risk={fullPlanSim.risk}
+            buyers={buyers}
+          />
         </View>
       )}
+    </View>
+  );
 
-      {merged.length === 0 && (
+  if (merged.length === 0) {
+    return (
+      <View style={styles.bg}>
+        {ListHeader}
         <EmptyState
-          icon="flash"
-          iconColor={colors.primary}
+          useLogo
           title="No actions yet"
           message="Run a check on your factory and we'll build a clear step-by-step plan to keep your export orders safe."
           cta={{
@@ -217,38 +252,80 @@ export default function ActionCenterScreen({ route, navigation }) {
             },
           }}
         />
-      )}
+      </View>
+    );
+  }
 
-      {merged.map((a, idx) => (
-        <ActionCard
-          key={a.action_id || idx}
-          action={a}
-          index={idx}
-          busy={!!busy[a.action_id]}
-          onSimulate={async () => {
-            setBusy((b) => ({ ...b, [a.action_id]: true }));
-            await runSimulate([a.action_id]);
-            setBusy((b) => ({ ...b, [a.action_id]: false }));
-          }}
-        />
-      ))}
-    </ScrollView>
+  return (
+    <FlatList
+      ref={listRef}
+      style={styles.bg}
+      contentContainerStyle={styles.content}
+      data={merged}
+      keyExtractor={(item, idx) => item.action_id || `act-${idx}`}
+      renderItem={renderItem}
+      ListHeaderComponent={ListHeader}
+      onScrollToIndexFailed={(info) => {
+        // Retry once after the list has had time to measure.
+        setTimeout(() => {
+          try {
+            listRef.current?.scrollToIndex({
+              index: info.index,
+              viewPosition: 0.3,
+              animated: true,
+            });
+          } catch {}
+        }, 300);
+      }}
+    />
   );
 }
 
-function ActionCard({ action, index, busy, onSimulate }) {
+function ActionCard({ action, index, busy, sim, buyers, highlighted, onSimulate }) {
   const priority = action.priority ?? index + 1;
   const effort = (action.effort || 'MEDIUM').toUpperCase();
   const effortColor = EFFORT_COLOR[effort] || colors.warning;
   const effortText = EFFORT_LABEL[effort] || `${effort.toLowerCase()} effort`;
   const status = (action.status || 'PENDING').toUpperCase();
   const isSimulated = status === 'SIMULATED' || status === 'EXECUTED';
-  const sim = action.simulation_output || {};
   const title = plainActionTitle(action);
   const reg = plainRegulation(action.regulation);
 
+  // Glow animation on highlight (1.5s teal border pulse, then fade).
+  const glow = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!highlighted) {
+      glow.setValue(0);
+      return;
+    }
+    Animated.sequence([
+      Animated.timing(glow, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.delay(900),
+      Animated.timing(glow, {
+        toValue: 0,
+        duration: 400,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [highlighted, glow]);
+
+  const borderColor = glow.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+  const borderWidth = glow.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 2],
+  });
+
   return (
-    <View style={styles.card}>
+    <Animated.View style={[styles.card, { borderColor, borderWidth }]}>
       <View style={styles.cardHead}>
         <View style={styles.priorityBadge}>
           <Text style={styles.priorityBadgeText}>{priority}</Text>
@@ -283,23 +360,11 @@ function ActionCard({ action, index, busy, onSimulate }) {
         {plainActionDescription(action)}
       </Text>
 
-      {/* Impact + sim result */}
       <View style={styles.impactRow}>
         <View style={styles.impactCell}>
           <Text style={styles.impactLabel}>Orders saved</Text>
           <Text style={styles.impactValue}>{formatPkr(action.impact_pkr)}</Text>
         </View>
-        {isSimulated && (
-          <View style={styles.impactCell}>
-            <Text style={styles.impactLabel}>Score change</Text>
-            <Text style={styles.impactValue}>
-              {sim.before_score}→{sim.after_score}{' '}
-              <Text style={{ color: colors.primary }}>
-                (+{(sim.after_score || 0) - (sim.before_score || 0)})
-              </Text>
-            </Text>
-          </View>
-        )}
       </View>
 
       <TouchableOpacity
@@ -309,15 +374,25 @@ function ActionCard({ action, index, busy, onSimulate }) {
         disabled={busy}
       >
         {busy ? (
-          <ActivityIndicator color={colors.primary} size="small" />
+          <LogoSpinner size={18} />
         ) : (
           <Ionicons name="play" size={15} color={colors.primary} />
         )}
         <Text style={styles.simBtnText}>
-          {busy ? 'Working it out…' : 'See what happens if I fix this'}
+          {busy ? 'Working it out…' : sim ? 'See again' : 'See what happens if I fix this'}
         </Text>
       </TouchableOpacity>
-    </View>
+
+      {/* Inline storytelling reveal — 3 cards stagger in 300ms apart */}
+      <SimulationReveal
+        visible={!!sim}
+        before={sim?.before}
+        after={sim?.after}
+        risk={sim?.risk}
+        buyers={buyers}
+        compact
+      />
+    </Animated.View>
   );
 }
 
@@ -325,9 +400,7 @@ const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xl },
 
-  header: {
-    marginBottom: spacing.lg,
-  },
+  header: { marginBottom: spacing.lg },
   h1: { color: colors.text, fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
   h2: { color: '#C9D1D9', fontSize: 15, lineHeight: 22, marginTop: 6 },
 
@@ -344,35 +417,24 @@ const styles = StyleSheet.create({
   },
   heroBtnText: { color: colors.bg, fontWeight: '800', fontSize: 15, marginLeft: 10 },
 
-  simBanner: {
+  fullPlanWrap: {
     backgroundColor: colors.primarySoft,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: radii.lg,
-    padding: spacing.lg,
+    padding: spacing.md,
     marginBottom: spacing.md,
   },
-  simBannerHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  simBannerTitle: {
+  fullPlanHead: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  fullPlanTitle: {
     color: colors.primary,
     fontWeight: '800',
     marginLeft: 8,
     fontSize: 14,
-    flex: 1,
   },
-  simRow: { flexDirection: 'row' },
-  simCell: { flex: 1 },
-  simCellLabel: {
-    color: '#C9D1D9',
-    fontSize: 13,
-    marginBottom: 6,
-  },
-  simCellValue: { color: colors.text, fontSize: 17, fontWeight: '800' },
 
   card: {
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,

@@ -13,7 +13,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
   ScrollView,
 } from 'react-native';
@@ -23,6 +22,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import { colors, radii, shadow, spacing } from '../constants/colors';
 import { api } from '../services/api';
+import LogoSpinner from '../components/LogoSpinner';
 
 const STAGES = {
   IDLE: 'idle',
@@ -105,7 +105,7 @@ export default function UploadScreen({ route, navigation }) {
         >
           {isBusy ? (
             <>
-              <ActivityIndicator color={colors.bg} />
+              <LogoSpinner size={22} />
               <Text style={styles.uploadBtnText}>
                 {stage === STAGES.UPLOADING ? 'Uploading…' : 'Starting analysis…'}
               </Text>

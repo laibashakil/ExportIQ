@@ -1,24 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, radii, shadow, spacing } from '../constants/colors';
+import LogoSpinner from './LogoSpinner';
 
 /**
  * Centred "no data yet" placeholder used by every screen.
  *
- *   icon       Ionicons name (preferred)
+ *   icon       Ionicons name (used when `useLogo` is false; default 'analytics')
  *   iconColor  optional override for the centred icon colour
  *   title      headline string
  *   message    paragraph below the title
  *   cta        { label, onPress, icon? } | null  — primary action
+ *   useLogo    when true, render the pulsing ExportIQ logo at 80x80
+ *              instead of the Ionicon
+ *   pulse      when useLogo is true, animate the logo (default true). Pass
+ *              false for a static logo image.
  */
-export default function EmptyState({ icon = 'analytics', iconColor, title, message, cta }) {
+export default function EmptyState({
+  icon = 'analytics',
+  iconColor,
+  title,
+  message,
+  cta,
+  useLogo = false,
+  pulse = true,
+}) {
   return (
     <View style={styles.wrap}>
-      <View style={styles.iconCircle}>
-        <Ionicons name={icon} size={36} color={iconColor || colors.textDim} />
-      </View>
+      {useLogo ? (
+        pulse ? (
+          <View style={styles.logoWrap}>
+            <LogoSpinner size={80} />
+          </View>
+        ) : (
+          <View style={styles.logoWrap}>
+            <Image
+              source={require('../assets/logo.png')}
+              style={styles.logoStatic}
+              resizeMode="contain"
+            />
+          </View>
+        )
+      ) : (
+        <View style={styles.iconCircle}>
+          <Ionicons name={icon} size={36} color={iconColor || colors.textDim} />
+        </View>
+      )}
       {title && <Text style={styles.title}>{title}</Text>}
       {message && <Text style={styles.message}>{message}</Text>}
       {cta && (
@@ -56,6 +85,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  logoWrap: { marginBottom: spacing.lg },
+  logoStatic: { width: 80, height: 80, borderRadius: 14 },
   title: {
     color: colors.text,
     fontSize: 17,

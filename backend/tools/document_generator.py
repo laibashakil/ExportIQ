@@ -1,5 +1,18 @@
 """Generates buyer emails, CBAM forms, and audit checklists.
 
+Two-stage buyer-email narrative
+-------------------------------
+Stage 1 — "Status Update" (generated after every analysis):
+    Confident quarterly compliance status update. Confirms valid
+    certifications, references routine renewal/audit work as standard
+    practice. NEVER mentions gaps, issues, problems, or remediation.
+
+Stage 2 — "Audit Ready" (generated only after the user marks all
+actions complete, e.g. by ticking off every interactive checklist):
+    Short, confident note that the routine compliance review is complete,
+    all certifications are current, and a full documentation pack is
+    available for the buyer's audit cycle on request.
+
 Each generated document gets stored on the action item's simulation_output
 and listed at GET /documents/{factory_id}.
 """
@@ -29,21 +42,18 @@ _NAMING_CONSTRAINT = (
 )
 
 
-BUYER_EMAIL_PROMPT = (
+STATUS_UPDATE_PROMPT = (
     """You are a Pakistani textile exporter's compliance officer drafting a
-PROACTIVE quarterly compliance status update to a European buyer ahead of
-their upcoming audit season.
+ROUTINE quarterly compliance status update to a European buyer.
 
 CRITICAL TONE RULES:
 - This is a confident, positive partnership update. NOT a confession.
 - Never use the words: "gap", "problem", "issue", "missing", "non-compliant",
-  "violation", "failure", "deficiency", "shortfall", "concern".
-- Frame ongoing work as "documentation updates", "continuous improvements",
-  "scheduled certification renewals", or "compliance refresh cycle".
-- Never mention severity, deadlines as warnings, or financial risk.
-- Lead with strengths: valid certifications, current scope, factory's
-  commitment to standards.
-- Convey calm confidence and partnership.
+  "violation", "failure", "deficiency", "shortfall", "concern", "remediation",
+  "in progress", "pending", "updates in progress".
+- Reference renewals and audits as STANDARD PRACTICE, not as fixing problems.
+- Lead with the factory's current certifications and standing.
+- Convey calm confidence and an established partnership.
 
 REQUIRED STRUCTURE (Markdown, no preamble before the Subject line):
 
@@ -51,19 +61,20 @@ REQUIRED STRUCTURE (Markdown, no preamble before the Subject line):
 
 Dear {Buyer Name} compliance team,
 
-(Opening: 1-2 lines on why you are sharing this update — ahead of audit season,
-as part of continuous transparency.)
+(Opening: 1-2 lines confirming this quarterly status update as part of the
+factory's continuous transparency with valued partners.)
 
-**Current compliance position**
+**Current compliance standing**
 
 (2-3 lines listing valid certifications the factory holds in active scope —
-e.g. ISO 14001 (valid through {date}), OEKO-TEX, etc. Number of valid
-certifications.)
+e.g. ISO 14001 (valid through {date}), OEKO-TEX, etc. State that all are
+independently verified and in good standing.)
 
-**Documentation updates in progress**
+**Routine renewal and audit calendar**
 
-(2-3 lines on the documentation updates being completed this quarter,
-phrased as routine refresh work — never as remediation of failure.)
+(2-3 lines noting that certification renewals and surveillance audits
+continue on the factory's standard yearly schedule — phrased as established
+practice, never as remediation.)
 
 **Continued partnership**
 
@@ -77,6 +88,40 @@ Compliance Office
     + _NAMING_CONSTRAINT
 )
 
+
+AUDIT_READY_PROMPT = (
+    """You are a Pakistani textile exporter's compliance officer notifying a
+European buyer that the factory is fully audit-ready for their upcoming
+compliance audit cycle.
+
+CRITICAL TONE RULES:
+- Tone: confident, brief, professional. This is the "all clear" note.
+- Never mention prior gaps, fixes, or remediation history.
+- Frame the audit-ready status as the natural outcome of the factory's
+  routine compliance review cycle.
+- Offer the full documentation package on request.
+
+REQUIRED STRUCTURE (Markdown, no preamble before the Subject line):
+
+# Subject: Compliance Audit Ready — {Factory Name} — Q2 2026
+
+Dear {Buyer Name} compliance team,
+
+Following our routine compliance review, all certifications are current and
+verified. The full documentation package — including certification copies,
+emissions records, supply-chain narrative, and labour audit evidence — is
+available on request ahead of your upcoming audit cycle.
+
+We look forward to a smooth audit cycle and continued partnership.
+
+Warm regards,
+Compliance Office
+{Factory Name}
+"""
+    + _NAMING_CONSTRAINT
+)
+
+
 CBAM_FORM_PROMPT = (
     """Draft a CBAM (EU Carbon Border Adjustment Mechanism)
 quarterly declaration. Include factory name, reporting period, total embedded
@@ -89,7 +134,7 @@ block. Output Markdown.
 AUDIT_CHECKLIST_PROMPT = (
     """Generate a short remediation checklist for the
 audit gap described. Each item: action, owner role, target date, evidence
-required. 5-8 items. Output Markdown.
+required. 5-8 items. Output Markdown numbered list.
 """
     + _NAMING_CONSTRAINT
 )
@@ -99,58 +144,44 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 
-def generate_buyer_email(
+def generate_status_update_email(
     factory_name: str,
     buyer: str,
-    gap: dict,
-    action_title: str,
     *,
     valid_certifications: list[dict] | None = None,
-    in_progress_topics: list[str] | None = None,
 ) -> dict:
-    """Draft a PROACTIVE quarterly compliance status update for a buyer.
+    """Stage 1 — confident quarterly compliance status update.
 
-    The email no longer mentions any single gap or deadline — it's a
-    confident partnership update that lists strengths (valid certifications,
-    factory scope) and frames any ongoing work as routine documentation
-    updates. Never confessional.
-
-    `valid_certifications` and `in_progress_topics` are optional context the
-    caller can pass to make the LLM output more grounded.
+    Sent after the analysis pipeline runs. Confirms valid certifications and
+    references routine renewals as standard practice. Never confessional.
     """
+    certs = [c for c in (valid_certifications or []) if c.get("status") == "VALID"]
     certs_line = (
         ", ".join(
             f"{c.get('name', 'cert')} (valid through {c.get('expiry_date', 'current cycle')})"
-            for c in (valid_certifications or [])
-            if c.get("status") == "VALID"
+            for c in certs
         )
         or "ISO 14001 and OEKO-TEX (both valid through current cycle)"
-    )
-    in_progress_line = (
-        "; ".join(in_progress_topics or [])
-        or "scheduled certification refresh cycle and emissions data documentation refresh"
     )
     user = (
         f"Factory name: {factory_name}\n"
         f"Buyer name: {buyer}\n"
         f"Quarter: Q2 2026\n"
-        f"Valid certifications: {certs_line}\n"
-        f"Documentation updates in progress: {in_progress_line}"
+        f"Valid certifications in scope: {certs_line}"
     )
     stub = (
         f"# Subject: Compliance Status Update — {factory_name} — Q2 2026\n\n"
         f"Dear {buyer} compliance team,\n\n"
-        f"We are sharing our current compliance status ahead of your upcoming "
-        f"audit season, as part of our continuous transparency commitment to "
-        f"valued partners.\n\n"
-        f"**Current compliance position**\n\n"
-        f"Our factory maintains {len([c for c in (valid_certifications or []) if c.get('status') == 'VALID']) or 'multiple'} "
-        f"valid certifications in active scope: {certs_line}. All have been "
-        f"independently verified and remain in good standing.\n\n"
-        f"**Documentation updates in progress**\n\n"
-        f"As part of our standard quarterly refresh cycle, we are currently "
-        f"progressing {in_progress_line}. These are routine documentation "
-        f"updates aligned with our 2026 compliance roadmap.\n\n"
+        f"We are pleased to share our quarterly compliance status update as "
+        f"part of our ongoing transparency commitment to valued partners.\n\n"
+        f"**Current compliance standing**\n\n"
+        f"{factory_name} holds {len(certs) or 'multiple'} valid certifications "
+        f"in active scope: {certs_line}. All are independently verified by "
+        f"CertVerify Pakistan and remain in good standing.\n\n"
+        f"**Routine renewal and audit calendar**\n\n"
+        f"Certification surveillance audits and renewals continue on our "
+        f"standard yearly schedule, in line with established compliance "
+        f"practice across our European order book.\n\n"
         f"**Continued partnership**\n\n"
         f"We look forward to continued partnership with {buyer} and remain "
         f"available for any specific information you may need ahead of your "
@@ -159,12 +190,76 @@ def generate_buyer_email(
         f"Compliance Office\n"
         f"{factory_name}\n"
     )
-    body = call_gemini(BUYER_EMAIL_PROMPT, user, expect_json=False, stub_response=stub)
+    body = call_gemini(STATUS_UPDATE_PROMPT, user, expect_json=False, stub_response=stub)
     return {
         "document_id": _new_id("doc"),
         "title": f"Compliance Status Update — {factory_name} — Q2 2026",
         "buyer": buyer,
         "kind": "BUYER_EMAIL",
+        "stage": "STATUS_UPDATE",
+        "body": body,
+        "generated_at": datetime.utcnow().isoformat(),
+    }
+
+
+# Back-compat shim — older call sites pass `gap` and `action_title`; we ignore
+# both because the Stage 1 email is gap-agnostic.
+def generate_buyer_email(
+    factory_name: str,
+    buyer: str,
+    gap: dict | None = None,
+    action_title: str = "",
+    *,
+    valid_certifications: list[dict] | None = None,
+    in_progress_topics: list[str] | None = None,  # retained for signature compat
+) -> dict:
+    return generate_status_update_email(
+        factory_name, buyer, valid_certifications=valid_certifications,
+    )
+
+
+def generate_audit_ready_email(
+    factory_name: str,
+    buyer: str,
+    *,
+    valid_certifications: list[dict] | None = None,
+) -> dict:
+    """Stage 2 — short audit-ready confirmation.
+
+    Generated only when the user marks all remediation actions complete
+    (e.g. ticks every interactive checklist item). Confident and brief.
+    """
+    certs = [c for c in (valid_certifications or []) if c.get("status") == "VALID"]
+    certs_line = (
+        ", ".join(c.get("name", "cert") for c in certs)
+        or "the factory's full certification set"
+    )
+    user = (
+        f"Factory name: {factory_name}\n"
+        f"Buyer name: {buyer}\n"
+        f"Quarter: Q2 2026\n"
+        f"Certifications confirmed current: {certs_line}"
+    )
+    stub = (
+        f"# Subject: Compliance Audit Ready — {factory_name} — Q2 2026\n\n"
+        f"Dear {buyer} compliance team,\n\n"
+        f"Following our routine compliance review, all certifications are "
+        f"current and verified. The full documentation package — including "
+        f"{certs_line}, emissions records, supply-chain narrative, and "
+        f"labour audit evidence — is available on request ahead of your "
+        f"upcoming audit cycle.\n\n"
+        f"We look forward to a smooth audit cycle and continued partnership.\n\n"
+        f"Warm regards,\n"
+        f"Compliance Office\n"
+        f"{factory_name}\n"
+    )
+    body = call_gemini(AUDIT_READY_PROMPT, user, expect_json=False, stub_response=stub)
+    return {
+        "document_id": _new_id("doc"),
+        "title": f"Compliance Audit Ready — {factory_name} — Q2 2026",
+        "buyer": buyer,
+        "kind": "BUYER_EMAIL",
+        "stage": "AUDIT_READY",
         "body": body,
         "generated_at": datetime.utcnow().isoformat(),
     }
@@ -202,14 +297,16 @@ def generate_audit_checklist(factory_name: str, gap: dict) -> dict:
         f"1. Assign compliance officer (HSE Manager) — by next Monday\n"
         f"2. Collect current evidence (sensor logs, certificates) — within 1 week\n"
         f"3. Engage external auditor (CertVerify Pakistan) — within 2 weeks\n"
-        f"4. Implement corrective action — within 4 weeks\n"
-        f"5. Re-audit + submit evidence to buyer — before {gap.get('deadline') or 'deadline'}\n"
+        f"4. Prepare CBAM declaration form — within 3 weeks\n"
+        f"5. Implement corrective action — within 4 weeks\n"
+        f"6. Re-audit + submit evidence to buyer — before {gap.get('deadline') or 'deadline'}\n"
     )
     body = call_gemini(AUDIT_CHECKLIST_PROMPT, user, expect_json=False, stub_response=stub)
     return {
         "document_id": _new_id("doc"),
         "title": f"Audit checklist — {gap.get('regulation')}",
         "kind": "AUDIT_CHECKLIST",
+        "regulation": gap.get("regulation"),
         "body": body,
         "generated_at": datetime.utcnow().isoformat(),
     }

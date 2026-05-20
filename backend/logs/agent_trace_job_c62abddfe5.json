@@ -1,0 +1,344 @@
+[
+  {
+    "timestamp": "2026-05-20T00:06:44.609222Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003",
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:46.130149Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "rgl_khi_003"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:46.225453Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:46.728445Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.224017Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Ravi Garments Ltd",
+      "certifications": 5,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.259301Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "uk_modern_slavery",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.534585Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_supply_chain_directive",
+      "rule_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.768147Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1625.0
+  },
+  {
+    "timestamp": "2026-05-20T00:06:48.094209Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 8
+      }
+    },
+    "duration_ms": 1860.0
+  },
+  {
+    "timestamp": "2026-05-20T00:06:48.646444Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:48.973963Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:14.227792Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:33.077045Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 0,
+      "first": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:33.353034Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 6
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:33.886488Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 6,
+        "contradiction_count": 0
+      }
+    },
+    "duration_ms": 105235.0
+  },
+  {
+    "timestamp": "2026-05-20T00:08:34.524850Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:44.956397Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 1520000000,
+        "buyers_affected": [
+          "EuroThread SA",
+          "NordStyle Group"
+        ]
+      }
+    },
+    "duration_ms": 10422.0
+  },
+  {
+    "timestamp": "2026-05-20T00:08:45.493497Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:09:27.566487Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 5,
+        "total_impact_pkr": 1520000000
+      }
+    },
+    "duration_ms": 42078.0
+  },
+  {
+    "timestamp": "2026-05-20T00:09:27.859634Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "```json\n{\n  \"action_chain\": [\n    {\n      \"action_title\": \"Submit Quarterly EU CBAM Report\",\n      \"gap_ids\": [\n        \"EU CBAM-CRITICAL\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-07-31\",\n      \"pkr_impact_estimate\": 760000000\n    },\n    {\n      \"action_title\": \"Systemize Embedded Emissions Data Collection\",\n      \"gap_ids\": [\n        \"EU CBAM-CRITICAL\",\n        \"EU CBAM-HIGH\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-09-30\",\n      \"pkr_impact_estimate\": 380000000\n    },\n    {\n      \"action_title\": \"Launch Rapid Audit for Unknown High-Risk Gaps\",\n      \"gap_ids\": [\n        \"Unknown-High-1\",\n        \"Unknown-High-2\"\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-08-30\",\n      \"pkr_impact_estimate\": 228000000\n    }\n  ],\n  \"rationale\": \"These actions prioritize immediate, binding regulatory deadlines associated with EU CBAM, which pose the most significant and immediate threat to market access. By first addressing the critical reporting requirement and then systemizing data collection, we secure the largest portion of revenue, while concurrently launching an investigation to define and mitigate the remaining high-risk unknown gaps.\"\n}\n```"
+  },
+  {
+    "timestamp": "2026-05-20T00:09:28.384704Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 5
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:09:28.910426Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 63,
+      "risk_pkr": 1520000000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:09:55.163910Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:14.154040Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_36cdfda2",
+      "title": "File EU Carbon Tax Report",
+      "score_delta": 10,
+      "risk_reduction_pkr": 475000000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:15.434376Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_89939264",
+      "title": "Verify Emissions Data Sources",
+      "score_delta": 7,
+      "risk_reduction_pkr": 332500000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:16.663095Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_8f1c648a",
+      "title": "Address Compliance Issue",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:17.926365Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_9750e300",
+      "title": "Address Compliance Issue",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:19.412962Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_bd99ea43",
+      "title": "Address Compliance Issue",
+      "score_delta": 5,
+      "risk_reduction_pkr": 237500000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:21.448833Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 95,
+        "risk_reduction_pkr": 1520000000
+      }
+    },
+    "duration_ms": 53062.0
+  },
+  {
+    "timestamp": "2026-05-20T00:10:23.979383Z",
+    "job_id": "job_c62abddfe5",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 63,
+        "simulated_after_score": 95,
+        "gap_count": 6,
+        "contradiction_count": 0,
+        "action_count": 5,
+        "documents_count": 9,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 219375.0
+  }
+]

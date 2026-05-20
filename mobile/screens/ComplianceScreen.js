@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,11 @@ import {
   spacing,
   shadow,
 } from '../constants/colors';
-import { subscribeFactory, subscribeReport } from '../services/firebase';
+import {
+  subscribeFactory,
+  subscribeReport,
+  setSimulationRevealed,
+} from '../services/firebase';
 import { plainRegulation, plainRequirement } from '../services/format';
 import { api } from '../services/api';
 import CircularScore from '../components/CircularScore';
@@ -29,7 +33,15 @@ const SEV_TO_RISK = {
   LOW: 'COMPLIANT',
 };
 
-function plainStatusLine(risk, gaps, contradictions) {
+// The "everything is resolved" threshold. Once the effective displayed
+// score crosses this, contradictions and gaps stop being flagged as
+// active red alerts and instead show as resolved-by-simulation.
+const RESOLVED_SCORE = 95;
+
+function plainStatusLine(risk, gaps, contradictions, resolved) {
+  if (resolved) {
+    return 'All audit risks resolved by simulation';
+  }
   if (risk === 'COMPLIANT' && gaps === 0) {
     return 'Your factory meets EU export requirements';
   }
@@ -57,15 +69,35 @@ export default function ComplianceScreen({ route, navigation }) {
     };
   }, [factoryId]);
 
-  const score = factory?.compliance_score ?? report?.compliance_score ?? 0;
-  const risk = factory?.risk_level ?? 'CRITICAL';
+  // Pre-sim is the default. The "Showing post-fix view" toggle only appears
+  // once the user has explicitly tapped "Show me the full fix plan" in the
+  // Fix It tab (which flips `report.simulation_revealed` to true on Firestore).
+  const revealed = !!report?.simulation_revealed;
+  const originalScore = report?.original_compliance_score
+    ?? report?.before_score
+    ?? factory?.compliance_score
+    ?? 0;
+  const afterScore = report?.after_score
+    ?? report?.simulation_result?.after_score
+    ?? originalScore;
+
+  const showPostSim = revealed;
+  const effectiveScore = showPostSim ? afterScore : originalScore;
+  const resolvedView = effectiveScore >= RESOLVED_SCORE && showPostSim;
+
+  const riskForGauge = useMemo(() => {
+    if (effectiveScore >= 85) return 'COMPLIANT';
+    if (effectiveScore >= 60) return 'WARNING';
+    return 'CRITICAL';
+  }, [effectiveScore]);
+
   const gaps = report?.gaps || [];
   const contradictions = report?.contradictions || [];
 
   const runAnalysis = useCallback(async () => {
     try {
       setAnalyzing(true);
-      const res = await api.analyze(factoryId);
+      await api.analyze(factoryId);
       Alert.alert(
         'New analysis started',
         `We'll check your factory against the latest EU and UK rules. This takes a few minutes — your status will update automatically.`,
@@ -77,46 +109,95 @@ export default function ComplianceScreen({ route, navigation }) {
     }
   }, [factoryId]);
 
+  const togglePreSimView = useCallback(async () => {
+    try {
+      await setSimulationRevealed(factoryId, !showPostSim);
+    } catch (e) {
+      Alert.alert('Could not switch view', String(e.message));
+    }
+  }, [factoryId, showPostSim]);
+
   const hasData = gaps.length > 0 || contradictions.length > 0 || report;
+
+  // Section titles flip to "resolved" tone when the post-sim view crosses
+  // the RESOLVED_SCORE threshold.
+  const contradictionsTitle = resolvedView
+    ? 'Conflicts Resolved ✓'
+    : 'Conflicting Information Found';
+  const gapsTitle = resolvedView
+    ? 'All Issues Addressed ✓'
+    : `Issues Found${gaps.length > 0 ? ` (${gaps.length})` : ''}`;
+  const sectionTitleColor = resolvedView ? colors.primary : colors.text;
+
+  // Navigate to a specific action card in the Fix It tab and ask it to
+  // glow briefly.
+  const onFixGap = (gap) => {
+    navigation.navigate('Fix It', {
+      highlightActionId: gap?.linked_action_id || null,
+    });
+  };
 
   return (
     <View style={styles.bg}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Pre-sim / post-sim toggle (only after user revealed the full plan) */}
+        {revealed && (
+          <TouchableOpacity
+            style={styles.viewToggle}
+            onPress={togglePreSimView}
+            activeOpacity={0.85}
+          >
+            <Ionicons
+              name={showPostSim ? 'eye' : 'eye-off'}
+              size={14}
+              color={colors.primary}
+            />
+            <Text style={styles.viewToggleText}>
+              {showPostSim
+                ? 'Showing post-fix view · tap to see current state'
+                : 'Showing current state · tap to see post-fix view'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Score card */}
         <View style={styles.scoreCard}>
           <View style={styles.scoreCenter}>
             <CircularScore
               size={170}
               stroke={13}
-              score={Math.max(0, Math.min(100, Math.round(score)))}
-              risk={risk}
+              score={Math.max(0, Math.min(100, Math.round(effectiveScore)))}
+              risk={riskForGauge}
             />
           </View>
           <Text
-            style={[styles.statusLine, { color: riskColor(risk) }]}
+            style={[styles.statusLine, { color: riskColor(riskForGauge) }]}
           >
-            {plainStatusLine(risk, gaps.length, contradictions.length)}
+            {plainStatusLine(riskForGauge, gaps.length, contradictions.length, resolvedView)}
           </Text>
         </View>
 
         {/* Contradictions */}
         {contradictions.length > 0 && (
           <>
-            <Text style={styles.section}>Conflicting Information Found</Text>
+            <Text style={[styles.section, { color: sectionTitleColor }]}>
+              {contradictionsTitle}
+            </Text>
             <Text style={styles.sectionSub}>
-              Our AI found information in your documents that does not match.
-              This could cause problems during a buyer audit.
+              {resolvedView
+                ? 'These document mismatches have been resolved by the full fix plan.'
+                : 'Our AI found information in your documents that does not match. This could cause problems during a buyer audit.'}
             </Text>
             {contradictions.map((c, i) => (
-              <ContradictionCard key={i} contradiction={c} />
+              <ContradictionCard key={i} contradiction={c} resolved={resolvedView} />
             ))}
           </>
         )}
 
         {/* Gaps */}
         {hasData && (
-          <Text style={styles.section}>
-            Issues Found{gaps.length > 0 ? ` (${gaps.length})` : ''}
+          <Text style={[styles.section, { color: sectionTitleColor }]}>
+            {gapsTitle}
           </Text>
         )}
 
@@ -133,14 +214,14 @@ export default function ComplianceScreen({ route, navigation }) {
               <GapCard
                 key={i}
                 gap={g}
-                onFix={() => navigation.navigate('Fix It')}
+                resolved={resolvedView}
+                onFix={() => onFixGap(g)}
               />
             ))
           )
         ) : (
           <EmptyState
-            icon="bar-chart"
-            iconColor={colors.primary}
+            useLogo
             title="No analysis run yet"
             message="Run a check to see what EU and UK rules apply to your factory and what needs attention."
             cta={{
@@ -151,7 +232,6 @@ export default function ComplianceScreen({ route, navigation }) {
           />
         )}
 
-        {/* Bottom text link replaces the floating button */}
         {hasData && (
           <TouchableOpacity
             style={styles.bottomLink}
@@ -174,13 +254,11 @@ export default function ComplianceScreen({ route, navigation }) {
   );
 }
 
-function GapCard({ gap, onFix }) {
+function GapCard({ gap, resolved, onFix }) {
   const sev = gap.severity || 'MEDIUM';
   const riskBucket = SEV_TO_RISK[sev] || 'WARNING';
-  const c = riskColor(riskBucket);
+  const c = resolved ? colors.primary : riskColor(riskBucket);
   const reg = plainRegulation(gap.regulation);
-  // Backend now attaches a plain-English `display_title` to every gap.
-  // Prefer it; fall back to the mobile-side humaniser for older data.
   const plainTitle =
     (gap.display_title && String(gap.display_title).trim())
     || plainRequirement(gap.requirement, gap.regulation, gap.status);
@@ -194,44 +272,91 @@ function GapCard({ gap, onFix }) {
   })();
   return (
     <View style={[styles.gap, { borderLeftColor: c }]}>
-      <Text style={styles.gapTitle}>{plainTitle}</Text>
+      <Text
+        style={[
+          styles.gapTitle,
+          resolved && styles.strikethrough,
+        ]}
+      >
+        {plainTitle}
+      </Text>
       {reg.ref && (
         <Text style={styles.gapRef}>Reference: {reg.ref}</Text>
       )}
-      <View style={styles.gapMetaRow}>
-        <View style={styles.gapMetaCell}>
-          <Ionicons name="time" size={14} color={c} />
-          <Text style={[styles.gapMetaText, { color: c }]}>{dueText}</Text>
+      {resolved ? (
+        <View style={styles.resolvedPill}>
+          <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+          <Text style={styles.resolvedPillText}>Resolved by simulation</Text>
         </View>
-      </View>
-      <TouchableOpacity style={[styles.fixBtn, { borderColor: c }]} onPress={onFix} activeOpacity={0.85}>
-        <Ionicons name="flash" size={15} color={c} />
-        <Text style={[styles.fixBtnText, { color: c }]}>See how to fix</Text>
-      </TouchableOpacity>
+      ) : (
+        <View style={styles.gapMetaRow}>
+          <View style={styles.gapMetaCell}>
+            <Ionicons name="time" size={14} color={c} />
+            <Text style={[styles.gapMetaText, { color: c }]}>{dueText}</Text>
+          </View>
+        </View>
+      )}
+      {!resolved && (
+        <TouchableOpacity
+          style={[styles.fixBtn, { borderColor: c }]}
+          onPress={onFix}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="flash" size={15} color={c} />
+          <Text style={[styles.fixBtnText, { color: c }]}>See how to fix</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
-function ContradictionCard({ contradiction }) {
+function ContradictionCard({ contradiction, resolved }) {
   const claim = contradiction.claim || 'Information in your documents';
-  // Backend now emits plain-English evidence_text. Fall back to the legacy
-  // evidence field for older reports.
   const evidence =
     contradiction.evidence_text || contradiction.evidence || 'Audit evidence';
   return (
-    <View style={styles.contra}>
+    <View
+      style={[
+        styles.contra,
+        resolved && styles.contraResolved,
+      ]}
+    >
       <View style={styles.contraHead}>
-        <Ionicons name="warning" size={18} color={colors.critical} />
-        <Text style={styles.contraTitle}>Mismatch between your documents</Text>
+        <Ionicons
+          name={resolved ? 'checkmark-circle' : 'warning'}
+          size={18}
+          color={resolved ? colors.primary : colors.critical}
+        />
+        <Text
+          style={[
+            styles.contraTitle,
+            resolved && { color: colors.primary },
+          ]}
+        >
+          {resolved ? 'Document mismatch resolved' : 'Mismatch between your documents'}
+        </Text>
       </View>
       <Text style={styles.contraBody}>
-        Your documents say <Text style={styles.contraStrong}>{claim}</Text>
-        {' '}but audit evidence shows{' '}
-        <Text style={styles.contraStrong}>{evidence}</Text>.
+        Your documents say{' '}
+        <Text style={[styles.contraStrong, resolved && styles.strikethrough]}>
+          {claim}
+        </Text>{' '}
+        but audit evidence shows{' '}
+        <Text style={[styles.contraStrong, resolved && styles.strikethrough]}>
+          {evidence}
+        </Text>
+        .
       </Text>
-      <Text style={styles.contraFooter}>
-        This needs to be resolved before your next buyer audit.
-      </Text>
+      {resolved ? (
+        <View style={styles.resolvedPill}>
+          <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
+          <Text style={styles.resolvedPillText}>Resolved by simulation</Text>
+        </View>
+      ) : (
+        <Text style={styles.contraFooter}>
+          This needs to be resolved before your next buyer audit.
+        </Text>
+      )}
     </View>
   );
 }
@@ -240,7 +365,25 @@ const styles = StyleSheet.create({
   bg: { flex: 1, backgroundColor: colors.bg },
   content: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xl },
 
-  // Score card
+  viewToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: radii.md,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: spacing.md,
+  },
+  viewToggleText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+
   scoreCard: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -262,7 +405,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
 
-  // Section header
   section: {
     color: colors.text,
     fontSize: 18,
@@ -277,7 +419,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  // Gap card
   gap: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -314,7 +455,6 @@ const styles = StyleSheet.create({
   },
   fixBtnText: { marginLeft: 6, fontWeight: '700', fontSize: 14 },
 
-  // Contradiction card
   contra: {
     backgroundColor: colors.criticalSoft,
     borderWidth: 1,
@@ -322,6 +462,10 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
+  },
+  contraResolved: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
   },
   contraHead: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   contraTitle: {
@@ -344,7 +488,29 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // Bottom run-new link (replaces the floating button)
+  strikethrough: {
+    textDecorationLine: 'line-through',
+    color: colors.textDim,
+  },
+  resolvedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 6,
+  },
+  resolvedPillText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 12,
+    marginLeft: 6,
+  },
+
   bottomLink: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -14,11 +14,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, riskColor, radii, spacing, shadow } from '../constants/colors';
 import { DEMO_FACTORIES } from '../constants/config';
 import { subscribeFactory, subscribeReport } from '../services/firebase';
+import {
+  loadOnce as loadReadSet,
+  subscribe as subscribeReadSet,
+  deadlineId,
+} from '../services/notificationsRead';
 import CircularScore from '../components/CircularScore';
+import DashedEmptyScore from '../components/DashedEmptyScore';
 
-function plainRiskLine(factory, report) {
-  if (factory.is_empty && !report) {
-    return 'Tap to upload your audit report';
+// Window for what counts as an upcoming deadline (gaps with days_remaining
+// strictly less than this and >= 0). Anything overdue (negative) is also
+// surfaced — those are the most urgent.
+const DEADLINE_WINDOW_DAYS = 30;
+
+function plainRiskLine(factory, report, empty) {
+  if (empty) {
+    return 'No data yet — tap to upload';
   }
   const gaps = report?.gaps?.length ?? 0;
   const contradictions = report?.contradictions?.length ?? 0;
@@ -37,9 +48,9 @@ function plainRiskLine(factory, report) {
   return 'Tap to see status';
 }
 
-// "No report yet" is the trigger for the upload flow. A factory has no
-// report when its subdoc /reports/latest is missing OR when the demo
-// placeholder card was flagged `is_empty`.
+// `is_empty` is the trigger for the upload flow. A factory has no report
+// when `is_empty` is true (regardless of any stale Firestore data) OR
+// when the subdoc /reports/latest is missing entirely.
 function hasReport(factory, report) {
   if (factory.is_empty) return false;
   if (!report) return false;
@@ -51,6 +62,7 @@ export default function HomeScreen({ navigation }) {
   const [factories, setFactories] = useState(DEMO_FACTORIES);
   const [reports, setReports] = useState({});
   const [refreshing, setRefreshing] = useState(false);
+  const [readSet, setReadSet] = useState(new Set());
   const tapCount = useRef(0);
   const tapTimer = useRef(null);
 
@@ -70,9 +82,17 @@ export default function HomeScreen({ navigation }) {
         setReports((prev) => ({ ...prev, [f.factory_id]: doc }));
       })
     );
+    // Hydrate read-set from AsyncStorage once and subscribe to changes so
+    // the badge clears the instant the user visits the Deadlines screen.
+    loadReadSet();
+    const unsubRead = subscribeReadSet((set) => {
+      // Clone so React detects identity change.
+      setReadSet(new Set(set));
+    });
     return () => {
       unsubs.forEach((u) => u && u());
       reportUnsubs.forEach((u) => u && u());
+      unsubRead && unsubRead();
     };
   }, []);
 
@@ -105,6 +125,24 @@ export default function HomeScreen({ navigation }) {
       day: 'numeric',
     });
   }, []);
+
+  // Bell badge shows ONLY the unread deadlines (gaps < 30 days that the
+  // user hasn't viewed yet). Visiting DeadlinesScreen marks all current
+  // ids as read, which clears the badge until a new deadline appears.
+  const unreadCount = useMemo(() => {
+    let unread = 0;
+    for (const f of factories) {
+      const r = reports[f.factory_id];
+      const gaps = r?.gaps || [];
+      for (const g of gaps) {
+        const d = g.days_remaining;
+        if (typeof d !== 'number' || d >= DEADLINE_WINDOW_DAYS) continue;
+        const id = deadlineId(f.factory_id, g);
+        if (!readSet.has(id)) unread += 1;
+      }
+    }
+    return unread;
+  }, [factories, reports, readSet]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -140,14 +178,50 @@ export default function HomeScreen({ navigation }) {
               </View>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.infoBtn}
-            onPress={() => navigation.navigate('HowItWorks')}
-            activeOpacity={0.7}
-            accessibilityLabel="How ExportIQ works"
-          >
-            <Ionicons name="information-circle-outline" size={28} color={colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => navigation.navigate('Deadlines')}
+              activeOpacity={0.7}
+              accessibilityLabel={
+                unreadCount > 0
+                  ? `${unreadCount} unread deadline notifications`
+                  : 'Upcoming deadlines'
+              }
+            >
+              {/* Filled bell when there are unread items, outline otherwise — */}
+              {/* same convention as iOS / Gmail. Color stays teal in both */}
+              {/* states; the fill is the signal. */}
+              <Ionicons
+                name={unreadCount > 0 ? 'notifications' : 'notifications-outline'}
+                size={24}
+                color={colors.primary}
+              />
+              {unreadCount > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => navigation.navigate('HowItWorks')}
+              activeOpacity={0.7}
+              accessibilityLabel="How ExportIQ works"
+            >
+              <Ionicons name="information-circle-outline" size={26} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.7}
+              accessibilityLabel="Settings"
+            >
+              <Ionicons name="settings-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Simple summary line — no money figures up front */}
@@ -168,12 +242,13 @@ export default function HomeScreen({ navigation }) {
         {factories.map((item) => {
           const report = reports[item.factory_id];
           const ready = hasReport(item, report);
+          const empty = !ready;
           return (
             <FactoryCard
               key={item.factory_id}
               item={item}
-              riskLine={plainRiskLine(item, report)}
-              empty={!ready}
+              riskLine={plainRiskLine(item, report, empty)}
+              empty={empty}
               onPress={() =>
                 ready
                   ? navigation.navigate('Factory', {
@@ -198,7 +273,9 @@ export default function HomeScreen({ navigation }) {
 }
 
 function FactoryCard({ item, riskLine, empty, onPress }) {
-  const c = empty ? colors.primary : riskColor(item.risk_level);
+  // Neutral gray for empty cards (matches the dashed empty score and the
+  // "no data yet" copy). Real factories use the risk traffic-light color.
+  const c = empty ? colors.textDim : riskColor(item.risk_level);
   return (
     <TouchableOpacity
       style={[styles.card, { borderLeftColor: c }]}
@@ -219,10 +296,13 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
         <Text style={styles.factoryName} numberOfLines={2}>
           {item.factory_name}
         </Text>
-        <View style={styles.locationRow}>
-          <Ionicons name="location" size={13} color={colors.textDim} />
-          <Text style={styles.factoryCity}>{item.city}</Text>
-        </View>
+        {/* Hide city entirely on empty cards — no inferred location. */}
+        {!empty && (
+          <View style={styles.locationRow}>
+            <Ionicons name="location" size={13} color={colors.textDim} />
+            <Text style={styles.factoryCity}>{item.city}</Text>
+          </View>
+        )}
         <Text style={[styles.riskLine, { color: c }]} numberOfLines={2}>
           {riskLine}
         </Text>
@@ -230,10 +310,7 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
 
       <View style={styles.cardRight}>
         {empty ? (
-          <View style={styles.uploadBadge}>
-            <Ionicons name="add-circle" size={26} color={colors.primary} />
-            <Text style={styles.uploadBadgeText}>Upload</Text>
-          </View>
+          <DashedEmptyScore size={68} stroke={4} />
         ) : (
           <CircularScore
             size={68}
@@ -265,13 +342,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   brandWrap: { flex: 1 },
-  infoBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  headerIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: colors.critical,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bellBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
   brandRow: { flexDirection: 'row', alignItems: 'center' },
   brandLogo: {
     width: 32,

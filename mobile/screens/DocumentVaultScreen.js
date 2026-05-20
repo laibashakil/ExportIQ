@@ -20,6 +20,7 @@ import { subscribeReport, markDocumentSent } from '../services/firebase';
 import { api } from '../services/api';
 import { buyerFlag, formatRelativeTime } from '../services/format';
 import EmptyState from '../components/EmptyState';
+import InteractiveChecklist from '../components/InteractiveChecklist';
 import { markdownStyles } from '../components/MarkdownStyles';
 import { transformMarkdownTables } from '../utils/markdownTransform';
 
@@ -71,13 +72,10 @@ function extractBuyerName(d) {
   return d.title || 'Buyer';
 }
 
-export default function DocumentVaultScreen({ route }) {
+export default function DocumentVaultScreen({ route, navigation }) {
   const { factoryId } = route.params;
   const [report, setReport] = useState(null);
   const [openId, setOpenId] = useState(null);
-  // Optimistic Sent set — Firestore is the source of truth (doc.sent === true),
-  // this is just the local tick that flips immediately on tap so the user sees
-  // feedback before the round-trip completes.
   const [optimisticSent, setOptimisticSent] = useState({});
 
   useEffect(() => {
@@ -101,8 +99,7 @@ export default function DocumentVaultScreen({ route }) {
     return (
       <View style={styles.bg}>
         <EmptyState
-          icon="folder-open"
-          iconColor={colors.primary}
+          useLogo
           title="No documents yet"
           message="Once we check your factory, we'll prepare buyer emails and the forms you need to file. They'll show up here, ready to send."
           cta={{
@@ -199,29 +196,50 @@ export default function DocumentVaultScreen({ route }) {
                   </View>
                 )}
 
-                <TouchableOpacity
-                  style={[
-                    styles.sendBtn,
-                    isSent && { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-                  ]}
-                  onPress={() => !isSent && sendEmail(id, buyer)}
-                  activeOpacity={0.85}
-                  disabled={isSent}
-                >
-                  <Ionicons
-                    name={isSent ? 'checkmark-circle' : 'send'}
-                    size={18}
-                    color={isSent ? colors.compliant : colors.bg}
-                  />
-                  <Text
-                    style={[
-                      styles.sendBtnText,
-                      isSent && { color: colors.compliant },
-                    ]}
+                {d.stage === 'AUDIT_READY' && (
+                  <View style={styles.stagePill}>
+                    <Ionicons name="ribbon" size={12} color={colors.primary} />
+                    <Text style={styles.stagePillText}>Audit Ready</Text>
+                  </View>
+                )}
+
+                <View style={styles.emailBtnRow}>
+                  <TouchableOpacity
+                    style={[styles.editBtn]}
+                    onPress={() => navigation.navigate('EditEmail', {
+                      factoryId,
+                      documentId: d.document_id || id,
+                      buyer,
+                    })}
+                    activeOpacity={0.85}
                   >
-                    {isSent ? 'Sent' : 'Send'}
-                  </Text>
-                </TouchableOpacity>
+                    <Ionicons name="create-outline" size={16} color={colors.primary} />
+                    <Text style={styles.editBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.sendBtn,
+                      isSent && { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
+                    ]}
+                    onPress={() => !isSent && sendEmail(id, buyer)}
+                    activeOpacity={0.85}
+                    disabled={isSent}
+                  >
+                    <Ionicons
+                      name={isSent ? 'checkmark-circle' : 'send'}
+                      size={18}
+                      color={isSent ? colors.compliant : colors.bg}
+                    />
+                    <Text
+                      style={[
+                        styles.sendBtnText,
+                        isSent && { color: colors.compliant },
+                      ]}
+                    >
+                      {isSent ? 'Sent' : 'Send'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             );
           })}
@@ -240,6 +258,7 @@ export default function DocumentVaultScreen({ route }) {
             const id = d.document_id || `form-${i}`;
             const isOpen = openId === id;
             const title = plainDocTitle(d);
+            const isChecklist = d.kind === 'AUDIT_CHECKLIST';
             return (
               <View key={id} style={styles.formCard}>
                 <TouchableOpacity
@@ -248,7 +267,11 @@ export default function DocumentVaultScreen({ route }) {
                   activeOpacity={0.85}
                 >
                   <View style={styles.formIcon}>
-                    <Ionicons name="document-text" size={22} color={colors.warning} />
+                    <Ionicons
+                      name={isChecklist ? 'checkmark-done' : 'document-text'}
+                      size={22}
+                      color={isChecklist ? colors.primary : colors.warning}
+                    />
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.formTitle} numberOfLines={2}>
@@ -267,12 +290,31 @@ export default function DocumentVaultScreen({ route }) {
                         isOpen && { color: colors.bg },
                       ]}
                     >
-                      {isOpen ? 'Close' : 'View'}
+                      {isOpen ? 'Close' : 'Open'}
                     </Text>
                   </View>
                 </TouchableOpacity>
 
-                {isOpen && d.body && (
+                {isOpen && isChecklist && (
+                  <View style={styles.body}>
+                    <InteractiveChecklist
+                      factoryId={factoryId}
+                      checklistId={id}
+                      body={d.body}
+                      documents={docs}
+                      onAllComplete={async () => {
+                        try {
+                          await api.generateAuditReady(factoryId);
+                        } catch (e) {
+                          // Non-fatal — the checklist still flips to "all done"
+                          console.warn('audit-ready generation failed', e);
+                        }
+                      }}
+                    />
+                  </View>
+                )}
+
+                {isOpen && !isChecklist && d.body && (
                   <View style={styles.body}>
                     <Markdown style={markdownStyles}>
                       {transformMarkdownTables(String(d.body))}
@@ -345,7 +387,29 @@ const styles = StyleSheet.create({
   buyerName: { color: colors.text, fontSize: 15, fontWeight: '700' },
   subjectLine: { color: '#C9D1D9', fontSize: 14, marginTop: 4, lineHeight: 20 },
 
+  emailBtnRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radii.md,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  editBtnText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 15,
+    marginLeft: 6,
+  },
   sendBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -360,6 +424,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
     marginLeft: 8,
+  },
+  stagePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    marginBottom: spacing.sm,
+  },
+  stagePillText: {
+    color: colors.primary,
+    fontWeight: '800',
+    fontSize: 10,
+    letterSpacing: 0.4,
+    marginLeft: 4,
   },
 
   // Form card (Forms to File)

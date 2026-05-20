@@ -101,6 +101,90 @@ export async function patchGap(factoryId, matcher, patch) {
   return changed;
 }
 
+/**
+ * Flip the report's `simulation_revealed` flag. When true, the mobile
+ * Compliance screen switches its gauge from the original pre-simulation
+ * score to the post-simulation score and renders all gaps / contradictions
+ * as resolved. Default is always false (set by orchestrator at report
+ * creation time).
+ */
+export async function setSimulationRevealed(factoryId, revealed) {
+  if (!factoryId) return;
+  const ref = doc(db(), 'factories', factoryId, 'reports', 'latest');
+  await updateDoc(ref, {
+    simulation_revealed: !!revealed,
+    simulation_revealed_at: revealed ? new Date().toISOString() : null,
+  });
+}
+
+/**
+ * Persist an edited buyer email back into the report's documents array.
+ * Matches by document_id; the new title (subject) and body replace the
+ * existing values and `edited_at` is set.
+ */
+export async function updateDocument(factoryId, documentId, patch) {
+  if (!factoryId || !documentId) return;
+  const ref = doc(db(), 'factories', factoryId, 'reports', 'latest');
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  const data = snap.data() || {};
+  const docs = Array.isArray(data.documents) ? data.documents : [];
+  let changed = false;
+  const next = docs.map((d) => {
+    if ((d.document_id || d.id) === documentId) {
+      changed = true;
+      return { ...d, ...patch, edited_at: new Date().toISOString() };
+    }
+    return d;
+  });
+  if (changed) {
+    await updateDoc(ref, { documents: next });
+  }
+}
+
+/**
+ * Interactive checklist persistence.
+ * Stored at /factories/{id}/checklists/{checklistId} (top-level doc with
+ * a `progress` summary) and /factories/{id}/checklists/{checklistId}/items/{itemId}
+ * (one doc per checklist item with `done` boolean).
+ */
+export function subscribeChecklistItems(factoryId, checklistId, cb) {
+  const ref = collection(db(), 'factories', factoryId, 'checklists', checklistId, 'items');
+  return onSnapshot(ref, (snap) => {
+    const items = [];
+    snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+    cb(items);
+  }, (err) => console.warn('subscribeChecklistItems error', err));
+}
+
+export async function seedChecklistItems(factoryId, checklistId, parsedItems) {
+  // Only writes if the collection is empty — idempotent first-open seeding.
+  const colRef = collection(db(), 'factories', factoryId, 'checklists', checklistId, 'items');
+  const summary = doc(db(), 'factories', factoryId, 'checklists', checklistId);
+  const existing = await getDoc(summary);
+  if (existing.exists()) return;
+  for (let i = 0; i < parsedItems.length; i += 1) {
+    const item = parsedItems[i];
+    const itemRef = doc(db(), 'factories', factoryId, 'checklists', checklistId, 'items', String(i));
+    await setDoc(itemRef, {
+      index: i,
+      label: item.label,
+      template_kind: item.template_kind || null,
+      done: false,
+    });
+  }
+  await setDoc(summary, {
+    total: parsedItems.length,
+    completed: 0,
+    created_at: new Date().toISOString(),
+  });
+}
+
+export async function toggleChecklistItem(factoryId, checklistId, itemId, done) {
+  const itemRef = doc(db(), 'factories', factoryId, 'checklists', checklistId, 'items', String(itemId));
+  await updateDoc(itemRef, { done: !!done, updated_at: new Date().toISOString() });
+}
+
 export function subscribeActions(factoryId, cb) {
   const q = query(collection(db(), 'factories', factoryId, 'actions'), limit(20));
   return onSnapshot(q, (snap) => {

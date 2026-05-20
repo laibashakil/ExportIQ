@@ -1,0 +1,354 @@
+[
+  {
+    "timestamp": "2026-05-20T00:06:43.376501Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001",
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.130739Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam",
+          "uk_modern_slavery",
+          "eu_supply_chain_directive"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.216021Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.411258Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.689577Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "uk_modern_slavery",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.769848Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Faisal Weave Industries",
+      "certifications": 4,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:44.974417Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_supply_chain_directive",
+      "rule_count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:46.419414Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 2203.0
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.209728Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 8
+      }
+    },
+    "duration_ms": 3078.0
+  },
+  {
+    "timestamp": "2026-05-20T00:06:47.754933Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:06:48.024349Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:25.841076Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:43.505603Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 2,
+      "first": {
+        "claim": "Factory is ISO 14001 compliant \u2014 effluent fully within legal limits",
+        "evidence": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "evidence_text": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "source_a": "faisal_weave_self_report_q1_2026.csv",
+        "source_b": "water_audit_march25.pdf",
+        "confidence": 0.91,
+        "impact": "ISO 14001 requires effluent discharge to stay within EU environmental limits. The audit measurement exceeds the limit, so the factory's compliance claim does not hold up to evidence."
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:43.780793Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:44.323343Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 5,
+        "contradiction_count": 2
+      }
+    },
+    "duration_ms": 116562.0
+  },
+  {
+    "timestamp": "2026-05-20T00:08:44.905980Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:08:53.552524Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 2905000000,
+        "buyers_affected": [
+          "NordStyle Group",
+          "BritMart Retail",
+          "EuroThread SA",
+          "Tesco"
+        ]
+      }
+    },
+    "duration_ms": 8657.0
+  },
+  {
+    "timestamp": "2026-05-20T00:08:54.075481Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:09:29.235230Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 5,
+        "total_impact_pkr": 2904999997
+      }
+    },
+    "duration_ms": 35156.0
+  },
+  {
+    "timestamp": "2026-05-20T00:09:29.522658Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "```json\n{\n  \"rationale\": \"This plan prioritizes establishing a CBAM carbon accounting system, as its impending reporting deadlines and direct financial penalties pose the most immediate threat to EU market access. Simultaneously, it initiates a comprehensive due diligence risk assessment to strategically address the broader EU CSDDD and UK MSA requirements, safeguarding the remaining at-risk orders by creating a foundational compliance roadmap.\",\n  \"actions\": [\n    {\n      \"action\": \"Implement a carbon accounting system to collect and validate product-level emissions data for quarterly EU CBAM reporting.\",\n      \"gap_ids\": [\n        \"EU CBAM-CRITICAL\",\n        \"EU CBAM-HIGH\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-09-30\",\n      \"pkr_impact\": 1500000000\n    },\n    {\n      \"action\": \"Conduct a comprehensive human rights and environmental due diligence risk assessment across the entire supply chain, mapping against EU CSDDD and UK Modern Slavery Act requirements.\",\n      \"gap_ids\": [\n        \"EU Supply Chain Due Diligence Directive-CRITICAL\",\n        \"EU Supply Chain Due Diligence Directive-HIGH\",\n        \"UK Modern Slavery Act-HIGH\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-12-31\",\n      \"pkr_impact\": 1000000000\n    },\n    {\n      \"action\": \"Establish a formal, accessible grievance mechanism for all workers and supply chain partners, and develop a public-facing policy on human rights due diligence.\",\n      \"gap_ids\": [\n        \"EU Supply Chain Due Diligence Directive-HIGH\",\n        \"UK Modern Slavery Act-HIGH\"\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-11-30\",\n      \"pkr_impact\": 405000000\n    }\n  ]\n}\n```"
+  },
+  {
+    "timestamp": "2026-05-20T00:09:30.124818Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 5
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:09:30.659463Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 51,
+      "risk_pkr": 2905000000
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:13.441125Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 4
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:13.708368Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_a1bb81d4",
+      "title": "File EU Carbon Tax Report",
+      "score_delta": 10,
+      "risk_reduction_pkr": 708536585
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:14.918740Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_7fa0d63b",
+      "title": "Complete Supply Chain Audit",
+      "score_delta": 10,
+      "risk_reduction_pkr": 708536585
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:16.138425Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_5958db4d",
+      "title": "Verify Emissions Data Sources",
+      "score_delta": 7,
+      "risk_reduction_pkr": 495975609
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:17.358535Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_8170faf6",
+      "title": "Renew Social Accountability Certificate",
+      "score_delta": 7,
+      "risk_reduction_pkr": 495975609
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:18.604477Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_bd2f249a",
+      "title": "Complete Supply Chain Audit",
+      "score_delta": 7,
+      "risk_reduction_pkr": 495975609
+    }
+  },
+  {
+    "timestamp": "2026-05-20T00:10:20.630315Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 92,
+        "risk_reduction_pkr": 2904999997
+      }
+    },
+    "duration_ms": 50516.0
+  },
+  {
+    "timestamp": "2026-05-20T00:10:22.930571Z",
+    "job_id": "job_49b6d16a0b",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 51,
+        "simulated_after_score": 92,
+        "gap_count": 5,
+        "contradiction_count": 2,
+        "action_count": 5,
+        "documents_count": 11,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 219563.0
+  }
+]
