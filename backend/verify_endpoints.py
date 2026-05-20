@@ -62,8 +62,9 @@ def hit(method, path, *, json_body=None, multipart=None, expect=200, label=None)
 
 # 1. GET /
 hit("GET", "/")
-# 2. GET /healthz
-hit("GET", "/healthz")
+# 2. GET /health  (note: /healthz is intercepted by GFE on Cloud Run, so we
+#    use /health both locally and in prod for consistency)
+hit("GET", "/health")
 
 # 3. POST /upload — multipart with fwi PDF
 pdf_path = Path(__file__).resolve().parent / "mock_data" / "factories" / "fwi_fsd_001.pdf"

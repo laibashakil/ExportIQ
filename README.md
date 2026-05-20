@@ -218,7 +218,7 @@ To run with real cloud services (required for the hackathon demo):
 | Method | Path | Purpose |
 |--------|------|---------|
 | `GET`  | `/` | Service banner + agent list |
-| `GET`  | `/healthz` | Liveness probe |
+| `GET`  | `/health` | Liveness probe (`/healthz` is reserved by Cloud Run's GFE) |
 | `POST` | `/upload` | Ingest a regulation PDF, factory audit PDF, or export CSV |
 | `POST` | `/analyze` | Kick off the 6-agent LangGraph pipeline for a factory |
 | `GET`  | `/status/{job_id}` | Poll progress + live agent trace |

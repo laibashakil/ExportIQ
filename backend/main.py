@@ -1,7 +1,9 @@
 """ExportIQ FastAPI entry point.
 
-Exposes 9 routers used by the Expo mobile app + Antigravity Manager view:
+Exposes the following routes used by the Expo mobile app + Antigravity Manager view:
 
+    GET  /                                — service banner + agent list
+    GET  /health                          — liveness probe (/healthz is reserved by Cloud Run's GFE)
     POST /upload                          — ingest PDFs / CSVs
     POST /analyze                         — kick off the 6-agent LangGraph pipeline
     GET  /status/{job_id}                 — poll progress + live agent trace
@@ -64,8 +66,10 @@ async def root() -> dict:
     }
 
 
-@app.get("/healthz")
-async def healthz() -> dict:
+@app.get("/health")
+async def health() -> dict:
+    # `/healthz` is reserved by the Google Front End above Cloud Run and is
+    # never forwarded to the container — use `/health` instead.
     return {"ok": True}
 
 

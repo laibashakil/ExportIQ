@@ -14,7 +14,7 @@
 
 | Component | Status | Verdict |
 |---|---|---|
-| **Backend — FastAPI** | ✅ Fully built | All 10 endpoints (9 routers + healthz), config, CORS, Docker |
+| **Backend — FastAPI** | ✅ Fully built | All 10 endpoints (9 routers + /health), config, CORS, Docker |
 | **Backend — 6 AI Agents** | ✅ Fully built | All agents implemented with trace logging |
 | **Backend — Recovery Agent** | ✅ Fully built | Wrap + fallback + injection support |
 | **Backend — Orchestrator** | ✅ Fully built | LangGraph DAG, parallel start, `run_pipeline()` |
@@ -42,7 +42,7 @@
 
 - **`main.py`** — FastAPI app with 9 routers (`upload`, `analyze`, `status`,
   `report`, `actions`, `simulate`, `documents`, `failure-test`,
-  `export-summary`) + `/healthz`, CORS, request logging
+  `export-summary`) + `/health`, CORS, request logging
 - **`config.py`** — Pydantic settings from `.env` with property helpers
 - **All 6 agents** — Each with `run()`, `log_step()`, `maybe_inject_failure()`, stub responses
 - **Recovery agent** — Fallback artifact + injection flag clearing

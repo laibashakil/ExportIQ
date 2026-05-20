@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+venv/
+.env
+.env.example
+service-account.json
+logs/
+*.pdf
+uploads/
+.uvicorn.log
+.git

@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "ExportIQ",
+    "slug": "exportiq",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "exportiq",
+    "owner": "laibashakil2",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D1117"
+    },
+    "androidStatusBar": {
+      "translucent": false,
+      "backgroundColor": "#0D1117",
+      "barStyle": "light-content"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.exportiq.app"
+    },
+    "android": {
+      "package": "com.exportiq.app",
+      "versionCode": 1,
+      "navigationBarColor": "#0D1117",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D1117"
+      }
+    },
+    "plugins": ["expo-document-picker"],
+    "extra": {
+      "apiBaseUrl": "https://exportiq-backend-gd7cex3ugq-uc.a.run.app",
+      "firebaseConfig": {
+        "apiKey": "AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0",
+        "authDomain": "exportiq-496416.firebaseapp.com",
+        "projectId": "exportiq-496416",
+        "storageBucket": "exportiq-496416.firebasestorage.app",
+        "messagingSenderId": "834278774758",
+        "appId": "1:834278774758:web:b02dda054471bdb4aa2827",
+        "measurementId": "G-VQMDM0830L"
+      },
+      "eas": {
+        "projectId": "714e623e-dfb0-4e68-8d57-00d7e6c4aa53"
+      }
+    }
+  }
+}

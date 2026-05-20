@@ -33,7 +33,7 @@ Generated: 2026-05-20 (autonomous QA pass — submission day)
 | Endpoint | Status code | Response time (ms) | Pass/Fail |
 |---|---|---|---|
 | `GET  /`                                       | 200 | 2058 | PASS |
-| `GET  /healthz`                                | 200 | 2026 | PASS |
+| `GET  /health`                                 | 200 | 2026 | PASS |
 | `POST /upload`                                 | 200 | 2321 | PASS |
 | `POST /analyze`                                | 200 | 2309 | PASS |
 | `GET  /status/{job_id}`                        | 200 | 2321 | PASS |
@@ -47,8 +47,10 @@ Generated: 2026-05-20 (autonomous QA pass — submission day)
 
 **12 / 12 endpoints pass.**
 
-Note: `GET /health` is not implemented; the equivalent is `GET /healthz` per
-FastAPI/Kubernetes convention.
+Note: the liveness path is `GET /health`. We used to expose `/healthz`
+(Kubernetes convention) but the Google Front End above Cloud Run reserves
+that exact path and answers it with a generic GFE 404 before the request
+ever reaches the container, so requests never make it to FastAPI.
 
 ### Seed data — 3 factories analysed end-to-end
 

@@ -13,9 +13,9 @@ env/
 service-account.json
 **/service-account*.json
 **/firebase-adminsdk-*.json
-# Firebase Web SDK config — both files contain real apiKey/appId/etc.
-mobile/constants/config.js
-mobile/app.json
+# Firebase Web SDK config — apiKey/appId are public-by-design identifiers
+# (security enforced via Firebase Rules), so these are tracked so EAS can
+# build them. Real secrets (.env, service-account.json) remain ignored above.
 
 # Uploads & generated
 backend/uploads/

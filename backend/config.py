@@ -1,9 +1,51 @@
 """Central runtime configuration loaded from environment."""
 from __future__ import annotations
 
+import json
+import logging
 import os
+import tempfile
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+log = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Cloud Run secret handling
+# ---------------------------------------------------------------------------
+# When deployed on Cloud Run the service-account JSON is injected via
+# Secret Manager into GOOGLE_APPLICATION_CREDENTIALS_JSON as a raw string.
+# We materialise it to a temp file so the Firebase Admin SDK (and any
+# other Google client library) can discover it via the standard
+# GOOGLE_APPLICATION_CREDENTIALS env-var.
+# ---------------------------------------------------------------------------
+def _materialise_sa_credentials() -> None:
+    """Write SA JSON from env to a temp file if not already on disk."""
+    creds_json = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if not creds_json:
+        return
+
+    # Already written in a previous import / worker
+    existing = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if existing and os.path.exists(existing):
+        return
+
+    try:
+        # Validate it's real JSON before writing
+        json.loads(creds_json)
+        tmp = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", prefix="gcp_sa_", delete=False
+        )
+        tmp.write(creds_json)
+        tmp.close()
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
+        log.info("Materialised SA credentials → %s", tmp.name)
+    except (json.JSONDecodeError, OSError) as exc:
+        log.error("Failed to materialise SA credentials: %s", exc)
+
+
+_materialise_sa_credentials()
 
 
 class Settings(BaseSettings):
@@ -37,7 +79,8 @@ class Settings(BaseSettings):
 
     @property
     def has_real_firebase(self) -> bool:
-        return bool(self.firebase_credentials and os.path.exists(self.firebase_credentials))
+        creds = self.firebase_credentials or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+        return bool(creds and os.path.exists(creds))
 
 
 @lru_cache
