@@ -8,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from tools.compliance_scorer import score, risk_level
+from tools.compliance_scorer import score
 from tools.document_generator import (
     generate_audit_checklist,
     generate_buyer_email,
@@ -18,7 +18,6 @@ from tools.firestore_client import (
     append_trace,
     get_doc,
     set_doc,
-    update_compliance_score,
 )
 
 router = APIRouter()
@@ -63,7 +62,11 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
     remaining = [g for g in gaps if g.get("gap_id") not in resolved]
     after_score = score(remaining, n_contradictions=0 if not remaining else len(contradictions))
 
-    update_compliance_score(factory_id, after_score, risk_level(after_score), risk)
+    # Manual /simulate is a what-if preview — do NOT mutate the live
+    # /factories/{id} doc. The orchestrator treats `factory.compliance_score`
+    # as the real-world pre-simulation score (see orchestrator.py:191-195),
+    # and writing the after_score here desyncs the Home card from the report
+    # the detail screen reads.
     if req.job_id:
         append_trace(req.job_id, {
             "agent": "execution_simulation",
