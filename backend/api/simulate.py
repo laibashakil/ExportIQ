@@ -17,7 +17,6 @@ from tools.document_generator import (
 from tools.firestore_client import (
     append_trace,
     get_doc,
-    set_doc,
 )
 
 router = APIRouter()
@@ -62,11 +61,12 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
     remaining = [g for g in gaps if g.get("gap_id") not in resolved]
     after_score = score(remaining, n_contradictions=0 if not remaining else len(contradictions))
 
-    # Manual /simulate is a what-if preview — do NOT mutate the live
-    # /factories/{id} doc. The orchestrator treats `factory.compliance_score`
-    # as the real-world pre-simulation score (see orchestrator.py:191-195),
-    # and writing the after_score here desyncs the Home card from the report
-    # the detail screen reads.
+    # SIMULATION ONLY — never overwrites real score.
+    # /simulate is a pure what-if preview. We do NOT write the projected
+    # score (or any other simulated field) anywhere on /factories/{id} —
+    # not on the live doc, not on a /simulations/ subdoc. The projected
+    # values are returned inline so the mobile card can render them in
+    # place without subscribing to any Firestore listener.
     if req.job_id:
         append_trace(req.job_id, {
             "agent": "execution_simulation",
@@ -79,7 +79,7 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
             },
         })
 
-    result = {
+    return {
         "factory_id": factory_id,
         "before_score": before_score,
         "after_score": after_score,
@@ -88,6 +88,5 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
         "risk_after_pkr": risk,
         "risk_reduction_pkr": before_risk - risk,
         "documents_generated": documents,
+        "preview_only": True,
     }
-    set_doc(f"factories/{factory_id}/simulations/latest", result)
-    return result

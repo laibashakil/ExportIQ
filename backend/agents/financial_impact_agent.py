@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import logging
 
+from tools.compliance_scorer import risk_level, score as compute_score
+from tools.firestore_client import update_compliance_score
 from tools.gemini_client import call_gemini
 from .base import log_step, maybe_inject_failure
 from .state import AgentState
@@ -115,9 +117,24 @@ def run(state: AgentState) -> dict:
     impact["commentary"] = commentary if isinstance(commentary, str) else str(commentary)
 
     patches["financial_impact"] = impact
+
+    # Write the **real** compliance score to /factories/{id}. This is the
+    # canonical source of truth read by the mobile HomeScreen + status gauge.
+    # We do it here (not in execution_simulation) so what-if simulations
+    # never overwrite the live score.
+    contradictions = state.get("contradictions") or []
+    real_score = compute_score(gaps, n_contradictions=len(contradictions))
+    try:
+        update_compliance_score(
+            state["factory_id"], real_score, risk_level(real_score), at_risk_pkr,
+        )
+    except Exception:  # noqa: BLE001
+        log.exception("failed to persist real compliance_score for %s", state.get("factory_id"))
+
     patches.update(log_step(state, AGENT_NAME, "complete",
                             {"orders_at_risk_pkr": at_risk_pkr,
-                             "buyers_affected": buyers_affected},
+                             "buyers_affected": buyers_affected,
+                             "real_compliance_score": real_score},
                             progress=70))
     return patches
 

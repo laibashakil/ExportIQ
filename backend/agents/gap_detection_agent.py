@@ -61,10 +61,17 @@ def run(state: AgentState) -> dict:
     patches.update(log_step(state, AGENT_NAME, "deterministic_pass",
                             {"gaps_found": len(deterministic_gaps)}))
 
-    # LLM gap pass (catches the subtle ones)
-    llm_gaps = _llm_gaps(factory, rules)
+    # LLM gap pass (catches the subtle ones). Filtered against the loaded
+    # rule set so Gemini hallucinations (fire safety / HAZMAT / arbitrary
+    # short codes) cannot inject phantom gaps into a clean factory and tip
+    # the score into the wrong risk band.
+    valid_rule_ids = {(r.get("rule_id") or "").lower() for r in rules if r.get("rule_id")}
+    valid_reg_names = {(r.get("regulation_name") or "").lower() for r in rules if r.get("regulation_name")}
+    raw_llm_gaps = _llm_gaps(factory, rules)
+    llm_gaps = _filter_llm_gaps(raw_llm_gaps, valid_rule_ids, valid_reg_names)
     patches.update(log_step(state, AGENT_NAME, "llm_pass",
-                            {"gaps_found": len(llm_gaps)}))
+                            {"gaps_found": len(llm_gaps),
+                             "gaps_filtered_out": len(raw_llm_gaps) - len(llm_gaps)}))
 
     gaps = _merge_gaps(deterministic_gaps, llm_gaps)
 
@@ -218,12 +225,39 @@ def _attach_display_titles(gaps: list[dict]) -> list[dict]:
     return gaps
 
 
+# Rule_id → keywords that, if ALL present somewhere in factory claims, mean
+# the factory has covered the requirement. Used as the fallback when no
+# explicit metric value is on file.
+_CLAIM_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "cbam_carbon_declaration": ("cbam", "filed"),
+    "csddd_due_diligence_narrative": ("supply chain", "due diligence"),
+}
+
+
+def _claims_contain_all(factory: dict, keywords: tuple[str, ...]) -> bool:
+    blob = " ".join(c.get("claim", "").lower() for c in factory.get("claims", []))
+    return all(kw in blob for kw in keywords)
+
+
+def _status_str(val) -> str | None:
+    if isinstance(val, str):
+        return val.upper()
+    return None
+
+
 def _deterministic_gaps(factory: dict, rules: list[dict]) -> list[dict]:
-    """Rule-based gap detection — guarantees coverage of the demo critical gaps."""
+    """Rule-based gap detection — guarantees coverage of the demo critical gaps.
+
+    Detection contract per category:
+      AUDIT_CERTIFICATION       check cert by name → MISSING / EXPIRED
+      CHEMICAL / LABOUR / CARBON measured metric value vs numerical_limit
+      REPORTING / SUPPLY_CHAIN   metric-tagged evidence first (DRAFT/PUBLISHED/
+                                  true/false), claim-keyword fallback if none
+      REPORTING_ANNUAL          skipped here (LLM may still surface)
+    """
     today = date.today()
     gaps: list[dict] = []
 
-    # Build lookup of factory facts
     certs_by_name = {c.get("name", "").upper(): c for c in factory.get("certifications", [])}
     evidence_by_metric = {e.get("metric", "").lower(): e
                          for e in factory.get("audit_evidence", [])}
@@ -238,7 +272,7 @@ def _deterministic_gaps(factory: dict, rules: list[dict]) -> list[dict]:
             except ValueError:
                 pass
 
-        # Category: AUDIT_CERTIFICATION — check cert exists & valid
+        # AUDIT_CERTIFICATION — check cert exists & valid
         if category == "AUDIT_CERTIFICATION":
             cert_name = rule.get("certification") or _guess_cert_from_req(rule.get("requirement", ""))
             if cert_name:
@@ -251,39 +285,52 @@ def _deterministic_gaps(factory: dict, rules: list[dict]) -> list[dict]:
                     gaps.append(_gap(rule, "EXPIRED",
                                      [f"{cert_name} expired on {cert.get('expiry_date')}"],
                                      days_remaining))
+                elif cert.get("status") == "MISSING":
+                    gaps.append(_gap(rule, "MISSING",
+                                     [f"{cert_name} not held"],
+                                     days_remaining))
 
-        # Category: CHEMICAL — check measured value vs limit
-        if category == "CHEMICAL" and rule.get("numerical_limit") is not None:
+        # CHEMICAL / LABOUR / CARBON — measured value vs numerical limit
+        elif category in ("CHEMICAL", "LABOUR", "CARBON") and rule.get("numerical_limit") is not None:
             metric = (rule.get("metric") or "").lower()
             ev = evidence_by_metric.get(metric)
-            if ev and isinstance(ev.get("value"), (int, float)):
+            if ev and isinstance(ev.get("value"), (int, float)) and not isinstance(ev.get("value"), bool):
                 if ev["value"] > rule["numerical_limit"]:
                     gaps.append(_gap(rule, "NON_CONFORMANT",
                                      [f"{metric} = {ev['value']} {ev.get('unit') or ''} > limit "
                                       f"{rule['numerical_limit']} ({ev.get('source')})"],
                                      days_remaining))
 
-        # Category: REPORTING / CARBON — check the declaration claim exists
-        if category in ("REPORTING", "CARBON"):
-            claim_text = (rule.get("requirement") or "").lower()
-            has_claim = any(claim_text[:20] in (c.get("claim", "").lower())
-                          for c in factory.get("claims", []))
-            if not has_claim:
-                gaps.append(_gap(rule, "MISSING",
-                                 [f"No factory claim or evidence for: {rule.get('requirement')}"],
-                                 days_remaining))
-
-        # Category: LABOUR — generic check
-        if category == "LABOUR":
+        # REPORTING / SUPPLY_CHAIN — evidence metric first, claim-keyword fallback
+        elif category in ("REPORTING", "SUPPLY_CHAIN"):
             metric = (rule.get("metric") or "").lower()
-            if metric and metric in evidence_by_metric:
-                ev = evidence_by_metric[metric]
-                limit = rule.get("numerical_limit")
-                if limit is not None and isinstance(ev.get("value"), (int, float)) \
-                        and ev["value"] > limit:
-                    gaps.append(_gap(rule, "NON_CONFORMANT",
-                                     [f"{metric} = {ev['value']} > {limit} ({ev.get('source')})"],
+            ev = evidence_by_metric.get(metric)
+            if ev is not None:
+                val = ev.get("value")
+                status = _status_str(val)
+                if status in ("PUBLISHED", "FILED", "COMPLETE", "VALID", "TRUE"):
+                    pass  # compliant
+                elif status == "DRAFT":
+                    gaps.append(_gap(rule, "PARTIAL",
+                                     [f"{metric} status = DRAFT ({ev.get('source')})"],
                                      days_remaining))
+                elif status in ("MISSING", "NONE", "NOT_FILED", "PENDING"):
+                    gaps.append(_gap(rule, "MISSING",
+                                     [f"{metric} = {status} ({ev.get('source')})"],
+                                     days_remaining))
+                elif val is False:
+                    gaps.append(_gap(rule, "MISSING",
+                                     [f"{metric} = false ({ev.get('source')})"],
+                                     days_remaining))
+                # else: True / numeric / other → treated as compliant
+            else:
+                keywords = _CLAIM_KEYWORDS.get(rule.get("rule_id") or "")
+                if keywords and not _claims_contain_all(factory, keywords):
+                    gaps.append(_gap(rule, "MISSING",
+                                     [f"No factory claim covers: {rule.get('requirement')}"],
+                                     days_remaining))
+        # Any other category (e.g. REPORTING_ANNUAL) is intentionally skipped
+        # here — the LLM gap pass remains free to surface those.
 
     return gaps
 
@@ -330,9 +377,45 @@ def _merge_gaps(a: list[dict], b: list[dict]) -> list[dict]:
     seen: set[str] = set()
     out: list[dict] = []
     for g in a + b:
+        # Normalize severity casing — the LLM occasionally returns "Critical"
+        # or "High" (title case) which would otherwise be treated as unknown
+        # severities by the scorer and the mobile UI.
+        sev = (g.get("severity") or "").strip().upper()
+        if sev in ("CRITICAL", "HIGH", "MEDIUM", "LOW"):
+            g["severity"] = sev
         key = f"{g.get('regulation','')}|{g.get('requirement','')[:60]}"
         if key in seen:
             continue
         seen.add(key)
         out.append(g)
     return out
+
+
+_VALID_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
+
+
+def _filter_llm_gaps(llm_gaps: list[dict], valid_rule_ids: set[str],
+                    valid_reg_names: set[str]) -> list[dict]:
+    """Keep only LLM gaps that reference an actually-loaded rule or regulation.
+
+    The LLM is happy to invent plausible-sounding short codes (SH-01, ENV-03,
+    LAB-05, fire-safety rules, HAZMAT certifications) that aren't in any of
+    the regulation JSONs we shipped. Those phantom gaps would corrupt the
+    deterministic score for a clean factory, so we drop anything whose
+    rule_id and regulation_name are both unknown.
+    """
+    kept: list[dict] = []
+    for g in llm_gaps:
+        rid = (g.get("rule_id") or "").lower()
+        reg = (g.get("regulation") or g.get("regulation_name") or "").lower()
+        if rid and rid in valid_rule_ids:
+            kept.append(g)
+            continue
+        if reg and reg in valid_reg_names:
+            # Anchor unknown-rule_id gaps to a known regulation only when the
+            # severity is at most MEDIUM — never let the LLM upgrade a
+            # phantom gap to CRITICAL/HIGH severity for the demo factories.
+            sev = (g.get("severity") or "").strip().upper()
+            if sev in ("MEDIUM", "LOW"):
+                kept.append(g)
+    return kept

@@ -73,23 +73,32 @@ export default function ComplianceScreen({ route, navigation }) {
   // once the user has explicitly tapped "Show me the full fix plan" in the
   // Fix It tab (which flips `report.simulation_revealed` to true on Firestore).
   const revealed = !!report?.simulation_revealed;
-  const originalScore = report?.original_compliance_score
-    ?? report?.before_score
-    ?? factory?.compliance_score
+
+  // The circular score gauge reads ONLY the real compliance_score field.
+  // It must never fall through to simulated_compliance_score, after_score,
+  // or simulation_result.after_score — those are what-if previews and
+  // changing the gauge based on them would mislead the user into thinking
+  // the factory is actually compliant when nothing has been remediated yet.
+  const realComplianceScore =
+    (typeof report?.compliance_score === 'number' ? report.compliance_score : undefined)
+    ?? (typeof factory?.compliance_score === 'number' ? factory.compliance_score : undefined)
     ?? 0;
+
+  // afterScore is retained ONLY to drive the "all gaps resolved by simulation"
+  // styling on the gap and contradiction cards once the user has opted into
+  // the post-fix view. It is never read by the gauge.
   const afterScore = report?.after_score
     ?? report?.simulation_result?.after_score
-    ?? originalScore;
+    ?? realComplianceScore;
 
   const showPostSim = revealed;
-  const effectiveScore = showPostSim ? afterScore : originalScore;
-  const resolvedView = effectiveScore >= RESOLVED_SCORE && showPostSim;
+  const resolvedView = afterScore >= RESOLVED_SCORE && showPostSim;
 
   const riskForGauge = useMemo(() => {
-    if (effectiveScore >= 85) return 'COMPLIANT';
-    if (effectiveScore >= 60) return 'WARNING';
+    if (realComplianceScore >= 85) return 'COMPLIANT';
+    if (realComplianceScore >= 60) return 'WARNING';
     return 'CRITICAL';
-  }, [effectiveScore]);
+  }, [realComplianceScore]);
 
   const gaps = report?.gaps || [];
   const contradictions = report?.contradictions || [];
@@ -140,7 +149,10 @@ export default function ComplianceScreen({ route, navigation }) {
   return (
     <View style={styles.bg}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Pre-sim / post-sim toggle (only after user revealed the full plan) */}
+        {/* Post-fix preview toggle (only after user revealed the full plan).
+            This now only flips gap/contradiction cards between "active" and
+            "resolved by simulation" styling — the score gauge above always
+            reflects the real, current compliance_score regardless. */}
         {revealed && (
           <TouchableOpacity
             style={styles.viewToggle}
@@ -154,19 +166,19 @@ export default function ComplianceScreen({ route, navigation }) {
             />
             <Text style={styles.viewToggleText}>
               {showPostSim
-                ? 'Showing post-fix view · tap to see current state'
-                : 'Showing current state · tap to see post-fix view'}
+                ? 'Showing post-fix preview on issues · tap to hide'
+                : 'Showing real issues · tap to preview post-fix view'}
             </Text>
           </TouchableOpacity>
         )}
 
-        {/* Score card */}
+        {/* Score card — gauge bound to the real compliance_score only. */}
         <View style={styles.scoreCard}>
           <View style={styles.scoreCenter}>
             <CircularScore
               size={170}
               stroke={13}
-              score={Math.max(0, Math.min(100, Math.round(effectiveScore)))}
+              score={Math.max(0, Math.min(100, Math.round(realComplianceScore)))}
               risk={riskForGauge}
             />
           </View>

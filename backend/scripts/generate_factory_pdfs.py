@@ -516,35 +516,40 @@ PROFILES = {
         risk_level="CRITICAL",
         orders_at_risk_pkr=340_000_000,
         summary=(
-            "<b>CRITICAL.</b> The factory's compliance posture is unsuitable for continued shipment of NordStyle Group and BritMart Retail orders without immediate remediation. "
-            "The headline risks are (i) SA8000 social-compliance certification has lapsed since 15 January 2026; (ii) no CBAM declarant registration is held despite "
-            "65% of exports going to EU jurisdictions; (iii) water effluent measurements exceed EU REACH SVHC limits by 50%; (iv) the self-reported claim of ISO 14001 "
-            "compliance is materially inconsistent with the third-party water audit evidence. Without remediation the auditor recommends a hold on EU/UK shipment "
-            "authorisations until certificate renewals are completed and CBAM registration is filed. Estimated revenue at risk within the next 12 months is "
-            "PKR 34 crore. The mobile ExportIQ pipeline ranks the actions automatically and produces remediation artifacts including the CBAM declaration template, "
-            "buyer communication drafts for NordStyle Group and BritMart Retail sourcing managers, and the SA8000 re-audit application letter."
+            "<b>CRITICAL.</b> The factory's compliance posture is unsuitable for continued shipment of NordStyle Group and BritMart Retail orders without "
+            "immediate remediation. The headline risks are (i) SA8000 social-compliance certification has lapsed since 15 January 2026; (ii) no CBAM "
+            "declarant registration is held despite roughly 61% of exports going to EU jurisdictions; (iii) lead-in-dye measurements at 95 ppm exceed the "
+            "EU REACH-aligned 90 ppm ceiling; (iv) measured weekly working hours of 68 exceed the SA8000 60-hour ceiling and contradict the factory's "
+            "self-reported figure of 48 hours; (v) the EU Corporate Sustainability Due Diligence Directive supply-chain narrative is not on file; "
+            "(vi) GOTS certification is not held, restricting access to organic-cotton product lines. The self-reported claim of ISO 14001 compliance is "
+            "materially inconsistent with the third-party water audit evidence (12.0 ppm effluent vs an 8.0 ppm limit). Without remediation the auditor "
+            "recommends a hold on EU/UK shipment authorisations until certificate renewals are completed and CBAM registration is filed. Estimated "
+            "revenue at risk within the next 12 months is PKR 34 crore. The mobile ExportIQ pipeline ranks the actions automatically and produces "
+            "remediation artifacts including the CBAM declaration template, buyer communication drafts for NordStyle Group and BritMart Retail sourcing "
+            "managers, and the SA8000 re-audit application letter."
         ),
     ),
     "cfw_lhe_002": dict(
         audit_date="2026-04-22",
         auditor="Bureau Veritas Pakistan",
-        score=78,
+        score=75,
         risk_level="WARNING",
         orders_at_risk_pkr=45_000_000,
         summary=(
-            "<b>WARNING.</b> Chenab Fabric Works is broadly compliant across SA8000, ISO 14001, GOTS, and OEKO-TEX certifications, all of which are current and within "
-            "their surveillance audit windows. Three residual gaps remain: (i) the EU Corporate Sustainability Due Diligence Directive (CSDDD) supply-chain narrative "
-            "is in DRAFT status and has not yet been published; this is required for EuroThread SA's 2026-27 commercial cycle and the deadline lapses 2026-12-31. "
-            "(ii) Reported weekly working hours of 52 are within SA8000 limits but the labour audit observed 53 hours, a minor variance that requires the HR log to be "
-            "reconciled. (iii) CO2 intensity at 3.1 kgCO2/garment is acceptable for current CBAM scope but on the edge of the 2027 free-allowance phase-out — the "
-            "factory should begin embedded-emissions monitoring under the CBAM authorised-declarant regime. Estimated exposure if these are not resolved within 6 months "
-            "is PKR 4.5 crore, concentrated on the M&amp;S and EuroThread SA order books."
+            "<b>WARNING.</b> Chenab Fabric Works is broadly compliant across SA8000, ISO 14001, GOTS, and OEKO-TEX certifications, all of which are current "
+            "and within their surveillance audit windows. Three residual gaps remain: (i) lead-in-dye measurements at 92 ppm marginally exceed the "
+            "EU REACH-aligned 90 ppm ceiling and require an effluent-treatment plant adjustment before the next OEKO-TEX surveillance audit. "
+            "(ii) CO2 intensity at 3.8 kgCO2/garment is over the 3.5 kgCO2/garment limit anticipated for the 2027 CBAM free-allowance phase-out — the "
+            "factory should begin embedded-emissions monitoring under the CBAM authorised-declarant regime. (iii) The EU Corporate Sustainability Due "
+            "Diligence Directive (CSDDD) supply-chain narrative is in DRAFT status and has not yet been published; this is required for EuroThread SA's "
+            "2026-27 commercial cycle and the deadline lapses 2026-12-31. Estimated exposure if these are not resolved within 6 months is PKR 4.5 crore, "
+            "concentrated on the M&amp;S and EuroThread SA order books."
         ),
     ),
     "rgl_khi_003": dict(
         audit_date="2026-05-02",
         auditor="amfori-accredited audit (third party)",
-        score=91,
+        score=90,
         risk_level="COMPLIANT",
         orders_at_risk_pkr=2_500_000,
         summary=(

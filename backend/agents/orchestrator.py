@@ -241,16 +241,10 @@ def run_pipeline(*, job_id: str, factory_id: str,
     }
     set_doc(f"factories/{factory_id}/reports/latest", report)
 
-    # Reset the live /factories/{id} doc to the pre-simulation real-world state.
-    # The execution_simulation step animates the score upward via repeated
-    # update_compliance_score() calls; without this reset the doc would be left
-    # at the post-simulation `after_score`, masking the factory's real risk.
-    try:
-        from tools.compliance_scorer import risk_level as _risk_level
-        from tools.firestore_client import update_compliance_score as _ucs
-        _ucs(factory_id, before_score, _risk_level(before_score), before_risk_pkr)
-    except Exception:  # noqa: BLE001
-        log.exception("post-pipeline factory reset failed")
+    # No post-pipeline factory reset needed: the real compliance_score is
+    # written by financial_impact_agent against the live factory state, and
+    # execution_simulation only ever writes to the mirrored simulated_*
+    # fields. The /factories/{id} doc stays at the real score throughout.
 
     update_job_progress(job_id, status="complete", progress=100,
                        current_agent="orchestrator")

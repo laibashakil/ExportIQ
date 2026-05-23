@@ -27,7 +27,7 @@
     {"metric": "water_effluent_discharge", "value": 12.0, "unit": "ppm", "source": "water_audit_march25.pdf", "measured_on": "2026-03-12"},
     {"metric": "weekly_working_hours", "value": 68, "unit": "hours", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
     {"metric": "overtime_hours", "value": 22, "unit": "hours/week", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
-    {"metric": "co2_per_unit", "value": 4.8, "unit": "kgCO2/garment", "source": "carbon_calc_jan26.csv", "measured_on": "2026-01-31"},
+    {"metric": "co2_per_unit", "value": 3.4, "unit": "kgCO2/garment", "source": "carbon_calc_jan26.csv", "measured_on": "2026-01-31"},
     {"metric": "lead_in_dyes", "value": 95.0, "unit": "ppm", "source": "chemical_lab_report_jan26.pdf", "measured_on": "2026-01-22"}
   ],
   "notes": "Faisal Weave Industries' NordStyle Group order shipped Q2 2026 is contingent on resolving the SA8000 expiry; BritMart Retail have flagged CBAM declaration as a hold."

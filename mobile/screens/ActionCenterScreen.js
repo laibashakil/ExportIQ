@@ -219,6 +219,16 @@ export default function ActionCenterScreen({ route, navigation }) {
               Here's what happens if you fix all {merged.length} actions
             </Text>
           </View>
+          {/* Preview only — these scores are projections, the real gauge
+              elsewhere in the app stays unchanged. */}
+          <View style={styles.scorePairRow}>
+            <Text style={styles.scorePairLabel}>
+              Current: <Text style={styles.scorePairCurrent}>{fullPlanSim.before}/100</Text>
+            </Text>
+            <Text style={styles.scorePairLabel}>
+              If all fixed: <Text style={styles.scorePairProjected}>{fullPlanSim.after}/100</Text>
+            </Text>
+          </View>
           <SimulationReveal
             visible
             before={fullPlanSim.before}
@@ -383,6 +393,15 @@ function ActionCard({ action, index, busy, sim, buyers, highlighted, onSimulate 
         </Text>
       </TouchableOpacity>
 
+      {/* Projected-score label — keeps the inline preview clearly framed
+          as a what-if, never as "your score". The real gauge elsewhere in
+          the app is not affected by this simulation. */}
+      {!!sim && (
+        <Text style={styles.projectedLabel}>
+          Projected score if fixed: <Text style={styles.projectedValue}>{sim.after}/100</Text>
+        </Text>
+      )}
+
       {/* Inline storytelling reveal — 3 cards stagger in 300ms apart */}
       <SimulationReveal
         visible={!!sim}
@@ -492,4 +511,36 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   simBtnText: { color: colors.primary, fontWeight: '700', marginLeft: 8, fontSize: 14 },
+
+  scorePairRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  scorePairLabel: {
+    color: '#C9D1D9',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  scorePairCurrent: {
+    color: colors.text,
+    fontWeight: '800',
+  },
+  scorePairProjected: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
+  projectedLabel: {
+    color: '#C9D1D9',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 10,
+    marginBottom: -4,
+  },
+  projectedValue: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
 });

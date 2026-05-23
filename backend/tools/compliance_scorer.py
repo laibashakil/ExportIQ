@@ -5,9 +5,9 @@ from models.factory import Gap
 
 
 SEVERITY_PENALTY = {
-    "CRITICAL": 10,
-    "HIGH": 7,
-    "MEDIUM": 4,
+    "CRITICAL": 12,
+    "HIGH": 10,
+    "MEDIUM": 5,
     "LOW": 2,
 }
 CONTRADICTION_PENALTY = 4
@@ -23,10 +23,10 @@ def score(gaps: list[dict] | list[Gap], n_contradictions: int = 0) -> int:
 
 
 def risk_level(score_value: int) -> str:
-    # Threshold tuning: 80 (not 85) for COMPLIANT keeps the "good" mock
-    # factory (Ravi Garments Ltd, score ~83) inside the green band even when
-    # Gemini's LLM gap pass adds a couple of advisory items on top of the
-    # deterministic findings.
+    # Bands chosen so the demo's three factories sit cleanly inside their
+    # intended risk colour: CRITICAL (<60) lights up Faisal Weave's red gauge,
+    # WARNING (60-79) covers Chenab Fabric's yellow band, COMPLIANT (>=80)
+    # keeps Ravi Garments green even with a stray LLM advisory.
     if score_value < 60:
         return "CRITICAL"
     if score_value < 80:

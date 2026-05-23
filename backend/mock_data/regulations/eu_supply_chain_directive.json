@@ -17,7 +17,7 @@
       "deadline": "2026-12-31",
       "grace_period_days": 30,
       "applies_to_pakistan_exporters": true,
-      "severity_if_missed": "HIGH",
+      "severity_if_missed": "MEDIUM",
       "source_section": "Article 16"
     },
     {
@@ -61,6 +61,20 @@
       "applies_to_pakistan_exporters": true,
       "severity_if_missed": "HIGH",
       "source_section": "Annex III"
+    },
+    {
+      "rule_id": "csddd_oekotex_class1_margin",
+      "regulation_name": "EU Supply Chain Due Diligence Directive",
+      "requirement": "OEKO-TEX Standard 100 Class I (infant/baby textiles) requires lead-in-dye levels at or below 25 ppm for product lines shipped to retailers carrying infant categories.",
+      "category": "CHEMICAL",
+      "metric": "oekotex_class1_lead_ppm",
+      "numerical_limit": 25.0,
+      "unit": "ppm",
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "MEDIUM",
+      "source_section": "OEKO-TEX Class I annex"
     }
   ]
 }

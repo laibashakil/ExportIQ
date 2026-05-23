@@ -25,8 +25,8 @@
   "audit_evidence": [
     {"metric": "water_effluent_discharge", "value": 6.5, "unit": "ppm", "source": "bureau_veritas_water_apr26.pdf", "measured_on": "2026-04-08"},
     {"metric": "weekly_working_hours", "value": 53, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-15"},
-    {"metric": "co2_per_unit", "value": 3.1, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
-    {"metric": "lead_in_dyes", "value": 60.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "co2_per_unit", "value": 3.8, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
+    {"metric": "lead_in_dyes", "value": 92.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
     {"metric": "supply_chain_due_diligence_report", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-01"}
   ],
   "notes": "Chenab Fabric Works is mostly clean; one outstanding gap is the EU Supply Chain Due Diligence Directive narrative still being in draft."

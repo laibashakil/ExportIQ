@@ -10,7 +10,7 @@
       "rule_id": "msa_section_54_statement",
       "regulation_name": "UK Modern Slavery Act",
       "requirement": "Publish an annual slavery and human trafficking statement (Section 54) covering supply chain due diligence.",
-      "category": "SUPPLY_CHAIN",
+      "category": "REPORTING_ANNUAL",
       "metric": "msa_statement_published",
       "numerical_limit": null,
       "unit": null,

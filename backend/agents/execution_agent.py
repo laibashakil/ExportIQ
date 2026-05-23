@@ -18,8 +18,8 @@ from tools.document_generator import (
 )
 from tools.firestore_client import (
     set_doc,
-    update_compliance_score,
     update_job_progress,
+    update_simulated_score,
 )
 from .base import log_step, maybe_inject_failure
 from .state import AgentState
@@ -57,18 +57,27 @@ def run(state: AgentState) -> dict:
     before_risk = int(financial.get("orders_at_risk_pkr") or 0)
     annual_export = int(financial.get("annual_export_pkr") or 0)
 
-    # Persist initial score so the mobile dashboard reflects it
-    update_compliance_score(factory_id, before_score, risk_level(before_score), before_risk)
+    # SIMULATION ONLY — never overwrites real score.
+    # Seed the `simulated_*` mirror fields with the current real score so
+    # the mobile preview UX has a starting point to animate from.
+    update_simulated_score(factory_id, before_score, risk_level(before_score), before_risk)
     patches.update(log_step(state, AGENT_NAME, "initial_score",
                             {"score": before_score, "risk_pkr": before_risk}))
 
     # One proactive quarterly status email per affected buyer — generated up
-    # front so we don't spam the buyer with one per action. This replaces the
-    # old per-action buyer email which was confessional in tone.
-    proactive_emails = _generate_proactive_buyer_emails(factory, financial)
-    documents: list[dict] = list(proactive_emails)
-    patches.update(log_step(state, AGENT_NAME, "buyer_emails_drafted",
-                            {"count": len(proactive_emails)}))
+    # front so we don't spam the buyer with one per action. Skipped entirely
+    # when the factory has no gaps and no actions (the COMPLIANT-band demo
+    # factory must surface a fully empty Documents tab — see
+    # rgl_clean_reference memory).
+    documents: list[dict] = []
+    if gaps or actions:
+        proactive_emails = _generate_proactive_buyer_emails(factory, financial)
+        documents.extend(proactive_emails)
+        patches.update(log_step(state, AGENT_NAME, "buyer_emails_drafted",
+                                {"count": len(proactive_emails)}))
+    else:
+        patches.update(log_step(state, AGENT_NAME, "buyer_emails_skipped",
+                                {"reason": "no gaps or actions — clean factory"}))
 
     cumulative_resolved: set[str] = set()
     current_score = before_score
@@ -117,8 +126,10 @@ def run(state: AgentState) -> dict:
             },
         ))
 
-        # Real-time score update — drives the mobile score animation
-        update_compliance_score(factory_id, new_score, risk_level(new_score), new_risk)
+        # SIMULATION ONLY — never overwrites real score.
+        # Writes to mirrored simulated_* fields so any post-fix preview UI
+        # can animate, while the real compliance_score stays untouched.
+        update_simulated_score(factory_id, new_score, risk_level(new_score), new_risk)
         # Persist per-action doc so the mobile listener picks it up
         set_doc(f"factories/{factory_id}/actions/{action['action_id']}", action)
         time.sleep(0.4)  # let the animation breathe during demo

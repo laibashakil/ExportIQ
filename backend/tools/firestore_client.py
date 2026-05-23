@@ -177,12 +177,35 @@ def list_collection(path: str) -> list[dict]:
 
 
 def update_compliance_score(factory_id: str, score: int, risk_level: str, orders_at_risk_pkr: int) -> None:
-    """Real-time score update — drives the score animation on the mobile HomeScreen."""
+    """Write the **real** compliance state to /factories/{id}.
+
+    This is the source of truth the mobile HomeScreen and ComplianceScreen
+    gauges read. Only the gap_detection / financial_impact agents (i.e. the
+    agents that observe the factory's actual state) may call this — the
+    execution_simulation agent must use update_simulated_score() instead so
+    its what-if results never overwrite the live score.
+    """
     update_doc(f"factories/{factory_id}", {
         "compliance_score": score,
         "risk_level": risk_level,
         "orders_at_risk_pkr": orders_at_risk_pkr,
         "updated_at": datetime.utcnow().isoformat(),
+    })
+
+
+def update_simulated_score(factory_id: str, score: int, risk_level: str, orders_at_risk_pkr: int) -> None:
+    """Write what-if simulation output to /factories/{id} on **separate** fields.
+
+    SIMULATION ONLY — never overwrites the real compliance_score. Mobile
+    screens that want to surface "post-fix preview" UX read these mirrored
+    `simulated_*` fields explicitly; the main score gauge reads
+    `compliance_score` and must never fall back to these.
+    """
+    update_doc(f"factories/{factory_id}", {
+        "simulated_compliance_score": score,
+        "simulated_risk_level": risk_level,
+        "simulated_orders_at_risk_pkr": orders_at_risk_pkr,
+        "simulated_updated_at": datetime.utcnow().isoformat(),
     })
 
 

@@ -29,6 +29,7 @@
     {"metric": "weekly_working_hours", "value": 47, "unit": "hours", "source": "certverify_labour_audit_apr26.pdf", "measured_on": "2026-04-10"},
     {"metric": "co2_per_unit", "value": 2.4, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
     {"metric": "lead_in_dyes", "value": 22.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-20"},
+    {"metric": "oekotex_class1_lead_ppm", "value": 28.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-20"},
     {"metric": "supply_chain_due_diligence_report", "value": "PUBLISHED", "unit": null, "source": "annual_disclosure_2026.pdf", "measured_on": "2026-03-15"}
   ],
   "notes": "Ideal is the gold-standard demo case — fully compliant. Used to show the COMPLIANT (green) risk badge."
