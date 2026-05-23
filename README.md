@@ -1,6 +1,60 @@
-# ExportIQ — Pakistan Textile Export Compliance Agent
+# ExportIQ 🇵🇰
+### Pakistan Textile Export Compliance Agent
+**AISeekho 2026 · Google Antigravity Hackathon · Challenge 1**
 
-AISeekho 2026 Google Antigravity Hackathon · Challenge 1: Autonomous Content-to-Action Agent.
+> Protects Pakistani textile factory owners from losing EU and UK
+> export orders — before buyers ever find out there was a problem.
+
+---
+
+## 🔗 Live Links
+
+| | Link |
+|---|---|
+| 📱 **Android APK** | [Download & Install](https://drive.google.com/file/d/1G0XVcBLUcIRe9z4zO6lP1LrsRAx_toNb/view?usp=sharing) |
+| 🌐 **Web App** | [dummy-project-496508.web.app](https://dummy-project-496508.web.app) |
+| ⚙️ **Backend API** | [Cloud Run](https://exportiq-backend-566147682281.us-central1.run.app) |
+| 📊 **API Docs** | [exportiq-backend-566147682281.us-central1.run.app/docs](https://exportiq-backend-566147682281.us-central1.run.app/docs) |
+
+> **Note for judges:** The project was originally deployed on
+> exportiq-496416. Due to a billing account issue during submission
+> day, the backend has been redeployed to a new project. All
+> functionality is identical. GitHub repository and all code
+> remain unchanged.
+
+---
+
+## 📱 How to Test the App
+
+### Option 1 — Android APK (Recommended)
+1. Open the [APK download link](https://drive.google.com/file/d/1G0XVcBLUcIRe9z4zO6lP1LrsRAx_toNb/view?usp=sharing) on your Android phone
+2. Download and install (allow unknown sources if prompted)
+3. Open ExportIQ
+4. Tap any factory to see compliance status
+5. Tap "Run Full Analysis" to trigger the 6-agent pipeline live
+
+### Option 2 — Web App
+Visit [https://dummy-project-496508.web.app](https://dummy-project-496508.web.app) in any browser.
+Shows the same compliance data with full agent trace visible.
+
+### Option 3 — API Directly
+Base URL: https://exportiq-backend-566147682281.us-central1.run.app
+
+```bash
+# Check service is running
+curl https://exportiq-backend-566147682281.us-central1.run.app/health
+
+# Get Faisal Weave Industries compliance report
+curl https://exportiq-backend-566147682281.us-central1.run.app/report/fwi_fsd_001
+
+# Trigger live 6-agent analysis
+curl -X POST https://exportiq-backend-566147682281.us-central1.run.app/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"factory_id":"fwi_fsd_001"}'
+
+# Inject failure to demo recovery agent
+curl -X POST https://exportiq-backend-566147682281.us-central1.run.app/failure-test/{job_id}
+```
 
 ---
 
