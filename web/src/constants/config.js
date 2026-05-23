@@ -2,13 +2,13 @@
 export const API_BASE_URL = 'https://exportiq-backend-566147682281.us-central1.run.app';
 
 export const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0',
-  authDomain: 'exportiq-496416.firebaseapp.com',
-  projectId: 'exportiq-496416',
-  storageBucket: 'exportiq-496416.firebasestorage.app',
-  messagingSenderId: '834278774758',
-  appId: '1:834278774758:web:b02dda054471bdb4aa2827',
-  measurementId: 'G-VQMDM0830L',
+  apiKey: 'AIzaSyAjVyxbacLNNLn9o8Qe_Am15Rx4b--FStk',
+  authDomain: 'dummy-project-496508.firebaseapp.com',
+  projectId: 'dummy-project-496508',
+  storageBucket: 'dummy-project-496508.firebasestorage.app',
+  messagingSenderId: '566147682281',
+  appId: '1:566147682281:web:b37110b3a6a7bb179a0578',
+  measurementId: 'G-3MHCEX35JG',
 };
 
 export const DEMO_FACTORIES = [

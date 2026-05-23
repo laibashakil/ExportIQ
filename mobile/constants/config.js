@@ -10,13 +10,13 @@ export const API_BASE_URL = extra.apiBaseUrl || 'https://exportiq-backend-566147
 // NOTE: this file contains real Firebase Web SDK credentials. It is listed
 // in .gitignore — do NOT commit it to any public repo.
 export const FIREBASE_CONFIG = extra.firebaseConfig || {
-  apiKey: 'AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0',
+  apiKey: 'AIzaSyAjVyxbacLNNLn9o8Qe_Am15Rx4b--FStk',
   authDomain: 'dummy-project-496508.firebaseapp.com',
   projectId: 'dummy-project-496508',
-  storageBucket: 'dummy-project-496508.appspot.com',
-  messagingSenderId: '834278774758',
-  appId: '1:834278774758:web:b02dda054471bdb4aa2827',
-  measurementId: 'G-VQMDM0830L',
+  storageBucket: 'dummy-project-496508.firebasestorage.app',
+  messagingSenderId: '566147682281',
+  appId: '1:566147682281:web:b37110b3a6a7bb179a0578',
+  measurementId: 'G-3MHCEX35JG',
 };
 
 // Demo factories — used to populate the HomeScreen list on first launch

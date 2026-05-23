@@ -18,9 +18,11 @@
 
 > **Note for judges:** The project was originally deployed on
 > exportiq-496416. Due to a billing account issue during submission
-> day, the backend has been redeployed to a new project. All
-> functionality is identical. GitHub repository and all code
-> remain unchanged.
+> day, the entire stack — backend (Cloud Run), web app (Firebase
+> Hosting), Firestore database, and mobile app config — has been
+> redeployed to a new GCP project (`dummy-project-496508`). All
+> code, agents, and functionality are identical. GitHub repository
+> and source code remain unchanged.
 
 ---
 
