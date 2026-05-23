@@ -1,0 +1,292 @@
+[
+  {
+    "timestamp": "2026-05-23T10:51:05.236702Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "orchestrator",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001",
+        "regulation_ids": [
+          "eu_cbam"
+        ],
+        "inject_failure_in": null,
+        "inject_failure_type": null
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:05.889537Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "regulation_ingestion",
+    "event": "start",
+    "data": {
+      "input": {
+        "regulation_ids": [
+          "eu_cbam"
+        ]
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:06.114987Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "factory_profile",
+    "event": "start",
+    "data": {
+      "input": {
+        "factory_id": "fwi_fsd_001"
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:06.337237Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "regulation_ingestion",
+    "event": "step:parsed_regulation",
+    "data": {
+      "regulation_id": "eu_cbam",
+      "rule_count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:06.709232Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "factory_profile",
+    "event": "step:loaded_profile",
+    "data": {
+      "factory_name": "Faisal Weave Industries",
+      "certifications": 4,
+      "claims": 4,
+      "evidence_items": 5
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:06.889099Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "regulation_ingestion",
+    "event": "end",
+    "data": {
+      "output": {
+        "total_rules": 2
+      }
+    },
+    "duration_ms": 1000.0
+  },
+  {
+    "timestamp": "2026-05-23T10:51:07.319238Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "factory_profile",
+    "event": "end",
+    "data": {
+      "output": null
+    },
+    "duration_ms": 1203.0
+  },
+  {
+    "timestamp": "2026-05-23T10:51:07.894938Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:51:08.180059Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "step:deterministic_pass",
+    "data": {
+      "gaps_found": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:52:57.485347Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "step:llm_pass",
+    "data": {
+      "gaps_found": 0
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:53:21.757710Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "step:contradictions_detected",
+    "data": {
+      "count": 2,
+      "first": {
+        "claim": "Factory is ISO 14001 compliant \u2014 effluent fully within legal limits",
+        "evidence": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "evidence_text": "Water discharge measured at 12.0 ppm (EU limit: 8.0 ppm)",
+        "source_a": "faisal_weave_self_report_q1_2026.csv",
+        "source_b": "water_audit_march25.pdf",
+        "confidence": 0.91,
+        "impact": "ISO 14001 requires effluent discharge to stay within EU environmental limits. The audit measurement exceeds the limit, so the factory's compliance claim does not hold up to evidence."
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:53:22.082109Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "step:display_titles_attached",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:53:22.712776Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "gap_detection",
+    "event": "end",
+    "data": {
+      "output": {
+        "gap_count": 2,
+        "contradiction_count": 2
+      }
+    },
+    "duration_ms": 134813.0
+  },
+  {
+    "timestamp": "2026-05-23T10:53:23.269106Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "financial_impact",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:53:43.772418Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "financial_impact",
+    "event": "end",
+    "data": {
+      "output": {
+        "orders_at_risk_pkr": 2080000000,
+        "buyers_affected": [
+          "NordStyle Group",
+          "EuroThread SA"
+        ]
+      }
+    },
+    "duration_ms": 20500.0
+  },
+  {
+    "timestamp": "2026-05-23T10:53:44.327710Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "action_chain",
+    "event": "start",
+    "data": {
+      "input": null
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:54:09.965108Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "action_chain",
+    "event": "end",
+    "data": {
+      "output": {
+        "action_count": 2,
+        "total_impact_pkr": 2079999999
+      }
+    },
+    "duration_ms": 25640.0
+  },
+  {
+    "timestamp": "2026-05-23T10:54:10.287419Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "action_chain",
+    "event": "step:rationale",
+    "data": "```json\n{\n  \"action_chain\": [\n    {\n      \"action\": \"Engage a specialized consultant and form an internal task force to develop a comprehensive EU CBAM compliance strategy.\",\n      \"gap_ids\": [\n        \"EU CBAM CRITICAL\",\n        \"EU CBAM HIGH\"\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-06-10\",\n      \"pkr_impact_estimate\": 2080000000\n    },\n    {\n      \"action\": \"Implement a robust data collection system for direct and indirect emissions (Scope 1 & 2) as required for the next quarterly CBAM report.\",\n      \"gap_ids\": [\n        \"EU CBAM HIGH\"\n      ],\n      \"effort\": \"High\",\n      \"deadline\": \"2024-07-15\",\n      \"pkr_impact_estimate\": 2080000000\n    },\n    {\n      \"action\": \"Calculate embedded emissions for the reporting period and submit verified data to all EU importers ahead of the July 31st deadline.\",\n      \"gap_ids\": [\n        \"EU CBAM CRITICAL\"\n      ],\n      \"effort\": \"Medium\",\n      \"deadline\": \"2024-07-25\",\n      \"pkr_impact_estimate\": 2080000000\n    }\n  ],\n  \"rationale\": \"This action plan prioritizes immediate EU CBAM compliance, as failure to meet the upcoming quarterly reporting deadline is the single greatest threat to the PKR 2.08B in European orders. The sequence first establishes expertise and a data framework before executing the final report submission, ensuring a robust and sustainable solution to secure market access.\"\n}\n```"
+  },
+  {
+    "timestamp": "2026-05-23T10:54:10.849901Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "start",
+    "data": {
+      "input": {
+        "action_count": 2
+      }
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:54:11.428667Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "step:initial_score",
+    "data": {
+      "score": 75,
+      "risk_pkr": 2080000000
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:54:35.801306Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "step:buyer_emails_drafted",
+    "data": {
+      "count": 2
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:55:20.910920Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_e527c236",
+      "title": "File EU Carbon Tax Report",
+      "score_delta": 10,
+      "risk_reduction_pkr": 1223529411
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:56:05.951869Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "step:simulated_action",
+    "data": {
+      "action_id": "act_64f4c46e",
+      "title": "Verify Emissions Data Sources",
+      "score_delta": 7,
+      "risk_reduction_pkr": 856470588
+    }
+  },
+  {
+    "timestamp": "2026-05-23T10:56:07.800246Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "execution_simulation",
+    "event": "end",
+    "data": {
+      "output": {
+        "final_score": 92,
+        "risk_reduction_pkr": 2079999999
+      }
+    },
+    "duration_ms": 116954.0
+  },
+  {
+    "timestamp": "2026-05-23T10:56:10.221061Z",
+    "job_id": "job_35d34e32b7",
+    "agent": "orchestrator",
+    "event": "end",
+    "data": {
+      "output": {
+        "compliance_score": 75,
+        "simulated_after_score": 92,
+        "gap_count": 2,
+        "contradiction_count": 2,
+        "action_count": 2,
+        "documents_count": 6,
+        "recovery_used": false
+      }
+    },
+    "duration_ms": 304984.0
+  }
+]

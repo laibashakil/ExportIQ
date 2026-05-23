@@ -5,15 +5,15 @@ const extra = Constants?.expoConfig?.extra ?? {};
 // Defaults to the deployed Cloud Run backend so installed APK builds work
 // out of the box. Override via app.json -> expo.extra.apiBaseUrl for local
 // dev (e.g. "http://<your-lan-ip>:8000" when running uvicorn locally).
-export const API_BASE_URL = extra.apiBaseUrl || 'https://exportiq-backend-gd7cex3ugq-uc.a.run.app';
+export const API_BASE_URL = extra.apiBaseUrl || 'https://exportiq-backend-566147682281.us-central1.run.app';
 
 // NOTE: this file contains real Firebase Web SDK credentials. It is listed
 // in .gitignore — do NOT commit it to any public repo.
 export const FIREBASE_CONFIG = extra.firebaseConfig || {
   apiKey: 'AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0',
-  authDomain: 'exportiq-496416.firebaseapp.com',
-  projectId: 'exportiq-496416',
-  storageBucket: 'exportiq-496416.firebasestorage.app',
+  authDomain: 'dummy-project-496508.firebaseapp.com',
+  projectId: 'dummy-project-496508',
+  storageBucket: 'dummy-project-496508.appspot.com',
   messagingSenderId: '834278774758',
   appId: '1:834278774758:web:b02dda054471bdb4aa2827',
   measurementId: 'G-VQMDM0830L',

@@ -33,12 +33,12 @@
     },
     "plugins": ["expo-document-picker"],
     "extra": {
-      "apiBaseUrl": "https://exportiq-backend-gd7cex3ugq-uc.a.run.app",
+      "apiBaseUrl": "https://exportiq-backend-566147682281.us-central1.run.app",
       "firebaseConfig": {
         "apiKey": "AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0",
-        "authDomain": "exportiq-496416.firebaseapp.com",
-        "projectId": "exportiq-496416",
-        "storageBucket": "exportiq-496416.firebasestorage.app",
+        "authDomain": "dummy-project-496508.firebaseapp.com",
+        "projectId": "dummy-project-496508",
+        "storageBucket": "dummy-project-496508.appspot.com",
         "messagingSenderId": "834278774758",
         "appId": "1:834278774758:web:b02dda054471bdb4aa2827",
         "measurementId": "G-VQMDM0830L"

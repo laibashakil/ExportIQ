@@ -1,5 +1,5 @@
 // Backend + Firebase config for the web app. Mirrors mobile/constants/config.js.
-export const API_BASE_URL = 'https://exportiq-backend-gd7cex3ugq-uc.a.run.app';
+export const API_BASE_URL = 'https://exportiq-backend-566147682281.us-central1.run.app';
 
 export const FIREBASE_CONFIG = {
   apiKey: 'AIzaSyCP9EzOhT7k3cuT5NvoQXovnKnzRmGkzm0',
