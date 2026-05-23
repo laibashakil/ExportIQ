@@ -17,6 +17,11 @@
 | 📊 **API Docs** | [exportiq-backend-566147682281.us-central1.run.app/docs](https://exportiq-backend-566147682281.us-central1.run.app/docs) |
 
 ---
+## Web App Screen Recording
+https://github.com/user-attachments/assets/df09a806-c9be-44ca-99a6-4bf361c3c7d9
+
+## Mobile App Screen Recording
+https://github.com/user-attachments/assets/3d08b676-e254-4eb9-9390-6ba2dc284231
 
 ## 📱 How to Test the App
 
