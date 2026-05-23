@@ -18,10 +18,10 @@
 
 ---
 ## Web App Screen Recording
-https://github.com/user-attachments/assets/df09a806-c9be-44ca-99a6-4bf361c3c7d9
+https://github.com/user-attachments/assets/598fdfaf-e852-4481-ad4c-2cc3c26e83b9
 
 ## Mobile App Screen Recording
-https://github.com/user-attachments/assets/3d08b676-e254-4eb9-9390-6ba2dc284231
+https://github.com/user-attachments/assets/77bbda49-8c06-4a88-8759-b6b3edb58688
 
 ## 📱 How to Test the App
 
