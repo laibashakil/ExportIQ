@@ -35,4 +35,9 @@ export const api = {
       body: JSON.stringify({ action_ids: actionIds, job_id: jobId }),
     }),
   documents: (factoryId) => req(`/documents/${factoryId}`),
+  generateAuditReady: (factoryId) =>
+    req(`/documents/${factoryId}/audit-ready`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
 };

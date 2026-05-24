@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -72,6 +73,22 @@ function extractBuyerName(d) {
   return d.title || 'Buyer';
 }
 
+function splitSubjectFromBody(rawBody, fallbackTitle) {
+  // Same logic EditEmailScreen uses so the "Send" mailto: gets the same
+  // subject/body the user would see in the editor.
+  const body = String(rawBody || '');
+  const lines = body.split('\n');
+  for (let i = 0; i < Math.min(3, lines.length); i += 1) {
+    const m = lines[i].match(/^\s*#?\s*(?:\*\*)?Subject(?:\*\*)?\s*:?\s*(.+)$/i);
+    if (m && m[1]) {
+      const subject = m[1].replace(/\*\*/g, '').trim();
+      const remainder = lines.slice(i + 1).join('\n').trim();
+      return { subject, body: remainder };
+    }
+  }
+  return { subject: fallbackTitle || 'Compliance Status Update', body: body.trim() };
+}
+
 export default function DocumentVaultScreen({ route, navigation }) {
   const { factoryId } = route.params;
   const [report, setReport] = useState(null);
@@ -119,21 +136,36 @@ export default function DocumentVaultScreen({ route, navigation }) {
     );
   }
 
-  const sendEmail = async (id, buyer) => {
+  const sendEmail = async (id, buyer, d) => {
+    // Open the user's default email app with the draft pre-filled (same
+    // mailto: scheme the EditEmail screen uses). Only mark the document
+    // as sent if the email app actually launches.
+    const split = splitSubjectFromBody(d?.body, d?.title);
+    const recipient = d?.buyer || buyer || '';
+    const to = encodeURIComponent(recipient);
+    const subj = encodeURIComponent(split.subject);
+    const bd = encodeURIComponent(split.body);
+    const url = `mailto:${to}?subject=${subj}&body=${bd}`;
+
+    const canOpen = await Linking.canOpenURL(url).catch(() => true);
+    if (!canOpen) {
+      Alert.alert(
+        'No email app',
+        'Could not find an email app on this device to open the draft.',
+      );
+      return;
+    }
+
     setOptimisticSent((s) => ({ ...s, [id]: true }));
-    Alert.alert(
-      'Email sent (simulated)',
-      `Your message to ${buyer} has been queued for sending. In the real app this would deliver via your email account.`,
-    );
     try {
+      await Linking.openURL(url);
       await markDocumentSent(factoryId, id);
     } catch (e) {
-      // Roll back the optimistic tick if Firestore rejected.
       setOptimisticSent((s) => {
         const { [id]: _, ...rest } = s;
         return rest;
       });
-      Alert.alert('Could not save send state', String(e.message));
+      Alert.alert('Could not open email app', String(e.message));
     }
   };
 
@@ -221,7 +253,7 @@ export default function DocumentVaultScreen({ route, navigation }) {
                       styles.sendBtn,
                       isSent && { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
                     ]}
-                    onPress={() => !isSent && sendEmail(id, buyer)}
+                    onPress={() => !isSent && sendEmail(id, buyer, d)}
                     activeOpacity={0.85}
                     disabled={isSent}
                   >
