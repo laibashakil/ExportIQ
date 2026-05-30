@@ -9,12 +9,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, radii, shadow, spacing } from '../constants/colors';
 import { subscribeReport, updateDocument } from '../services/firebase';
+import { openInGmail } from '../services/mail';
 
 function splitSubjectFromBody(rawBody, fallbackTitle) {
   const body = String(rawBody || '');
@@ -73,23 +73,9 @@ export default function EditEmailScreen({ route, navigation }) {
   }, [factoryId, documentId, subject, body, navigation]);
 
   const onOpenInGmail = useCallback(async () => {
-    const to = encodeURIComponent(recipient || '');
-    const subj = encodeURIComponent(subject);
-    const bd = encodeURIComponent(body);
-    const url = `mailto:${to}?subject=${subj}&body=${bd}`;
-    const canOpen = await Linking.canOpenURL(url).catch(() => true);
-    if (!canOpen) {
-      Alert.alert(
-        'No email app',
-        'Could not find an email app on this device to open the draft.',
-      );
-      return;
-    }
-    try {
-      await Linking.openURL(url);
-    } catch (e) {
-      Alert.alert('Could not open email app', String(e.message));
-    }
+    // Hand the draft to the Gmail app (falls back to the default mail app).
+    // We never send — the user reviews and sends from Gmail.
+    await openInGmail({ to: recipient || '', subject, body });
   }, [recipient, subject, body]);
 
   if (!originalDoc) {
@@ -151,13 +137,14 @@ export default function EditEmailScreen({ route, navigation }) {
             activeOpacity={0.85}
           >
             <Ionicons name="mail" size={16} color={colors.bg} />
-            <Text style={styles.btnPrimaryText}>Open in Gmail</Text>
+            <Text style={styles.btnPrimaryText}>Open in Gmail App</Text>
           </TouchableOpacity>
         </View>
 
         <Text style={styles.note}>
-          "Open in Gmail" launches your phone's default email app with this
-          draft pre-filled. You can send from any signed-in account.
+          "Open in Gmail App" opens this draft in Gmail (or your default mail
+          app) with everything pre-filled. You can send from any signed-in
+          account.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

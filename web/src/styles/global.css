@@ -148,6 +148,7 @@ button { font-family: inherit; }
 .summary-sub { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 .summary-value.critical { color: var(--critical); }
 .summary-value.warning { color: var(--warning); }
+.summary-value.almost { color: var(--warning); }
 .summary-value.compliant { color: var(--compliant); }
 
 .section-label {
@@ -201,6 +202,7 @@ button { font-family: inherit; }
 }
 .badge.critical { background: var(--critical-soft); color: var(--critical); }
 .badge.warning { background: var(--warning-soft); color: var(--warning); }
+.badge.almost { background: var(--warning-soft); color: var(--warning); }
 .badge.compliant { background: var(--compliant-soft); color: var(--compliant); }
 
 .fc-stats { display: flex; gap: 16px; flex-wrap: wrap; }

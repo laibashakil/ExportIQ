@@ -21,7 +21,10 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.exportiq.app"
+      "bundleIdentifier": "com.exportiq.app",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["googlegmail", "mailto"]
+      }
     },
     "android": {
       "package": "com.exportiq.app",

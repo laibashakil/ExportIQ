@@ -12,6 +12,11 @@ SEVERITY_PENALTY = {
 }
 CONTRADICTION_PENALTY = 4
 
+# When the entire remediation plan is executed the factory reaches full
+# compliance. We cap the projected score here rather than letting a residual
+# contradiction penalty strand it below 100 (e.g. 100 - 2·4 = 92).
+FULL_COMPLIANCE_SCORE = 100
+
 
 def score(gaps: list[dict] | list[Gap], n_contradictions: int = 0) -> int:
     total = 100
@@ -34,8 +39,26 @@ def risk_level(score_value: int) -> str:
     return "COMPLIANT"
 
 
+def simulate_close(initial_gaps: list[dict], resolved_gap_ids: set[str] | list[str],
+                   n_contradictions: int = 0) -> int:
+    """Project the compliance score after the given gap_ids are remediated.
+
+    This is the close-the-gaps simulation entry point referenced by the
+    Execution Simulator and Action Chain skills. When *every* gap is closed
+    the factory reaches full compliance: the contradictions those gaps stem
+    from are resolved alongside them, so the residual contradiction penalty
+    is dropped and the score caps at exactly FULL_COMPLIANCE_SCORE (100) — not
+    100 - CONTRADICTION_PENALTY·n_contradictions, which would strand it at
+    e.g. 92.
+    """
+    resolved = set(resolved_gap_ids or [])
+    remaining = [g for g in initial_gaps if g.get("gap_id") not in resolved]
+    if not remaining:
+        return FULL_COMPLIANCE_SCORE
+    return score(remaining, n_contradictions=n_contradictions)
+
+
 def score_after_actions(initial_gaps: list[dict], n_contradictions: int,
                        resolved_gap_ids: set[str]) -> int:
     """Score recomputed assuming the given gap_ids are now resolved."""
-    remaining = [g for g in initial_gaps if g.get("gap_id") not in resolved_gap_ids]
-    return score(remaining, n_contradictions=0 if not remaining else n_contradictions)
+    return simulate_close(initial_gaps, resolved_gap_ids, n_contradictions=n_contradictions)

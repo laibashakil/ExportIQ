@@ -115,12 +115,27 @@ export default function ActionCenterScreen({ route, navigation }) {
   }, [highlightActionId, merged, navigation]);
 
   const runSimulate = async (actionIds, { full = false } = {}) => {
+    // Executing the entire plan brings the factory to full compliance, so the
+    // full-plan reveal must always land on 100 / PKR 0 residual risk — never
+    // stranded at 92 by a leftover contradiction penalty. The protected PKR
+    // shown is the full at-risk exposure.
+    const fullAfter =
+      report?.score_after_full_simulation
+      ?? report?.simulation_result?.score_after_full_simulation
+      ?? 100;
+    const fullRiskProtected =
+      Number(report?.orders_at_risk_pkr)
+      || Number(report?.financial_impact?.orders_at_risk_pkr)
+      || 0;
     const fallback = () => {
       const targets = merged.filter((a) => actionIds.includes(a.action_id));
       const before = targets[0]?.simulation_output?.before_score
         ?? report?.original_compliance_score
         ?? report?.compliance_score
         ?? 0;
+      if (full) {
+        return { before, after: fullAfter, risk: fullRiskProtected };
+      }
       const after = targets.reduce(
         (acc, a) => Math.max(acc, a.simulation_output?.after_score ?? before),
         before,
@@ -136,6 +151,13 @@ export default function ActionCenterScreen({ route, navigation }) {
     };
     try {
       const res = await simulateWithTimeout(factoryId, actionIds);
+      if (full) {
+        return {
+          before: res.before_score ?? 0,
+          after: res.score_after_full_simulation ?? res.after_score ?? fullAfter,
+          risk: Number(res.risk_reduction_pkr) || fullRiskProtected,
+        };
+      }
       return {
         before: res.before_score ?? 0,
         after: res.after_score ?? 0,

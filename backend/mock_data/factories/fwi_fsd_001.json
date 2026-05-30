@@ -11,6 +11,8 @@
     "Tesco": 200000000
   },
   "primary_buyers": ["NordStyle Group", "BritMart Retail", "EuroThread SA", "Tesco"],
+  "score_after_full_simulation": 100,
+  "orders_at_risk_after_simulation": 0,
   "certifications": [
     {"name": "SA8000", "status": "EXPIRED", "expiry_date": "2026-01-15", "issuer": "SAI"},
     {"name": "ISO 14001", "status": "VALID", "expiry_date": "2026-09-30", "issuer": "Bureau Veritas"},

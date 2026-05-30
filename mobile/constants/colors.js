@@ -36,6 +36,9 @@ export const colors = {
 export const riskColor = (level) => {
   if (level === 'CRITICAL') return colors.critical;
   if (level === 'WARNING') return colors.warning;
+  // "Almost Compliant" (90–99 or any residual risk) is amber, NOT green —
+  // green is reserved for a perfect 100 / zero-risk factory.
+  if (level === 'ALMOST') return colors.warning;
   if (level === 'COMPLIANT') return colors.compliant;
   return colors.textDim;
 };
@@ -43,6 +46,7 @@ export const riskColor = (level) => {
 export const riskSoftColor = (level) => {
   if (level === 'CRITICAL') return colors.criticalSoft;
   if (level === 'WARNING') return colors.warningSoft;
+  if (level === 'ALMOST') return colors.warningSoft;
   if (level === 'COMPLIANT') return colors.compliantSoft;
   return colors.surfaceAlt;
 };

@@ -13,11 +13,11 @@ import {
   subscribeReport,
   subscribeJob,
   updateDocument,
-  markDocumentSent,
 } from '../services/firebase';
 import { api } from '../services/api';
 import { pkrFormat } from '../utils/traceFormatter';
-import { deriveScore, deriveRiskPkr } from '../utils/scoring';
+import { deriveScore, deriveRiskPkr, riskLabel } from '../utils/scoring';
+import { openGmailCompose } from '../utils/mail';
 import { transformMarkdownTables } from '../utils/markdownTransform';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -125,7 +125,7 @@ export default function FactoryDetail() {
               {revealed ? 'Post-Fix Score' : 'Compliance Score'}
             </div>
             <CircularScore score={score} size={200} stroke={14} />
-            <span className={`badge ${riskLevel.toLowerCase()}`} style={{ marginTop: 12 }}>{riskLevel}</span>
+            <span className={`badge ${riskLevel.toLowerCase()}`} style={{ marginTop: 12 }}>{riskLabel(riskLevel)}</span>
             {originalScore !== afterScore && (
               <div className="view-toggle">
                 <button
@@ -448,11 +448,9 @@ function EditEmailPanel({ factoryId, document: docItem, buyer, onClose }) {
   }
 
   function onOpenInGmail() {
-    const to = encodeURIComponent(recipient || '');
-    const subj = encodeURIComponent(subject);
-    const bd = encodeURIComponent(body);
-    const url = `mailto:${to}?subject=${subj}&body=${bd}`;
-    window.location.href = url;
+    // Open Gmail's web compose in a new tab with the draft pre-filled. We
+    // never send — the user reviews and sends from their Gmail account.
+    openGmailCompose({ to: recipient || '', subject, body });
   }
 
   return (
@@ -530,32 +528,15 @@ function EmailCard({ factoryId, document: docItem, documents, isOpen, onToggle }
   const buyer = extractBuyerName(docItem);
   const subject = extractEmailSubject(docItem);
   const [editing, setEditing] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [optimisticSent, setOptimisticSent] = useState(false);
-  const isSent = !!docItem.sent || optimisticSent;
 
-  async function onSend() {
-    if (isSent || sending) return;
-    setSending(true);
-    // Launch the user's default email app via mailto: with the draft
-    // pre-filled, then mark as sent. Same scheme as the Edit panel's
-    // "Open in Gmail" button.
+  function onOpenInGmail() {
+    // Open Gmail's web compose in a new tab with the draft pre-filled.
+    // Opening Gmail is NOT sending — the user may or may not actually send —
+    // so we deliberately persist NO "sent" state. The button always renders
+    // in its default ready state on every mount.
     const split = splitSubjectFromBody(docItem.body, docItem.title);
     const recipient = docItem.buyer || buyer || '';
-    const to = encodeURIComponent(recipient);
-    const subj = encodeURIComponent(split.subject);
-    const bd = encodeURIComponent(split.body);
-    const url = `mailto:${to}?subject=${subj}&body=${bd}`;
-    try {
-      window.location.href = url;
-      setOptimisticSent(true);
-      await markDocumentSent(factoryId, id);
-    } catch (e) {
-      setOptimisticSent(false);
-      alert(`Could not open email app: ${e.message}`);
-    } finally {
-      setSending(false);
-    }
+    openGmailCompose({ to: recipient, subject: split.subject, body: split.body });
   }
 
   return (
@@ -594,19 +575,10 @@ function EmailCard({ factoryId, document: docItem, documents, isOpen, onToggle }
           </button>
           <button
             type="button"
-            className={`btn small ${isSent ? 'ghost' : 'primary'}`}
-            onClick={onSend}
-            disabled={isSent || sending}
+            className="btn small primary"
+            onClick={onOpenInGmail}
           >
-            {isSent ? (
-              <>
-                <Icon name="check" size={12} color="#00D4AA" /> Sent
-              </>
-            ) : (
-              <>
-                <Icon name="send" size={12} /> {sending ? 'Sending…' : 'Send'}
-              </>
-            )}
+            <Icon name="external" size={12} /> Open in Gmail
           </button>
         </div>
       )}

@@ -47,7 +47,9 @@ export default function Dashboard() {
       const { riskLevel } = deriveScore(f, r);
       totalRisk += deriveRiskPkr(f, r);
       if (riskLevel === 'CRITICAL') critical++;
-      else if (riskLevel === 'WARNING') warning++;
+      // "Almost Compliant" rolls into the warning tally — it is NOT counted as
+      // an "ok"/compliant factory (only a perfect 100 / zero-risk is).
+      else if (riskLevel === 'WARNING' || riskLevel === 'ALMOST') warning++;
       else if (riskLevel === 'COMPLIANT') compliant++;
     }
     const worst = critical > 0 ? 'CRITICAL' : warning > 0 ? 'WARNING' : 'COMPLIANT';

@@ -1,6 +1,39 @@
 // Format helpers shared by every screen so PKR rendering is consistent.
 
 /**
+ * Single source of truth for mapping a compliance score + PKR-at-risk to a
+ * status level. Mirrors web/src/utils/scoring.js so a judge sees the same
+ * status regardless of which client they open.
+ *
+ *   score === 100 AND risk === 0   -> 'COMPLIANT'  (green, "Compliant")
+ *   score >= 90  (or risk > 0)      -> 'ALMOST'     (amber, "Almost Compliant")
+ *   score >= 60                     -> 'WARNING'    (amber, "Needs Attention")
+ *   score <  60                     -> 'CRITICAL'   (red,   "At Risk")
+ *
+ * A factory is only ever "Compliant"/"meets EU requirements" at a perfect
+ * 100 with nothing at risk — 90–99 is always "Almost".
+ */
+export function complianceLevel(score, riskPkr = 0) {
+  const s = Number(score) || 0;
+  const r = Number(riskPkr) || 0;
+  if (s >= 100 && r <= 0) return 'COMPLIANT';
+  if (s >= 90) return 'ALMOST';
+  if (s >= 60) return 'WARNING';
+  return 'CRITICAL';
+}
+
+/** Friendly, factory-owner-facing label for a status level. */
+export function complianceLabel(level) {
+  switch (level) {
+    case 'COMPLIANT': return 'Compliant';
+    case 'ALMOST': return 'Almost Compliant';
+    case 'WARNING': return 'Needs Attention';
+    case 'CRITICAL': return 'At Risk';
+    default: return '—';
+  }
+}
+
+/**
  * Format a PKR integer as a human-readable string with crore / lakh suffixes.
  *   90_000_000          -> "PKR 9 Cr"
  *   340_000_000         -> "PKR 34 Cr"

@@ -5,7 +5,7 @@ import AgentPipeline from './AgentPipeline.jsx';
 import { Icon } from './Icon.jsx';
 import { riskColor } from '../constants/colors';
 import { pkrFormat } from '../utils/traceFormatter';
-import { deriveScore, deriveRiskPkr } from '../utils/scoring';
+import { deriveScore, deriveRiskPkr, riskLabel } from '../utils/scoring';
 import { api } from '../services/api';
 import { subscribeJob } from '../services/firebase';
 
@@ -81,7 +81,7 @@ export default function FactoryCard({ factory, report }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className={`badge ${riskLevel.toLowerCase()}`}>{riskLevel}</span>
+        <span className={`badge ${riskLevel.toLowerCase()}`}>{riskLabel(riskLevel)}</span>
         <span style={{ fontSize: 12, color: '#9BA3AF' }}>
           {ordersAtRisk > 0 ? `${pkrFormat(ordersAtRisk)} at risk` : 'No risk'}
         </span>

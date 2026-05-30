@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   colors,
   riskColor,
+  riskSoftColor,
   radii,
   spacing,
   shadow,
@@ -21,7 +22,12 @@ import {
   subscribeReport,
   setSimulationRevealed,
 } from '../services/firebase';
-import { plainRegulation, plainRequirement } from '../services/format';
+import {
+  plainRegulation,
+  plainRequirement,
+  complianceLevel,
+  complianceLabel,
+} from '../services/format';
 import { api } from '../services/api';
 import CircularScore from '../components/CircularScore';
 import EmptyState from '../components/EmptyState';
@@ -44,6 +50,9 @@ function plainStatusLine(risk, gaps, contradictions, resolved) {
   }
   if (risk === 'COMPLIANT' && gaps === 0) {
     return 'Your factory meets EU export requirements';
+  }
+  if (risk === 'ALMOST') {
+    return 'Your factory almost meets EU requirements';
   }
   if (risk === 'CRITICAL') {
     return 'Your factory is at HIGH RISK of losing EU export orders';
@@ -94,11 +103,19 @@ export default function ComplianceScreen({ route, navigation }) {
   const showPostSim = revealed;
   const resolvedView = afterScore >= RESOLVED_SCORE && showPostSim;
 
-  const riskForGauge = useMemo(() => {
-    if (realComplianceScore >= 85) return 'COMPLIANT';
-    if (realComplianceScore >= 60) return 'WARNING';
-    return 'CRITICAL';
-  }, [realComplianceScore]);
+  // Real (pre-simulation) PKR still at risk — drives the "Almost" vs
+  // "Compliant" decision alongside the score.
+  const realRiskPkr = Number(
+    report?.orders_at_risk_pkr ?? factory?.orders_at_risk_pkr ?? 0,
+  );
+
+  // Truly "Compliant" (green) only at a perfect 100 / zero-risk. 90–99 (or
+  // any residual risk) is "Almost Compliant" (amber). Shared mapping with the
+  // HomeScreen cards and the web app.
+  const riskForGauge = useMemo(
+    () => complianceLevel(realComplianceScore, realRiskPkr),
+    [realComplianceScore, realRiskPkr],
+  );
 
   const gaps = report?.gaps || [];
   const contradictions = report?.contradictions || [];
@@ -181,6 +198,19 @@ export default function ComplianceScreen({ route, navigation }) {
               score={Math.max(0, Math.min(100, Math.round(realComplianceScore)))}
               risk={riskForGauge}
             />
+          </View>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: riskSoftColor(riskForGauge),
+                borderColor: riskColor(riskForGauge),
+              },
+            ]}
+          >
+            <Text style={[styles.statusBadgeText, { color: riskColor(riskForGauge) }]}>
+              {complianceLabel(riskForGauge)}
+            </Text>
           </View>
           <Text
             style={[styles.statusLine, { color: riskColor(riskForGauge) }]}
@@ -408,6 +438,20 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   scoreCenter: { alignItems: 'center' },
+  statusBadge: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: radii.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginTop: spacing.lg,
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
   statusLine: {
     fontSize: 15,
     fontWeight: '700',

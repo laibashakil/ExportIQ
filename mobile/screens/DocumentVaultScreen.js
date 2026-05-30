@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -17,7 +16,8 @@ import {
   shadow,
   spacing,
 } from '../constants/colors';
-import { subscribeReport, markDocumentSent } from '../services/firebase';
+import { subscribeReport } from '../services/firebase';
+import { openInGmail } from '../services/mail';
 import { api } from '../services/api';
 import { buyerFlag, formatRelativeTime } from '../services/format';
 import EmptyState from '../components/EmptyState';
@@ -93,7 +93,6 @@ export default function DocumentVaultScreen({ route, navigation }) {
   const { factoryId } = route.params;
   const [report, setReport] = useState(null);
   const [openId, setOpenId] = useState(null);
-  const [optimisticSent, setOptimisticSent] = useState({});
 
   useEffect(() => {
     const u = subscribeReport(factoryId, setReport);
@@ -136,37 +135,18 @@ export default function DocumentVaultScreen({ route, navigation }) {
     );
   }
 
-  const sendEmail = async (id, buyer, d) => {
-    // Open the user's default email app with the draft pre-filled (same
-    // mailto: scheme the EditEmail screen uses). Only mark the document
-    // as sent if the email app actually launches.
+  const openEmailInGmail = async (buyer, d) => {
+    // Open the Gmail app (falling back to the default mail app) with the
+    // draft pre-filled. Opening Gmail is NOT sending — the user may or may
+    // not actually send — so we deliberately persist NO "sent" state. The
+    // button always renders fresh on every mount.
     const split = splitSubjectFromBody(d?.body, d?.title);
     const recipient = d?.buyer || buyer || '';
-    const to = encodeURIComponent(recipient);
-    const subj = encodeURIComponent(split.subject);
-    const bd = encodeURIComponent(split.body);
-    const url = `mailto:${to}?subject=${subj}&body=${bd}`;
-
-    const canOpen = await Linking.canOpenURL(url).catch(() => true);
-    if (!canOpen) {
-      Alert.alert(
-        'No email app',
-        'Could not find an email app on this device to open the draft.',
-      );
-      return;
-    }
-
-    setOptimisticSent((s) => ({ ...s, [id]: true }));
-    try {
-      await Linking.openURL(url);
-      await markDocumentSent(factoryId, id);
-    } catch (e) {
-      setOptimisticSent((s) => {
-        const { [id]: _, ...rest } = s;
-        return rest;
-      });
-      Alert.alert('Could not open email app', String(e.message));
-    }
+    await openInGmail({
+      to: recipient,
+      subject: split.subject,
+      body: split.body,
+    });
   };
 
   return (
@@ -189,7 +169,6 @@ export default function DocumentVaultScreen({ route, navigation }) {
             const subject = extractEmailSubject(d);
             const flag = buyerFlag(buyer);
             const isOpen = openId === id;
-            const isSent = !!d.sent || !!optimisticSent[id];
             return (
               <View key={id} style={styles.emailCard}>
                 <TouchableOpacity
@@ -249,27 +228,12 @@ export default function DocumentVaultScreen({ route, navigation }) {
                     <Text style={styles.editBtnText}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.sendBtn,
-                      isSent && { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-                    ]}
-                    onPress={() => !isSent && sendEmail(id, buyer, d)}
+                    style={styles.sendBtn}
+                    onPress={() => openEmailInGmail(buyer, d)}
                     activeOpacity={0.85}
-                    disabled={isSent}
                   >
-                    <Ionicons
-                      name={isSent ? 'checkmark-circle' : 'send'}
-                      size={18}
-                      color={isSent ? colors.compliant : colors.bg}
-                    />
-                    <Text
-                      style={[
-                        styles.sendBtnText,
-                        isSent && { color: colors.compliant },
-                      ]}
-                    >
-                      {isSent ? 'Sent' : 'Send'}
-                    </Text>
+                    <Ionicons name="mail" size={18} color={colors.bg} />
+                    <Text style={styles.sendBtnText}>Open in Gmail App</Text>
                   </TouchableOpacity>
                 </View>
               </View>

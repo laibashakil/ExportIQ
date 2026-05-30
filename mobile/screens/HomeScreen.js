@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, riskColor, radii, spacing, shadow } from '../constants/colors';
 import { DEMO_FACTORIES } from '../constants/config';
 import { subscribeFactory, subscribeReport } from '../services/firebase';
+import { complianceLevel } from '../services/format';
 import {
   loadOnce as loadReadSet,
   subscribe as subscribeReadSet,
@@ -33,8 +34,16 @@ function plainRiskLine(factory, report, empty) {
   }
   const gaps = report?.gaps?.length ?? 0;
   const contradictions = report?.contradictions?.length ?? 0;
-  if (factory.risk_level === 'COMPLIANT') {
+  const score = Number(factory.compliance_score) || 0;
+  const risk = Number(factory.orders_at_risk_pkr) || 0;
+
+  // Only a perfect 100 / zero-risk factory truly "meets EU requirements".
+  // 90–99 (or any residual PKR at risk) is "almost" — never "meets".
+  if (score >= 100 && risk <= 0) {
     return 'Your factory meets EU export requirements';
+  }
+  if (score >= 90) {
+    return 'Your factory almost meets EU requirements';
   }
   if (gaps > 0) {
     const base = `${gaps} EU rule${gaps === 1 ? '' : 's'} need${gaps === 1 ? 's' : ''} attention`;
@@ -274,8 +283,10 @@ export default function HomeScreen({ navigation }) {
 
 function FactoryCard({ item, riskLine, empty, onPress }) {
   // Neutral gray for empty cards (matches the dashed empty score and the
-  // "no data yet" copy). Real factories use the risk traffic-light color.
-  const c = empty ? colors.textDim : riskColor(item.risk_level);
+  // "no data yet" copy). Real factories derive the traffic-light color from
+  // score + PKR-at-risk so 90–99 shows amber ("Almost"), not green.
+  const level = complianceLevel(item.compliance_score, item.orders_at_risk_pkr);
+  const c = empty ? colors.textDim : riskColor(level);
   return (
     <TouchableOpacity
       style={[styles.card, { borderLeftColor: c }]}
@@ -316,7 +327,7 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
             size={68}
             stroke={6}
             score={Number(item.compliance_score) || 0}
-            risk={item.risk_level}
+            risk={level}
             label="/ 100"
           />
         )}

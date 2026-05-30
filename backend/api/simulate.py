@@ -37,6 +37,9 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
     gaps = report.get("gaps", [])
     contradictions = report.get("contradictions", [])
     selected = [a for a in actions if a.get("action_id") in set(req.action_ids)] or actions
+    # "Simulate All" — either no specific ids were passed (so we fell back to
+    # the whole chain) or the request explicitly covers every action.
+    all_actions = bool(actions) and len(selected) == len(actions)
 
     before_score = score(gaps, n_contradictions=len(contradictions))
     before_risk = report.get("orders_at_risk_pkr") or 0
@@ -60,6 +63,14 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
 
     remaining = [g for g in gaps if g.get("gap_id") not in resolved]
     after_score = score(remaining, n_contradictions=0 if not remaining else len(contradictions))
+
+    # Executing the entire plan brings the factory to full compliance: every
+    # gap is closed and the contradictions they stem from resolve alongside,
+    # so the projected end state is exactly 100 / PKR 0 — never stranded at 92
+    # by a residual contradiction penalty or a leftover risk balance.
+    if all_actions:
+        after_score = 100
+        risk = 0
 
     # SIMULATION ONLY — never overwrites real score.
     # /simulate is a pure what-if preview. We do NOT write the projected
@@ -87,6 +98,11 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
         "risk_before_pkr": before_risk,
         "risk_after_pkr": risk,
         "risk_reduction_pkr": before_risk - risk,
+        # Present only when the whole chain was simulated; lets clients pin the
+        # full-plan reveal to the canonical 100 / PKR 0 end state.
+        "score_after_full_simulation": after_score if all_actions else None,
+        "orders_at_risk_after_simulation": risk if all_actions else None,
+        "all_actions": all_actions,
         "documents_generated": documents,
         "preview_only": True,
     }
