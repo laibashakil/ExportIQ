@@ -8,6 +8,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
+import { getStorage, ref as storageRef, getDownloadURL } from 'firebase/storage';
 
 import { FIREBASE_CONFIG } from '../constants/config';
 
@@ -20,6 +21,23 @@ let _db = null;
 export function db() {
   if (!_db) _db = getFirestore(ensureApp());
   return _db;
+}
+
+let _storage = null;
+export function storage() {
+  if (!_storage) _storage = getStorage(ensureApp());
+  return _storage;
+}
+
+// --- Firebase Storage --------------------------------------------------
+
+/**
+ * Resolve a download URL for a file in Firebase Storage (e.g. a regulation
+ * PDF stored at 'regulations/eu_cbam.pdf'). Returned URL is a public,
+ * tokenised link suitable for opening in a new browser tab.
+ */
+export function getRegulationUrl(path) {
+  return getDownloadURL(storageRef(storage(), path));
 }
 
 export function subscribeFactory(factoryId, cb) {

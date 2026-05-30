@@ -11,7 +11,7 @@ import {
   seedChecklistItems,
   toggleChecklistItem,
 } from '../services/firebase';
-import Markdown from './Markdown.jsx';
+import Markdown, { renderInline } from './Markdown.jsx';
 
 function detectTemplateKind(label) {
   const l = label.toLowerCase();
@@ -149,7 +149,7 @@ export default function InteractiveChecklist({
                 {it.done ? <Icon name="check" size={14} color="#00D4AA" /> : null}
               </button>
               <div className="checklist-item-body">
-                <div className={`checklist-label ${it.done ? 'done' : ''}`}>{it.label}</div>
+                <div className={`checklist-label ${it.done ? 'done' : ''}`}>{renderInline(it.label)}</div>
                 {template && (
                   <button
                     type="button"

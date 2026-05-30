@@ -15,6 +15,8 @@ import {
   setDoc,
 } from 'firebase/firestore';
 
+import { getStorage, ref as storageRef, getDownloadURL } from 'firebase/storage';
+
 import { FIREBASE_CONFIG } from '../constants/config';
 
 function ensureApp() {
@@ -30,6 +32,23 @@ export function db() {
     _db = getFirestore(ensureApp());
   }
   return _db;
+}
+
+let _storage = null;
+export function storage() {
+  if (!_storage) {
+    _storage = getStorage(ensureApp());
+  }
+  return _storage;
+}
+
+/**
+ * Resolve a download URL for a file in Firebase Storage (e.g. a regulation
+ * PDF stored at 'regulations/eu_cbam.pdf'). The returned URL can be handed
+ * straight to Linking.openURL to open in the device browser / PDF viewer.
+ */
+export function getRegulationUrl(path) {
+  return getDownloadURL(storageRef(storage(), path));
 }
 
 export function subscribeFactory(factoryId, cb) {

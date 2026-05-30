@@ -19,7 +19,8 @@ import { pkrFormat } from '../utils/traceFormatter';
 import { deriveScore, deriveRiskPkr, riskLabel } from '../utils/scoring';
 import { openGmailCompose } from '../utils/mail';
 import { transformMarkdownTables } from '../utils/markdownTransform';
-import { doc, updateDoc } from 'firebase/firestore';
+import { formatAnalyzedAt, toDateSafe } from '../utils/format';
+import { doc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const TABS = [
@@ -45,6 +46,13 @@ export default function FactoryDetail() {
   const [job, setJob] = useState(null);
   const [error, setError] = useState(null);
   const [openDoc, setOpenDoc] = useState(null);
+  // Set the instant an analysis completes so the "Last analyzed" label updates
+  // immediately, before the Firestore serverTimestamp round-trips back.
+  const [optimisticAnalyzedAt, setOptimisticAnalyzedAt] = useState(null);
+  // Which gap's inline impact box is expanded (keyed by gap_id or index), and
+  // which action card should glow when the Action Plan tab is shown.
+  const [expandedGapId, setExpandedGapId] = useState(null);
+  const [flashActionId, setFlashActionId] = useState(null);
   const unsubJob = useRef(null);
 
   useEffect(() => {
@@ -59,12 +67,31 @@ export default function FactoryDetail() {
 
   useEffect(() => {
     if (!jobId) return undefined;
+    let handled = false; // guard: the callback fires repeatedly per job
     unsubJob.current = subscribeJob(jobId, (data) => {
       setJob(data);
-      if (data?.status === 'complete' || data?.status === 'failed') setRunning(false);
+      if (data?.status === 'complete' || data?.status === 'failed') {
+        setRunning(false);
+        if (data?.status === 'complete' && !handled) {
+          handled = true;
+          setOptimisticAnalyzedAt(new Date());
+          markAnalyzed();
+        }
+      }
     });
     return () => { if (unsubJob.current) unsubJob.current(); };
   }, [jobId]);
+
+  // Persist the last-analyzed time on the factory doc so it survives reloads
+  // and propagates to any other client watching this factory in real time.
+  async function markAnalyzed() {
+    try {
+      const ref = doc(db(), 'factories', factoryId);
+      await setDoc(ref, { last_analyzed_at: serverTimestamp() }, { merge: true });
+    } catch (err) {
+      console.warn('markAnalyzed failed', err);
+    }
+  }
 
   async function runAnalysis() {
     setError(null);
@@ -95,9 +122,67 @@ export default function FactoryDetail() {
   const contradictions = resolvedView ? [] : rawContradictions;
   const actions = report?.action_chain || [];
   const documents = report?.documents || [];
-  const lastAnalyzed = report?.created_at ? new Date(report.created_at).toLocaleString() : null;
+  // Resolve the most recent analysis time from any available source: the
+  // report's created_at, the factory's last_analyzed_at, or our optimistic
+  // value set the moment a run completes. Whichever is newest wins.
+  const analyzedDate = useMemo(() => {
+    let best = toDateSafe(report?.created_at);
+    const fromFactory = toDateSafe(factory?.last_analyzed_at);
+    if (fromFactory && (!best || fromFactory > best)) best = fromFactory;
+    if (optimisticAnalyzedAt && (!best || optimisticAnalyzedAt > best)) best = optimisticAnalyzedAt;
+    return best;
+  }, [report, factory, optimisticAnalyzedAt]);
+  const lastAnalyzedLabel = analyzedDate ? formatAnalyzedAt(analyzedDate) : 'Not yet analyzed';
 
   const targetScore = afterScore !== originalScore ? afterScore : null;
+
+  // Map a gap to the action that fixes it. The orchestrator pre-links most
+  // gaps via `linked_action_id`; we fall back to matching the gap_id against
+  // each action's `addresses_gap_ids`.
+  function findActionForGap(gap) {
+    if (!gap) return null;
+    if (gap.linked_action_id) {
+      const byLink = actions.find((a) => a.action_id === gap.linked_action_id);
+      if (byLink) return byLink;
+    }
+    if (gap.gap_id) {
+      const byGap = actions.find((a) => (a.addresses_gap_ids || []).includes(gap.gap_id));
+      if (byGap) return byGap;
+    }
+    return null;
+  }
+
+  // Clicking a gap toggles its inline impact box and arms the matching action
+  // card to glow. The scroll + glow fires from the effect below once the
+  // Action Plan tab is on screen (gaps and actions live in separate tabs).
+  function handleGapClick(gap, key) {
+    if (expandedGapId === key) {
+      setExpandedGapId(null);
+      setFlashActionId(null);
+      return;
+    }
+    setExpandedGapId(key);
+    const action = findActionForGap(gap);
+    setFlashActionId(action?.action_id || null);
+  }
+
+  // When the Action Plan tab is visible and an action is armed, smooth-scroll
+  // it into view and let the .action-flash class run its glow, then disarm
+  // after the animation so it can be re-triggered later.
+  useEffect(() => {
+    if (tab !== 'actions' || !flashActionId) return undefined;
+    const id = flashActionId;
+    const raf = requestAnimationFrame(() => {
+      const safe = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id;
+      const el = document.querySelector(`[data-action-id="${safe}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const t = setTimeout(() => setFlashActionId(null), 2600);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+  }, [tab, flashActionId]);
 
   async function toggleReveal() {
     try {
@@ -167,7 +252,7 @@ export default function FactoryDetail() {
             </div>
             <div className="detail-row">
               <span className="k">Last Analyzed</span>
-              <span className="v" style={{ fontSize: 11 }}>{lastAnalyzed || 'Never'}</span>
+              <span className="v" style={{ fontSize: 11 }}>{lastAnalyzedLabel}</span>
             </div>
           </div>
 
@@ -201,10 +286,23 @@ export default function FactoryDetail() {
           </div>
           <div className="tab-panel">
             {tab === 'status' && (
-              <StatusTab gaps={gaps} contradictions={contradictions} />
+              <StatusTab
+                gaps={gaps}
+                contradictions={contradictions}
+                expandedGapId={expandedGapId}
+                onGapClick={handleGapClick}
+                findActionForGap={findActionForGap}
+                currentScore={score}
+              />
             )}
             {tab === 'actions' && (
-              <ActionsTab actions={actions} currentScore={score} targetScore={targetScore} totalRisk={ordersAtRisk} />
+              <ActionsTab
+                actions={actions}
+                currentScore={score}
+                targetScore={targetScore}
+                totalRisk={ordersAtRisk}
+                flashActionId={flashActionId}
+              />
             )}
             {tab === 'documents' && (
               <DocumentsTab
@@ -224,7 +322,60 @@ export default function FactoryDetail() {
   );
 }
 
-function StatusTab({ gaps, contradictions }) {
+// Inline "if you fix this" preview rendered directly under a clicked gap.
+// Pulls the score delta and PKR impact from the gap's linked action; falls
+// back gracefully to whatever the gap itself carries when no action exists.
+function GapImpactBox({ gap, action, currentScore }) {
+  const so = (action && action.simulation_output) || {};
+  let delta = 0;
+  if (so.score_delta != null) delta = Number(so.score_delta);
+  else if (action && action.estimated_score_delta != null) delta = Number(action.estimated_score_delta);
+  else if (so.compliance_score_delta != null) delta = Number(so.compliance_score_delta);
+  if (!Number.isFinite(delta)) delta = 0;
+
+  const fromScore = Number.isFinite(Number(currentScore)) ? Number(currentScore) : 0;
+  const toScore = Math.min(100, fromScore + delta);
+
+  let impact = Number(action?.impact_pkr);
+  if (!Number.isFinite(impact) || impact <= 0) impact = Number(so.risk_reduction_pkr) || 0;
+
+  const dlRaw = (action && action.deadline) || gap.deadline || null;
+  const dateStr = dlRaw ? new Date(dlRaw).toLocaleDateString() : null;
+
+  return (
+    <div className="gap-impact">
+      {delta > 0 && (
+        <div className="gap-impact-line">
+          <Icon name="check" size={13} color="#00C48C" />
+          <span>If you fix this: <strong>Score goes from {fromScore} → {toScore}</strong></span>
+        </div>
+      )}
+      {impact > 0 && (
+        <div className="gap-impact-line">
+          <Icon name="check" size={13} color="#00C48C" />
+          <span><strong>{pkrFormat(impact)}</strong> recovered</span>
+        </div>
+      )}
+      {dateStr && (
+        <div className="gap-impact-line">
+          <Icon name="check" size={13} color="#00C48C" />
+          <span>Deadline: <strong>{dateStr}</strong></span>
+        </div>
+      )}
+      {!action && delta === 0 && impact === 0 && !dateStr && (
+        <div className="gap-impact-line muted">
+          <Icon name="alert" size={13} color="#9BA3AF" />
+          <span>No linked action yet — run an analysis to generate a fix.</span>
+        </div>
+      )}
+      {action && (
+        <div className="gap-impact-hint">Open the Action Plan tab to see the full fix →</div>
+      )}
+    </div>
+  );
+}
+
+function StatusTab({ gaps, contradictions, expandedGapId, onGapClick, findActionForGap, currentScore }) {
   if (!gaps.length && !contradictions.length) {
     return (
       <div className="empty-state">
@@ -268,8 +419,23 @@ function StatusTab({ gaps, contradictions }) {
             const severity = (g.severity || 'WARNING').toLowerCase();
             const days = typeof g.days_remaining === 'number' ? g.days_remaining : null;
             const dateStr = g.deadline ? new Date(g.deadline).toLocaleDateString() : null;
+            const key = g.gap_id || `gap-${i}`;
+            const expanded = expandedGapId === key;
+            const action = findActionForGap ? findActionForGap(g) : null;
             return (
-              <div className={`list-card ${severity}`} key={i}>
+              <div
+                className={`list-card clickable ${severity} ${expanded ? 'expanded' : ''}`}
+                key={key}
+                role="button"
+                tabIndex={0}
+                onClick={() => onGapClick && onGapClick(g, key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onGapClick && onGapClick(g, key);
+                  }
+                }}
+              >
                 <div className="lc-head">
                   <div>
                     <div className="lc-sub">{g.regulation}</div>
@@ -287,6 +453,7 @@ function StatusTab({ gaps, contradictions }) {
                     </span>
                   )}
                 </div>
+                {expanded && <GapImpactBox gap={g} action={action} currentScore={currentScore} />}
               </div>
             );
           })}
@@ -296,7 +463,7 @@ function StatusTab({ gaps, contradictions }) {
   );
 }
 
-function ActionsTab({ actions, currentScore, targetScore, totalRisk }) {
+function ActionsTab({ actions, currentScore, targetScore, totalRisk, flashActionId }) {
   if (!actions.length) {
     return <div className="empty-state">No actions yet. Run an analysis to generate a remediation plan.</div>;
   }
@@ -320,8 +487,13 @@ function ActionsTab({ actions, currentScore, targetScore, totalRisk }) {
       {actions.map((a) => {
         const effortLevel = (a.effort || 'MEDIUM').toLowerCase();
         const dateStr = a.deadline ? new Date(a.deadline).toLocaleDateString() : null;
+        const flashing = flashActionId && a.action_id === flashActionId;
         return (
-          <div className="list-card primary" key={a.action_id || a.priority}>
+          <div
+            className={`list-card primary ${flashing ? 'action-flash' : ''}`}
+            key={a.action_id || a.priority}
+            data-action-id={a.action_id || ''}
+          >
             <div className="lc-head">
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <div
@@ -632,7 +804,7 @@ function FormCard({ factoryId, document: docItem, documents, isOpen, onToggle })
       </div>
 
       {isOpen && isChecklist && (
-        <div className="doc-body">
+        <div className="doc-body md-wrap">
           <InteractiveChecklist
             factoryId={factoryId}
             checklistId={id}

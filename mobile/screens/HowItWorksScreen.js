@@ -1,12 +1,33 @@
 // Plain-English explainer reached by tapping the ℹ️ icon on the HomeScreen
 // header. Four steps with icons; no jargon. Aimed at a judge who's never
 // seen the app before.
-import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Linking,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, radii, shadow, spacing } from '../constants/colors';
+import { getRegulationUrl } from '../services/firebase';
+
+// The regulations the agents read, with their Firebase Storage PDF paths.
+// Rendered as tappable rows under step 2 so users can open the real text.
+const REGULATIONS = [
+  { name: 'EU Carbon Border Adjustment Mechanism (CBAM)', path: 'regulations/eu_cbam.pdf' },
+  { name: 'UK Modern Slavery Act 2015', path: 'regulations/uk_modern_slavery.pdf' },
+  {
+    name: 'EU Supply Chain Due Diligence Directive (CSDDD)',
+    path: 'regulations/eu_supply_chain_directive.pdf',
+  },
+];
 
 const STEPS = [
   {
@@ -17,9 +38,10 @@ const STEPS = [
   },
   {
     icon: 'book',
+    key: 'rules',
     title: 'Our AI reads EU and UK export rules',
     body:
-      'We keep the latest EU CBAM, UK Modern Slavery Act and Supply Chain rules in our system — you don\'t have to.',
+      'We keep the latest EU CBAM, UK Modern Slavery Act and Supply Chain rules in our system — you don\'t have to. Tap any rule to read it:',
   },
   {
     icon: 'search',
@@ -34,6 +56,46 @@ const STEPS = [
       'You get a clear plain-English action plan, and we draft the emails to your European buyers for you.',
   },
 ];
+
+function RegulationLinks() {
+  // Tracks which regulation path is currently resolving its download URL.
+  const [loadingPath, setLoadingPath] = useState(null);
+
+  const open = async (reg) => {
+    if (loadingPath) return;
+    setLoadingPath(reg.path);
+    try {
+      const url = await getRegulationUrl(reg.path);
+      await Linking.openURL(url);
+    } catch (err) {
+      console.warn('Could not open regulation PDF', reg.path, err);
+    } finally {
+      setLoadingPath(null);
+    }
+  };
+
+  return (
+    <View style={styles.regList}>
+      {REGULATIONS.map((reg) => (
+        <TouchableOpacity
+          key={reg.path}
+          style={styles.regRow}
+          activeOpacity={0.7}
+          onPress={() => open(reg)}
+          disabled={!!loadingPath}
+        >
+          <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+          <Text style={styles.regName}>{reg.name}</Text>
+          {loadingPath === reg.path ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Ionicons name="open-outline" size={16} color={colors.textDim} />
+          )}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
 
 export default function HowItWorksScreen() {
   return (
@@ -69,6 +131,7 @@ export default function HowItWorksScreen() {
               <Text style={styles.cardTitle}>{s.title}</Text>
             </View>
             <Text style={styles.cardBody}>{s.body}</Text>
+            {s.key === 'rules' && <RegulationLinks />}
           </View>
         ))}
 
@@ -198,6 +261,26 @@ const styles = StyleSheet.create({
     color: '#C9D1D9',
     fontSize: 15,
     lineHeight: 24,
+  },
+  regList: {
+    marginTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+  },
+  regRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  regName: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: 10,
+    marginRight: 8,
+    lineHeight: 20,
   },
   sectionHeader: {
     color: colors.primary,

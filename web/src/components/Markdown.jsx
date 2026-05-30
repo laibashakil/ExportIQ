@@ -10,7 +10,7 @@
 
 import React from 'react';
 
-function renderInline(text) {
+export function renderInline(text) {
   // Walk the string, replacing **bold**, *italic*, and `code` in one pass.
   // We tokenize so a string like "**a** *b*" doesn't double-match.
   const parts = [];

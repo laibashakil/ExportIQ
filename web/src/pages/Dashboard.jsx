@@ -4,14 +4,56 @@ import Header from '../components/Header.jsx';
 import FactoryCard from '../components/FactoryCard.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { DEMO_FACTORIES } from '../constants/config';
-import { subscribeFactory, subscribeReport } from '../services/firebase';
+import { subscribeFactory, subscribeReport, getRegulationUrl } from '../services/firebase';
 import { pkrFormat } from '../utils/traceFormatter';
 import { deriveScore, deriveRiskPkr } from '../utils/scoring';
+
+// The three regulations the agents track, with their Firebase Storage paths.
+// Short labels keep the summary card compact; each opens the real PDF.
+const REGULATIONS = [
+  { label: 'EU CBAM', path: 'regulations/eu_cbam.pdf' },
+  { label: 'UK MSA', path: 'regulations/uk_modern_slavery.pdf' },
+  { label: 'EU CSDDD', path: 'regulations/eu_supply_chain_directive.pdf' },
+];
 
 export default function Dashboard() {
   const nav = useNavigate();
   const [factories, setFactories] = useState(DEMO_FACTORIES);
   const [reports, setReports] = useState({});
+  const [regUrls, setRegUrls] = useState({});
+
+  // Pre-fetch the regulation PDF download URLs so the links carry a real
+  // href (opens cleanly in a new tab, no popup-blocker issues). If a fetch
+  // fails the link falls back to an on-click resolve below.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      REGULATIONS.map((r) =>
+        getRegulationUrl(r.path)
+          .then((url) => [r.path, url])
+          .catch((err) => {
+            console.warn('regulation URL fetch failed', r.path, err);
+            return null;
+          }),
+      ),
+    ).then((pairs) => {
+      if (cancelled) return;
+      setRegUrls(Object.fromEntries(pairs.filter(Boolean)));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fallback for when the prefetch hasn't resolved (or failed): resolve the
+  // URL on click, then open it.
+  const openRegulation = (e, path) => {
+    if (regUrls[path]) return; // href already handles it
+    e.preventDefault();
+    getRegulationUrl(path)
+      .then((url) => window.open(url, '_blank', 'noopener,noreferrer'))
+      .catch((err) => console.warn('regulation open failed', path, err));
+  };
 
   useEffect(() => {
     const unsubs = DEMO_FACTORIES.map((f) =>
@@ -83,7 +125,24 @@ export default function Dashboard() {
         <div className="summary-card">
           <div className="summary-label">REGULATIONS TRACKED</div>
           <div className="summary-value">3</div>
-          <div className="summary-sub">EU CBAM · UK MSA · EU CSDDD</div>
+          <div className="summary-sub reg-links">
+            {REGULATIONS.map((r, i) => (
+              <span key={r.path}>
+                {i > 0 && <span className="reg-sep"> · </span>}
+                <a
+                  className="reg-link"
+                  href={regUrls[r.path] || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => openRegulation(e, r.path)}
+                  title={`Open ${r.label} regulation PDF`}
+                >
+                  {r.label}
+                  <span className="reg-ext" aria-hidden="true">↗</span>
+                </a>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
