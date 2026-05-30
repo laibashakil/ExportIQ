@@ -21,6 +21,11 @@ from functools import lru_cache
 from config import get_settings
 
 LLM_INVOKE_TIMEOUT_SECONDS = 45
+# Hard cap on how long the (one-time, lru_cached) ChatVertexAI constructor may
+# block. On some freshly-created GCP projects the default gRPC channel setup
+# hangs for several minutes; we use REST transport to avoid that, and this
+# timeout is a backstop so a cold start can never wedge the whole pipeline.
+LLM_INIT_TIMEOUT_SECONDS = 30
 
 # Module-level executor — we deliberately do NOT use `with ... as` because the
 # context manager waits for in-flight workers on exit, which would defeat the
@@ -68,22 +73,39 @@ def safe_llm_invoke(llm, messages, timeout: int = LLM_INVOKE_TIMEOUT_SECONDS):
 
 @lru_cache(maxsize=1)
 def _get_primary_llm():
-    """Vertex AI ChatVertexAI — returns None if creds not configured."""
+    """Vertex AI ChatVertexAI — returns None if creds not configured or init stalls.
+
+    Construction runs on the shared executor under a hard timeout: the gRPC
+    channel setup can hang for minutes on some fresh projects, so we force
+    REST transport (matches the fast REST endpoint) and bail to the stub path
+    if construction still exceeds LLM_INIT_TIMEOUT_SECONDS.
+    """
     settings = get_settings()
     if not settings.google_application_credentials:
         return None
-    try:
+
+    def _build():
         from langchain_google_vertexai import ChatVertexAI
-        llm = ChatVertexAI(
+        return ChatVertexAI(
             model_name=settings.gemini_model,
             project=settings.google_cloud_project,
             location=settings.google_cloud_location,
             temperature=0.1,
             max_output_tokens=4096,
             max_retries=1,
+            api_transport="rest",
         )
-        log.info("Gemini primary: ChatVertexAI initialised (%s)", settings.gemini_model)
+
+    try:
+        llm = _EXECUTOR.submit(_build).result(timeout=LLM_INIT_TIMEOUT_SECONDS)
+        log.info("Gemini primary: ChatVertexAI initialised (%s, rest)", settings.gemini_model)
         return llm
+    except concurrent.futures.TimeoutError:
+        log.warning(
+            "Vertex AI init exceeded %ss — disabling primary, using stub/fallback",
+            LLM_INIT_TIMEOUT_SECONDS,
+        )
+        return None
     except Exception:  # noqa: BLE001
         log.exception("Vertex AI init failed")
         return None

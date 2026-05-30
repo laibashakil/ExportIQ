@@ -12,9 +12,9 @@
 | | Link |
 |---|---|
 | 📱 **Android APK** | [Download & Install](https://drive.google.com/file/d/1G0XVcBLUcIRe9z4zO6lP1LrsRAx_toNb/view?usp=sharing) |
-| 🌐 **Web App** | [dummy-project-496508.web.app](https://dummy-project-496508.web.app) |
-| ⚙️ **Backend API** | [Cloud Run](https://exportiq-backend-566147682281.us-central1.run.app) |
-| 📊 **API Docs** | [exportiq-backend-566147682281.us-central1.run.app/docs](https://exportiq-backend-566147682281.us-central1.run.app/docs) |
+| 🌐 **Web App** | [gen-lang-client-0067611351.web.app](https://gen-lang-client-0067611351.web.app) |
+| ⚙️ **Backend API** | [Cloud Run](https://exportiq-backend-495022768388.us-central1.run.app) |
+| 📊 **API Docs** | [exportiq-backend-495022768388.us-central1.run.app/docs](https://exportiq-backend-495022768388.us-central1.run.app/docs) |
 
 ---
 ## Web App Screen Recording
@@ -33,26 +33,26 @@ https://github.com/user-attachments/assets/77bbda49-8c06-4a88-8759-b6b3edb58688
 5. Tap "Run Full Analysis" to trigger the 6-agent pipeline live
 
 ### Option 2 — Web App
-Visit [https://dummy-project-496508.web.app](https://dummy-project-496508.web.app) in any browser.
+Visit [https://gen-lang-client-0067611351.web.app](https://gen-lang-client-0067611351.web.app) in any browser.
 Shows the same compliance data with full agent trace visible.
 
 ### Option 3 — API Directly
-Base URL: https://exportiq-backend-566147682281.us-central1.run.app
+Base URL: https://exportiq-backend-495022768388.us-central1.run.app
 
 ```bash
 # Check service is running
-curl https://exportiq-backend-566147682281.us-central1.run.app/health
+curl https://exportiq-backend-495022768388.us-central1.run.app/health
 
 # Get Faisal Weave Industries compliance report
-curl https://exportiq-backend-566147682281.us-central1.run.app/report/fwi_fsd_001
+curl https://exportiq-backend-495022768388.us-central1.run.app/report/fwi_fsd_001
 
 # Trigger live 6-agent analysis
-curl -X POST https://exportiq-backend-566147682281.us-central1.run.app/analyze \
+curl -X POST https://exportiq-backend-495022768388.us-central1.run.app/analyze \
   -H "Content-Type: application/json" \
   -d '{"factory_id":"fwi_fsd_001"}'
 
 # Inject failure to demo recovery agent
-curl -X POST https://exportiq-backend-566147682281.us-central1.run.app/failure-test/{job_id}
+curl -X POST https://exportiq-backend-495022768388.us-central1.run.app/failure-test/{job_id}
 ```
 
 ---

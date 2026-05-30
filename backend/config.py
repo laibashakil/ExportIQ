@@ -51,14 +51,14 @@ _materialise_sa_credentials()
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    google_cloud_project: str = "exportiq-dev"
+    google_cloud_project: str = "gen-lang-client-0067611351"
     google_cloud_location: str = "us-central1"
     google_application_credentials: str | None = None
     gemini_model: str = "gemini-1.5-pro"
     gemini_api_key: str | None = None
 
-    firebase_project_id: str = "exportiq-dev"
-    firebase_storage_bucket: str = "exportiq-dev.appspot.com"
+    firebase_project_id: str = "gen-lang-client-0067611351"
+    firebase_storage_bucket: str = "gen-lang-client-0067611351.firebasestorage.app"
     firebase_credentials: str | None = None
 
     environment: str = "development"

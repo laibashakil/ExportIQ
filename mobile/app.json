@@ -2,7 +2,7 @@
   "expo": {
     "name": "ExportIQ",
     "slug": "exportiq",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "exportiq",
@@ -28,7 +28,7 @@
     },
     "android": {
       "package": "com.exportiq.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D1117"
@@ -36,15 +36,15 @@
     },
     "plugins": ["expo-document-picker"],
     "extra": {
-      "apiBaseUrl": "https://exportiq-backend-566147682281.us-central1.run.app",
+      "apiBaseUrl": "https://exportiq-backend-495022768388.us-central1.run.app",
       "firebaseConfig": {
-        "apiKey": "AIzaSyAjVyxbacLNNLn9o8Qe_Am15Rx4b--FStk",
-        "authDomain": "dummy-project-496508.firebaseapp.com",
-        "projectId": "dummy-project-496508",
-        "storageBucket": "dummy-project-496508.firebasestorage.app",
-        "messagingSenderId": "566147682281",
-        "appId": "1:566147682281:web:b37110b3a6a7bb179a0578",
-        "measurementId": "G-3MHCEX35JG"
+        "apiKey": "AIzaSyA7IglTBHOGHHtAlsR9tPW2SrAIisps8Lw",
+        "authDomain": "gen-lang-client-0067611351.firebaseapp.com",
+        "projectId": "gen-lang-client-0067611351",
+        "storageBucket": "gen-lang-client-0067611351.firebasestorage.app",
+        "messagingSenderId": "495022768388",
+        "appId": "1:495022768388:web:70ca122ddde84b5cf51051",
+        "measurementId": "G-EB3828VD34"
       },
       "eas": {
         "projectId": "714e623e-dfb0-4e68-8d57-00d7e6c4aa53"
