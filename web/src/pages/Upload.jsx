@@ -15,6 +15,84 @@ const STAGES = {
   ERROR: 'error',
 };
 
+const REQUIRED_ITEMS = [
+  'Factory name, city, and country of operation',
+  'Annual export volume in PKR or USD (broken down by buyer if possible)',
+  'List of active EU/UK buyers (e.g. retailer names and order values)',
+  'Current certifications with expiry dates: SA8000, ISO 14001, OEKO-TEX or GOTS',
+  'Chemical usage data — effluent discharge levels (ppm), dye chemicals used',
+  'Working hours per week (including overtime)',
+  'Forced/child labour compliance statement',
+  'Carbon/emissions data if exporting to EU (for CBAM compliance)',
+  'Supply chain mapping — tier-1 and tier-2 suppliers if available',
+];
+
+const OPTIONAL_ITEMS = [
+  'Previous audit findings or corrective action reports',
+  'Buyer-specific compliance questionnaire responses',
+  'Water and energy consumption data',
+  'Grievance mechanism documentation',
+];
+
+// Collapsible "what should your audit report include?" helper. Collapsed by
+// default; expands to show required vs optional content as rendered text.
+function AuditGuidanceBox() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="guidance-box">
+      <button
+        type="button"
+        className="guidance-head"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <Icon name={open ? 'chevron-down' : 'chevron-right'} size={14} color="#00C48C" />
+        <span>📋 What should your audit report include?</span>
+      </button>
+      {open && (
+        <div className="guidance-body">
+          <div className="guidance-section-title">Required information</div>
+          {REQUIRED_ITEMS.map((t) => (
+            <div className="guidance-item" key={t}>
+              <span className="guidance-tick">✓</span> {t}
+            </div>
+          ))}
+          <div className="guidance-section-title">Helpful but optional</div>
+          {OPTIONAL_ITEMS.map((t) => (
+            <div className="guidance-item optional" key={t}>
+              <span className="guidance-dot">•</span> {t}
+            </div>
+          ))}
+          <div className="guidance-section-title">Supported formats</div>
+          <div className="guidance-item optional">
+            PDF only · Max 20 MB · Scanned documents are supported
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// "Not sure what to include?" sample template download row. Files live in
+// web/public and are served from the site root.
+function SampleTemplateRow() {
+  return (
+    <div className="sample-template-row">
+      <div className="sample-template-text">
+        📄 Not sure what to include? Download our sample audit report template
+      </div>
+      <div className="sample-template-btns">
+        <a className="btn small ghost" href="/sample_audit_template.docx" download>
+          <Icon name="doc" size={12} /> Download DOCX
+        </a>
+        <a className="btn small primary" href="/sample_audit_template.pdf" download>
+          <Icon name="doc" size={12} /> Download PDF
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function Upload() {
   const nav = useNavigate();
   const { factoryId: paramFactory } = useParams();
@@ -32,11 +110,15 @@ export default function Upload() {
     }
     return {
       factory_id: 'demo_factory_upload_test',
-      factory_name: 'New Factory (Demo Upload)',
+      factory_name: 'New Factory',
       city: 'Faisalabad',
     };
   }, [paramFactory]);
 
+  // For a brand-new (unknown) factory the user types the name; for an existing
+  // factory we show its known name as a read-only chip.
+  const isNew = !paramFactory;
+  const [factoryName, setFactoryName] = useState(factory.factory_name);
   const [stage, setStage] = useState(STAGES.IDLE);
   const [picked, setPicked] = useState(null);
   const [error, setError] = useState(null);
@@ -109,9 +191,23 @@ export default function Upload() {
           Slavery Act, and EU CSDDD rules in our system — our agents will compare and find any gaps.
         </p>
 
-        <div className="upload-chip">
-          <Icon name="factory" size={14} color="#00D4AA" /> {factory.factory_name}
-        </div>
+        {isNew ? (
+          <div className="factory-name-field">
+            <label htmlFor="fac-name">Factory name</label>
+            <input
+              id="fac-name"
+              className="factory-name-input"
+              value={factoryName}
+              onChange={(e) => setFactoryName(e.target.value)}
+              placeholder="e.g. Faisal Weave Industries"
+              disabled={busy}
+            />
+          </div>
+        ) : (
+          <div className="upload-chip">
+            <Icon name="factory" size={14} color="#00D4AA" /> {factory.factory_name}
+          </div>
+        )}
 
         <div
           className={`drop-zone ${busy ? 'busy' : ''}`}
@@ -143,7 +239,7 @@ export default function Upload() {
                 style={{ marginTop: 14, maxWidth: 260 }}
                 onClick={() => nav(`/factory/${factory.factory_id}`)}
               >
-                View {factory.factory_name}
+                View {factoryName}
               </button>
             </>
           ) : (
@@ -159,6 +255,9 @@ export default function Upload() {
         </div>
 
         {error && <div className="upload-error">{error}</div>}
+
+        <AuditGuidanceBox />
+        <SampleTemplateRow />
 
         {(busy || (trace && trace.length > 0)) && (
           <div style={{ marginTop: 24, width: '100%', maxWidth: 720 }}>

@@ -29,6 +29,32 @@ const STEPS = [
   },
 ];
 
+// Score bands — these match the live banding in utils/scoring.js exactly
+// (Compliant only at a perfect 100; 90–99 Almost; 60–89 Needs Attention;
+// 0–59 At Risk).
+const SCORE_BANDS = [
+  { range: '100', label: 'Compliant', color: '#00C48C', desc: 'Meets all EU/UK requirements' },
+  { range: '90–99', label: 'Almost Compliant', color: '#F5A623', desc: 'Minor gaps — action needed soon' },
+  { range: '60–89', label: 'Needs Attention', color: '#F97316', desc: 'Significant gaps — orders at risk' },
+  { range: '0–59', label: 'At Risk', color: '#EF4444', desc: 'High risk of losing export orders' },
+];
+
+// Penalty weights — verbatim from backend/tools/compliance_scorer.py
+// (SEVERITY_PENALTY + CONTRADICTION_PENALTY). Every factory starts at 100.
+const DEDUCTIONS = [
+  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CBAM registration (mandatory)' },
+  { type: 'High severity gap', weight: '−10 pts', example: 'SA8000 certification expired' },
+  { type: 'Medium severity gap', weight: '−5 pts', example: 'Supply chain mapping incomplete' },
+  { type: 'Low severity gap', weight: '−2 pts', example: 'Advisory recommendation not addressed' },
+  { type: 'Document contradiction', weight: '−4 pts', example: 'ISO claim contradicted by audit data' },
+];
+
+const RAISES = [
+  'Each gap you fix restores its full deducted points',
+  'Resolving a contradiction restores 4 points',
+  'Completing the full action plan brings your score back to 100',
+];
+
 export default function HowItWorks() {
   const nav = useNavigate();
   return (
@@ -60,11 +86,63 @@ export default function HowItWorks() {
         ))}
       </div>
 
-      <div className="hiw-section-head">How We Calculate Your Score</div>
+      <div className="hiw-section-head">How Your Score Is Calculated</div>
       <div className="hiw-info">
-        Your compliance score reflects how well your factory's documentation aligns with EU and UK
-        export rules. Critical missing requirements weigh more heavily than minor gaps.
-        Contradictions between your own documents reduce your score because they signal audit risk.
+        Every factory starts at <strong>100</strong>. We subtract points for each gap and
+        contradiction we find, weighted by how serious it is. Here's the full breakdown.
+      </div>
+
+      <div className="score-bands">
+        {SCORE_BANDS.map((b) => (
+          <div className="score-band" style={{ background: b.color }} key={b.label}>
+            <span className="score-band-range">{b.range}</span>
+            <span className="score-band-label">{b.label}</span>
+            <span className="score-band-desc">{b.desc}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="score-sub-head">How points are deducted</div>
+      <div className="deduct-table">
+        <div className="deduct-row deduct-head">
+          <span>Issue type</span><span>Weight</span><span>Example</span>
+        </div>
+        {DEDUCTIONS.map((d) => (
+          <div className="deduct-row" key={d.type}>
+            <span className="deduct-type">{d.type}</span>
+            <span className="deduct-weight">{d.weight}</span>
+            <span className="deduct-example">{d.example}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="score-sub-head">What raises your score</div>
+      <div className="raise-list">
+        {RAISES.map((r) => (
+          <div className="raise-item" key={r}>
+            <span className="raise-tick">✓</span> {r}
+          </div>
+        ))}
+      </div>
+
+      <div className="contradiction-callout">
+        <div className="cc-title"><Icon name="alert" size={16} color="#F5A623" /> Contradiction penalty explained</div>
+        <div className="cc-body">
+          When your own documents disagree — e.g. your factory claims ISO 14001 certification but your
+          water audit shows effluent at <strong>12 ppm</strong>, above the <strong>8 ppm</strong> legal
+          limit — EU auditors treat it as misrepresentation, which is more serious than a simple gap.
+          Each contradiction deducts <strong>4 points</strong>, and ExportIQ drafts a buyer
+          notification email so you can get ahead of it.
+        </div>
+      </div>
+
+      <div className="score-tip">
+        <span className="score-tip-emoji">💡</span>
+        <div>
+          The <strong>Simulate</strong> feature shows your projected score after each fix is
+          completed — so you can see exactly which action has the biggest impact before committing
+          resources.
+        </div>
       </div>
 
       <div className="hiw-section-head">Why EU and UK only?</div>

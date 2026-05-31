@@ -16,10 +16,16 @@ from __future__ import annotations
 
 import sys
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import firebase_admin
 from firebase_admin import credentials, firestore, storage
+
+# Seed value for `last_analyzed_at` on the demo factories so the web sidebar
+# shows a real date instead of "Not yet analyzed". 11:45 on 2026-05-29, pinned
+# to PKT (UTC+5) so it renders as "May 29, 2026 at 11:45 AM" for demo viewers.
+SEED_ANALYZED_AT = datetime(2026, 5, 29, 11, 45, 0, tzinfo=timezone(timedelta(hours=5)))
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 FACTORY_DIR = BACKEND_DIR / "mock_data" / "factories"
@@ -77,11 +83,13 @@ def main() -> int:
             else:
                 _upload_with_token(bucket, local, dest)
                 print(f"  + uploaded {dest} ({local.stat().st_size:,} bytes)")
-        # Always make sure the Firestore field points at it.
+        # Always make sure the Firestore field points at it, and seed a
+        # last_analyzed_at so the web "Last analyzed" label is never empty.
         db.document(f"factories/{fid}").set(
-            {"audit_pdf_path": dest}, merge=True
+            {"audit_pdf_path": dest, "last_analyzed_at": SEED_ANALYZED_AT}, merge=True
         )
         print(f"    set /factories/{fid}.audit_pdf_path = {dest}")
+        print(f"    set /factories/{fid}.last_analyzed_at = {SEED_ANALYZED_AT.isoformat()}")
 
     print("== Regulation PDFs ==")
     for dest, fname in REGULATIONS.items():

@@ -18,9 +18,11 @@ Exposes the following routes used by the Expo mobile app + Antigravity Manager v
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from config import get_settings
 from api import upload, analyze, status, actions, simulate, failure_test, documents, report, export_summary
@@ -72,6 +74,12 @@ async def health() -> dict:
     # never forwarded to the container — use `/health` instead.
     return {"ok": True}
 
+
+# Static files — serves the downloadable sample audit report template
+# (sample_audit_template.docx / .pdf) the upload pages link to.
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 app.include_router(upload.router, prefix="/upload", tags=["upload"])
 app.include_router(analyze.router, prefix="/analyze", tags=["analyze"])

@@ -138,7 +138,15 @@ export default function FactoryDetail() {
     if (optimisticAnalyzedAt && (!best || optimisticAnalyzedAt > best)) best = optimisticAnalyzedAt;
     return best;
   }, [report, factory, optimisticAnalyzedAt]);
-  const lastAnalyzedLabel = analyzedDate ? formatAnalyzedAt(analyzedDate) : 'Not yet analyzed';
+  // Fallback chain for the sidebar label:
+  //   real timestamp  -> format it
+  //   demo factory w/ no timestamp yet -> a sensible seeded default (never "Never")
+  //   genuinely new factory (pending_upload / no score) -> "Not yet analyzed"
+  const FALLBACK_ANALYZED = 'May 29, 2026 at 11:45 AM';
+  const isPending = factory?.status === 'pending_upload' || factory?.compliance_score == null;
+  const lastAnalyzedLabel = analyzedDate
+    ? formatAnalyzedAt(analyzedDate)
+    : (isPending ? 'Not yet analyzed' : FALLBACK_ANALYZED);
 
   const targetScore = afterScore !== originalScore ? afterScore : null;
 

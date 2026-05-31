@@ -1,6 +1,6 @@
 // Upload flow entry point. Reached from HomeScreen when a factory has no
-// report yet (or the user explicitly chose the "New Factory (Demo Upload)"
-// card). Two phases:
+// report yet (or the user chose the permanent "Add New Factory" card). Two
+// phases:
 //
 //   1. Pick a PDF via expo-document-picker, POST /upload, show progress.
 //   2. POST /analyze, navigate to AnalysisProgressScreen which polls
@@ -12,8 +12,10 @@ import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   Alert,
+  Linking,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,8 +23,29 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { colors, radii, shadow, spacing } from '../constants/colors';
+import { API_BASE_URL, NEW_FACTORY_UPLOAD_ID } from '../constants/config';
 import { api } from '../services/api';
 import LogoSpinner from '../components/LogoSpinner';
+
+// Guidance content for "What should your audit report include?"
+const REQUIRED_ITEMS = [
+  'Factory name, city, and country of operation',
+  'Annual export volume in PKR or USD (broken down by buyer if possible)',
+  'List of active EU/UK buyers (e.g. retailer names and order values)',
+  'Current certifications with expiry dates: SA8000, ISO 14001, OEKO-TEX or GOTS',
+  'Chemical usage data — effluent discharge levels (ppm), dye chemicals used',
+  'Working hours per week (including overtime)',
+  'Forced/child labour compliance statement',
+  'Carbon/emissions data if exporting to EU (for CBAM compliance)',
+  'Supply chain mapping — tier-1 and tier-2 suppliers if available',
+];
+
+const OPTIONAL_ITEMS = [
+  'Previous audit findings or corrective action reports',
+  'Buyer-specific compliance questionnaire responses',
+  'Water and energy consumption data',
+  'Grievance mechanism documentation',
+];
 
 const STAGES = {
   IDLE: 'idle',
@@ -33,9 +56,18 @@ const STAGES = {
 
 export default function UploadScreen({ route, navigation }) {
   const { factoryId, factoryName } = route.params || {};
+  // New/unknown factory → user types the name; existing factory → read-only.
+  const isNew = !factoryId || factoryId === NEW_FACTORY_UPLOAD_ID;
+  const [name, setName] = useState(factoryName || 'New Factory');
   const [stage, setStage] = useState(STAGES.IDLE);
   const [pickedFile, setPickedFile] = useState(null);
   const [errMsg, setErrMsg] = useState(null);
+
+  const openTemplate = (ext) => {
+    Linking.openURL(`${API_BASE_URL}/static/sample_audit_template.${ext}`).catch(() =>
+      Alert.alert('Unable to open', 'Could not open the template. Please try again.'),
+    );
+  };
 
   const pickAndUpload = useCallback(async () => {
     setErrMsg(null);
@@ -67,13 +99,13 @@ export default function UploadScreen({ route, navigation }) {
       navigation.replace('AnalysisProgress', {
         jobId: job.job_id,
         factoryId,
-        factoryName,
+        factoryName: name,
       });
     } catch (e) {
       setStage(STAGES.ERROR);
       setErrMsg(String(e?.message || e));
     }
-  }, [factoryId, factoryName, navigation]);
+  }, [factoryId, name, navigation]);
 
   const isBusy = stage === STAGES.UPLOADING || stage === STAGES.ANALYZING_START;
 
@@ -90,12 +122,26 @@ export default function UploadScreen({ route, navigation }) {
           regulations in our system.
         </Text>
 
-        <View style={styles.factoryChip}>
-          <Ionicons name="business" size={16} color={colors.primary} />
-          <Text style={styles.factoryChipText} numberOfLines={1}>
-            {factoryName || factoryId || 'Your factory'}
-          </Text>
-        </View>
+        {isNew ? (
+          <View style={styles.nameField}>
+            <Text style={styles.nameLabel}>FACTORY NAME</Text>
+            <TextInput
+              style={styles.nameInput}
+              value={name}
+              onChangeText={setName}
+              placeholder="e.g. Faisal Weave Industries"
+              placeholderTextColor={colors.textDim}
+              editable={!isBusy}
+            />
+          </View>
+        ) : (
+          <View style={styles.factoryChip}>
+            <Ionicons name="business" size={16} color={colors.primary} />
+            <Text style={styles.factoryChipText} numberOfLines={1}>
+              {name || factoryId || 'Your factory'}
+            </Text>
+          </View>
+        )}
 
         <TouchableOpacity
           style={[styles.uploadBtn, isBusy && styles.uploadBtnBusy]}
@@ -139,6 +185,32 @@ export default function UploadScreen({ route, navigation }) {
           </View>
         )}
 
+        <GuidanceBox />
+
+        <View style={styles.sampleRow}>
+          <Text style={styles.sampleText}>
+            📄 Not sure what to include? Download our sample audit report template:
+          </Text>
+          <View style={styles.sampleBtns}>
+            <TouchableOpacity
+              style={styles.docxBtn}
+              onPress={() => openTemplate('docx')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="document-outline" size={16} color={colors.text} />
+              <Text style={styles.docxBtnText}>Download DOCX</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.pdfBtn}
+              onPress={() => openTemplate('pdf')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="document-text" size={16} color={colors.bg} />
+              <Text style={styles.pdfBtnText}>Download PDF</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>What happens next?</Text>
           <InfoRow n="1" text="We upload your PDF securely to our system." />
@@ -157,6 +229,51 @@ function InfoRow({ n, text }) {
         <Text style={styles.infoDotText}>{n}</Text>
       </View>
       <Text style={styles.infoText}>{text}</Text>
+    </View>
+  );
+}
+
+// Collapsible "What should your audit report include?" — collapsed by default.
+function GuidanceBox() {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.guidanceBox}>
+      <TouchableOpacity
+        style={styles.guidanceHead}
+        onPress={() => setOpen((o) => !o)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={open ? 'chevron-down' : 'chevron-forward'}
+          size={16}
+          color="#00C48C"
+        />
+        <Text style={styles.guidanceHeadText}>
+          📋 What should your audit report include?
+        </Text>
+      </TouchableOpacity>
+      {open && (
+        <View style={styles.guidanceBody}>
+          <Text style={styles.guidanceSectionTitle}>REQUIRED INFORMATION</Text>
+          {REQUIRED_ITEMS.map((t) => (
+            <View key={t} style={styles.guidanceItemRow}>
+              <Text style={styles.guidanceTick}>✓</Text>
+              <Text style={styles.guidanceItem}>{t}</Text>
+            </View>
+          ))}
+          <Text style={styles.guidanceSectionTitle}>HELPFUL BUT OPTIONAL</Text>
+          {OPTIONAL_ITEMS.map((t) => (
+            <View key={t} style={styles.guidanceItemRow}>
+              <Text style={styles.guidanceDot}>•</Text>
+              <Text style={styles.guidanceItemOptional}>{t}</Text>
+            </View>
+          ))}
+          <Text style={styles.guidanceSectionTitle}>SUPPORTED FORMATS</Text>
+          <Text style={styles.guidanceItemOptional}>
+            PDF only · Max 20 MB · Scanned documents are supported
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -287,4 +404,95 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     flex: 1,
   },
+
+  // Editable factory-name field
+  nameField: { marginBottom: spacing.xl },
+  nameLabel: {
+    color: colors.textDim,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    marginBottom: 6,
+  },
+  nameInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    color: colors.text,
+    fontSize: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+
+  // Guidance box (collapsible)
+  guidanceBox: {
+    backgroundColor: '#131C2E',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00C48C',
+    borderRadius: 8,
+    marginBottom: spacing.md,
+  },
+  guidanceHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  guidanceHeadText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+    marginLeft: 8,
+    flex: 1,
+  },
+  guidanceBody: { paddingHorizontal: 16, paddingBottom: 16 },
+  guidanceSectionTitle: {
+    color: '#00C48C',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    marginTop: 14,
+    marginBottom: 8,
+  },
+  guidanceItemRow: { flexDirection: 'row', marginBottom: 6 },
+  guidanceTick: { color: '#00C48C', fontWeight: '800', marginRight: 6 },
+  guidanceDot: { color: '#9CA3AF', marginRight: 6 },
+  guidanceItem: { color: '#fff', fontSize: 13, lineHeight: 19, flex: 1 },
+  guidanceItemOptional: { color: '#9CA3AF', fontSize: 13, lineHeight: 19, flex: 1 },
+
+  // Sample template download row
+  sampleRow: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: spacing.lg,
+  },
+  sampleText: { color: '#C9D1D9', fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  sampleBtns: { flexDirection: 'row', gap: spacing.sm },
+  docxBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingVertical: 12,
+  },
+  docxBtnText: { color: colors.text, fontWeight: '700', fontSize: 14, marginLeft: 6 },
+  pdfBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00C48C',
+    borderRadius: radii.md,
+    paddingVertical: 12,
+  },
+  pdfBtnText: { color: colors.bg, fontWeight: '800', fontSize: 14, marginLeft: 6 },
 });
