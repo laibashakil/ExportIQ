@@ -1,0 +1,12 @@
+# Treat these as binary so Git never applies CRLF/text normalization
+# (which would corrupt them on checkout/clone).
+*.pdf  binary
+*.docx binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
