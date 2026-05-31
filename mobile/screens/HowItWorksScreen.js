@@ -57,6 +57,104 @@ const STEPS = [
   },
 ];
 
+// Mirrors web/src/pages/HowItWorks.jsx + utils/scoring.js exactly.
+const SCORE_BANDS = [
+  { range: '100', label: 'Compliant', color: '#00C48C', desc: 'Meets all EU/UK requirements' },
+  { range: '90–99', label: 'Almost Compliant', color: '#F5A623', desc: 'Minor gaps — action needed soon' },
+  { range: '60–89', label: 'Needs Attention', color: '#F97316', desc: 'Significant gaps — orders at risk' },
+  { range: '0–59', label: 'At Risk', color: '#EF4444', desc: 'High risk of losing export orders' },
+];
+
+// Weights verbatim from backend/tools/compliance_scorer.py.
+const DEDUCTIONS = [
+  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CBAM registration (mandatory)' },
+  { type: 'High severity gap', weight: '−10 pts', example: 'SA8000 certification expired' },
+  { type: 'Medium severity gap', weight: '−5 pts', example: 'Supply chain mapping incomplete' },
+  { type: 'Low severity gap', weight: '−2 pts', example: 'Advisory recommendation not addressed' },
+  { type: 'Document contradiction', weight: '−4 pts', example: 'ISO claim contradicted by audit data' },
+];
+
+const RAISES = [
+  'Each gap you fix restores its full deducted points',
+  'Resolving a contradiction restores 4 points',
+  'Completing the full action plan brings your score back to 100',
+];
+
+function ScoreBreakdown() {
+  return (
+    <>
+      <Text style={styles.sectionHeader}>How Your Score Is Calculated</Text>
+      <View style={styles.infoCard}>
+        <Text style={styles.infoBody}>
+          Every factory starts at 100. We subtract points for each gap and
+          contradiction we find, weighted by how serious it is.
+        </Text>
+      </View>
+
+      <View style={styles.bandList}>
+        {SCORE_BANDS.map((b) => (
+          <View key={b.label} style={[styles.band, { backgroundColor: b.color }]}>
+            <Text style={styles.bandRange}>{b.range}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bandLabel}>{b.label}</Text>
+              <Text style={styles.bandDesc}>{b.desc}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      <Text style={styles.subHead}>How points are deducted</Text>
+      <View style={styles.deductCard}>
+        {DEDUCTIONS.map((d, i) => (
+          <View
+            key={d.type}
+            style={[styles.deductRow, i < DEDUCTIONS.length - 1 && styles.deductDivider]}
+          >
+            <View style={styles.deductTopRow}>
+              <Text style={styles.deductType}>{d.type}</Text>
+              <Text style={styles.deductWeight}>{d.weight}</Text>
+            </View>
+            <Text style={styles.deductExample}>{d.example}</Text>
+          </View>
+        ))}
+      </View>
+
+      <Text style={styles.subHead}>What raises your score</Text>
+      <View style={styles.raiseCard}>
+        {RAISES.map((r) => (
+          <View key={r} style={styles.raiseRow}>
+            <Text style={styles.raiseTick}>✓</Text>
+            <Text style={styles.raiseText}>{r}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.calloutCard}>
+        <View style={styles.calloutTitleRow}>
+          <Ionicons name="warning" size={16} color="#F5A623" />
+          <Text style={styles.calloutTitle}>Contradiction penalty explained</Text>
+        </View>
+        <Text style={styles.calloutBody}>
+          When your own documents disagree — e.g. your factory claims ISO 14001
+          certification but your water audit shows effluent at 12 ppm, above the
+          8 ppm legal limit — EU auditors treat it as misrepresentation, which is
+          more serious than a simple gap. Each contradiction deducts 4 points, and
+          ExportIQ drafts a buyer notification email so you can get ahead of it.
+        </Text>
+      </View>
+
+      <View style={styles.scoreTip}>
+        <Text style={styles.scoreTipEmoji}>💡</Text>
+        <Text style={styles.scoreTipText}>
+          The Simulate feature shows your projected score after each fix is
+          completed — so you can see which action has the biggest impact before
+          committing resources.
+        </Text>
+      </View>
+    </>
+  );
+}
+
 function RegulationLinks() {
   // Tracks which regulation path is currently resolving its download URL.
   const [loadingPath, setLoadingPath] = useState(null);
@@ -134,15 +232,7 @@ export default function HowItWorksScreen() {
           </View>
         ))}
 
-        <Text style={styles.sectionHeader}>How We Calculate Your Score</Text>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoBody}>
-            Your compliance score reflects how well your factory's documentation
-            aligns with EU and UK export rules. Critical missing requirements
-            weigh more heavily than minor gaps. Contradictions between your own
-            documents reduce your score because they signal audit risk.
-          </Text>
-        </View>
+        <ScoreBreakdown />
 
         <Text style={styles.sectionHeader}>Why EU and UK only?</Text>
         <View style={styles.infoCard}>
@@ -304,6 +394,77 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
   },
+
+  // Score breakdown
+  bandList: { marginTop: spacing.md },
+  band: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 44,
+    borderRadius: 6,
+    paddingHorizontal: 14,
+    marginBottom: 8,
+  },
+  bandRange: { color: '#0D1117', fontWeight: '800', fontSize: 14, width: 54 },
+  bandLabel: { color: '#0D1117', fontWeight: '800', fontSize: 13 },
+  bandDesc: { color: '#0D1117', fontSize: 11, fontWeight: '600', opacity: 0.85 },
+
+  subHead: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  deductCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 4,
+  },
+  deductRow: { paddingVertical: 11 },
+  deductDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  deductTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  deductType: { color: '#fff', fontSize: 14, fontWeight: '600', flex: 1 },
+  deductWeight: { color: '#EF4444', fontWeight: '800', fontSize: 14, marginLeft: 8 },
+  deductExample: { color: '#6B7280', fontSize: 12, marginTop: 3, lineHeight: 17 },
+
+  raiseCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+  },
+  raiseRow: { flexDirection: 'row', marginBottom: 6 },
+  raiseTick: { color: '#00C48C', fontWeight: '800', marginRight: 8 },
+  raiseText: { color: '#C9D1D9', fontSize: 13, lineHeight: 19, flex: 1 },
+
+  calloutCard: {
+    backgroundColor: 'rgba(245,166,35,0.1)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#F5A623',
+    borderRadius: 6,
+    padding: spacing.lg,
+    marginTop: spacing.md,
+  },
+  calloutTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  calloutTitle: { color: '#F5A623', fontWeight: '800', fontSize: 14, marginLeft: 6 },
+  calloutBody: { color: '#C9D1D9', fontSize: 13, lineHeight: 19 },
+
+  scoreTip: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,196,140,0.08)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#00C48C',
+    borderRadius: 6,
+    padding: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  scoreTipEmoji: { fontSize: 16, marginRight: 8 },
+  scoreTipText: { color: '#C9D1D9', fontSize: 13, lineHeight: 19, flex: 1 },
 
   tipCard: {
     flexDirection: 'row',
