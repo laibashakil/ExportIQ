@@ -13,6 +13,7 @@ import {
   subscribeReport,
   subscribeJob,
   updateDocument,
+  getRegulationUrl,
 } from '../services/firebase';
 import { api } from '../services/api';
 import { pkrFormat } from '../utils/traceFormatter';
@@ -312,6 +313,7 @@ export default function FactoryDetail() {
             {tab === 'documents' && (
               <DocumentsTab
                 factoryId={factoryId}
+                factory={factory}
                 documents={documents}
                 openDoc={openDoc}
                 setOpenDoc={setOpenDoc}
@@ -829,12 +831,65 @@ function FormCard({ factoryId, document: docItem, documents, isOpen, onToggle })
   );
 }
 
-function DocumentsTab({ factoryId, documents, openDoc, setOpenDoc }) {
+// Opens the factory's original uploaded audit PDF from Firebase Storage.
+// Mirrors the mobile DocumentVault "Original Audit Report" card so the same
+// source document is reachable on the web.
+function SourceDocCard({ factory }) {
+  const [loading, setLoading] = useState(false);
+  const path = factory?.audit_pdf_path;
+  const name = factory?.factory_name || 'Factory';
+
+  async function open() {
+    if (!path || loading) return;
+    setLoading(true);
+    try {
+      const url = await getRegulationUrl(path);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.warn('open audit pdf failed', path, err);
+      alert('Could not load the document. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="doc-section">
+      <div className="doc-section-head">
+        <Icon name="doc" size={14} color="#00D4AA" />
+        <span className="doc-section-title">Original Audit Report</span>
+      </div>
+      <div className="form-card">
+        <div className="form-head" onClick={path ? open : undefined} style={{ cursor: path ? 'pointer' : 'default' }}>
+          <div className="form-icon" style={{ background: 'var(--primary-soft)' }}>
+            <Icon name="doc" size={16} color={path ? '#00D4AA' : '#9BA3AF'} />
+          </div>
+          <div className="form-info">
+            <div className="form-title">{name}</div>
+            <div className="form-meta">
+              {path ? 'Factory Audit Report · PDF' : 'Audit document not yet available'}
+            </div>
+          </div>
+          {path && (
+            <button type="button" className="btn small primary" onClick={open} disabled={loading}>
+              {loading ? 'Opening…' : (<><Icon name="external" size={12} /> View</>)}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DocumentsTab({ factoryId, factory, documents, openDoc, setOpenDoc }) {
   if (!documents.length) {
     return (
-      <div className="empty-state">
-        No documents generated yet. Run an analysis to produce buyer emails,
-        CBAM forms, and audit checklists.
+      <div>
+        <SourceDocCard factory={factory} />
+        <div className="empty-state">
+          No generated documents yet. Run an analysis to produce buyer emails,
+          CBAM forms, and audit checklists.
+        </div>
       </div>
     );
   }
@@ -844,6 +899,7 @@ function DocumentsTab({ factoryId, documents, openDoc, setOpenDoc }) {
 
   return (
     <div>
+      <SourceDocCard factory={factory} />
       {readyToSend.length > 0 && (
         <div className="doc-section">
           <div className="doc-section-head">

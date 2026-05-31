@@ -17,7 +17,12 @@ log = logging.getLogger("exportiq.api.analyze")
 
 class AnalyzeRequest(BaseModel):
     factory_id: str
-    regulation_ids: list[str] = Field(default_factory=lambda: ["eu_cbam"])
+    # Default to the full rulebook the apps send. Analysing against only a
+    # subset (e.g. just CBAM) misses SA8000/CSDDD/chemical/labour gaps and
+    # inflates the compliance score, so a bare /analyze must not do that.
+    regulation_ids: list[str] = Field(
+        default_factory=lambda: ["eu_cbam", "uk_modern_slavery", "eu_supply_chain_directive"]
+    )
     inject_failure_in: str | None = None
     inject_failure_type: str | None = None
 
