@@ -8,12 +8,14 @@ import { subscribeFactory, subscribeReport, getRegulationUrl } from '../services
 import { pkrFormat } from '../utils/traceFormatter';
 import { deriveScore, deriveRiskPkr } from '../utils/scoring';
 
-// The three regulations the agents track, with their Firebase Storage paths.
+// The regulations the agents track, with their Firebase Storage paths.
 // Short labels keep the summary card compact; each opens the real PDF.
 const REGULATIONS = [
-  { label: 'EU CBAM', path: 'regulations/eu_cbam.pdf' },
+  { label: 'EU CSDDD', path: 'regulations/eu_csddd.pdf' },
   { label: 'UK MSA', path: 'regulations/uk_modern_slavery.pdf' },
-  { label: 'EU CSDDD', path: 'regulations/eu_supply_chain_directive.pdf' },
+  { label: 'SA8000', path: 'regulations/sa8000.pdf' },
+  { label: 'EU REACH', path: 'regulations/eu_reach.pdf' },
+  { label: 'GSP+', path: 'regulations/gsplus.pdf' },
 ];
 
 export default function Dashboard() {
@@ -124,7 +126,7 @@ export default function Dashboard() {
         </div>
         <div className="summary-card">
           <div className="summary-label">REGULATIONS TRACKED</div>
-          <div className="summary-value">3</div>
+          <div className="summary-value">5</div>
           <div className="summary-sub reg-links">
             {REGULATIONS.map((r, i) => (
               <span key={r.path}>
@@ -186,7 +188,7 @@ export default function Dashboard() {
             <div className="hiw-num">2</div>
             <div className="hiw-h">AI Agents Run a 6-Stage Pipeline</div>
             <div className="hiw-p">
-              Six specialised agents parse EU/UK regulations (CBAM, Modern Slavery, CSDDD),
+              Six specialised agents parse EU/UK regulations (CSDDD, Modern Slavery, SA8000, REACH, GSP+),
               cross-reference your audit, detect contradictions, and quantify financial risk in PKR.
             </div>
           </div>

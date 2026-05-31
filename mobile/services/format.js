@@ -81,10 +81,10 @@ export function formatRelativeTime(iso) {
 // Plain-English titles for regulations & gap requirements so the UI doesn't
 // throw acronyms at a factory owner who isn't a compliance expert.
 const REGULATION_PLAIN = [
-  { match: /CBAM|carbon border/i,            plain: 'EU Carbon Tax Filing',           ref: 'EU CBAM' },
+  { match: /supply chain due diligence|CSDDD/i, plain: 'EU Supply Chain Due Diligence', ref: 'EU CSDDD' },
   { match: /modern slavery/i,                plain: 'UK Modern Slavery Statement',    ref: 'UK Modern Slavery Act' },
-  { match: /supply chain due diligence|CSDDD/i, plain: 'EU Supply Chain Audit',       ref: 'EU CSDDD' },
   { match: /SA[\s-]?8000/i,                  plain: 'Social Accountability Certificate', ref: 'SA8000' },
+  { match: /GSP\+|GSP plus|zero[\s-]?tariff/i, plain: 'GSP+ Zero-Tariff Access',      ref: 'GSP+' },
   { match: /ISO[\s-]?14001/i,                plain: 'Environmental Management Standard', ref: 'ISO 14001' },
   { match: /ISO[\s-]?45001/i,                plain: 'Worker Safety Standard',         ref: 'ISO 45001' },
   { match: /REACH/i,                         plain: 'EU Chemical Safety Rules',       ref: 'EU REACH' },
@@ -94,11 +94,11 @@ const REGULATION_PLAIN = [
 ];
 
 const REQUIREMENT_PLAIN = [
-  // Carbon / CBAM family
-  { match: /embedded emissions.*(verified|factor|default)|verified.*emission factor|q1 2027/i,
-                                                              plain: 'Verify Emissions Data Sources' },
-  { match: /carbon declaration|cbam declar|quarterly cbam/i, plain: 'File EU Carbon Tax Report' },
-  { match: /carbon emissions report|emissions report/i,      plain: 'Submit Emissions Report' },
+  // Supply chain due diligence (CSDDD) family
+  { match: /SMETA|supplier audit|tier[\s-]?[12].*audit|q1 2027/i,
+                                                              plain: 'Commission SMETA Supplier Audits' },
+  { match: /due diligence policy|csddd declar|quarterly csddd/i, plain: 'Establish CSDDD Due Diligence Policy' },
+  { match: /due diligence process|supply chain transparency report/i, plain: 'Establish supply chain due diligence process' },
   // Labour / certifications
   { match: /labour|labor.*(standard|cert)|certverify.*labour/i, plain: 'Renew Labour Standards Certification' },
   { match: /modern slavery statement|msa statement/i,         plain: 'Publish Modern Slavery Statement' },
@@ -137,7 +137,7 @@ function compressTo6Words(s) {
 
 /**
  * Return a plain-English title + the original code reference for a regulation.
- *   plainRegulation('EU CBAM')           -> { plain: 'EU Carbon Tax Filing', ref: 'EU CBAM' }
+ *   plainRegulation('EU CSDDD')          -> { plain: 'EU Supply Chain Due Diligence', ref: 'EU CSDDD' }
  *   plainRegulation('Unknown Reg ABC')   -> { plain: 'Unknown Reg ABC', ref: null }
  */
 export function plainRegulation(raw) {
@@ -193,13 +193,13 @@ export function plainRequirement(raw, regulationRaw, status) {
  * Strip backend jargon out of an action description and return a clean
  * single-sentence plain-English description for the factory owner.
  *
- *   "Close gap on EU CBAM: File quarterly CBAM declaration covering
- *    embedded emissions of imported goods.. Current status: MISSING.
+ *   "Close gap on EU CSDDD: Establish supply chain due diligence process
+ *    covering tier-1 and tier-2 suppliers.. Current status: MISSING.
  *    Severity: CRITICAL. Deadline: 2026-07-31. Evidence cited: …"
  *
  * becomes
  *
- *   "You need to file your EU Carbon Tax Report before 31 Jul 2026."
+ *   "You need to establish your CSDDD due diligence policy before 31 Jul 2026."
  */
 export function plainActionDescription(action) {
   if (!action) return '';
@@ -232,7 +232,7 @@ export function plainActionDescription(action) {
  */
 export function plainActionTitle(action) {
   const raw = action?.title || '';
-  // Strip leading regulation-code prefix like "EU CBAM: " or "ISO 14001 - "
+  // Strip leading regulation-code prefix like "EU CSDDD: " or "ISO 14001 - "
   const cleaned = raw
     .replace(/^(EU |UK )?[A-Z][A-Z0-9 /-]{2,}\s*[:|–-]\s*/i, '')
     .replace(/^(File|Remediate|Implement|Submit|Renew)\s+(EU |UK )?[A-Z][A-Z0-9 /-]{2,}\s*[:|]\s*/i, '$1 ');

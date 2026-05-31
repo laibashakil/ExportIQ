@@ -12,7 +12,7 @@ from tools.compliance_scorer import score
 from tools.document_generator import (
     generate_audit_checklist,
     generate_buyer_email,
-    generate_cbam_form,
+    generate_csddd_report,
 )
 from tools.firestore_client import (
     append_trace,
@@ -41,7 +41,14 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
     # the whole chain) or the request explicitly covers every action.
     all_actions = bool(actions) and len(selected) == len(actions)
 
-    before_score = score(gaps, n_contradictions=len(contradictions))
+    # Use the report's pinned/persisted current score as the starting point so
+    # the simulation preview animates from the SAME number the home gauge shows
+    # (demo factories are pinned via demo_report; uploads use the live score).
+    before_score = int(
+        report.get("compliance_score")
+        or report.get("original_compliance_score")
+        or score(gaps, n_contradictions=len(contradictions))
+    )
     before_risk = report.get("orders_at_risk_pkr") or 0
 
     resolved: set[str] = set()
@@ -57,12 +64,16 @@ async def simulate(factory_id: str, req: SimulateRequest) -> dict:
         if addressed:
             gap = addressed[0]
             documents.append(generate_buyer_email(factory_name, "NordStyle Group", gap, action.get("title", "")))
-            if "CBAM" in (gap.get("regulation") or "").upper():
-                documents.append(generate_cbam_form(factory_name, "Q2-2026", 1250.0))
+            if "CSDDD" in (gap.get("regulation") or "").upper():
+                documents.append(generate_csddd_report(factory_name, "Q2-2026"))
             documents.append(generate_audit_checklist(factory_name, gap))
 
-    remaining = [g for g in gaps if g.get("gap_id") not in resolved]
-    after_score = score(remaining, n_contradictions=0 if not remaining else len(contradictions))
+    # Project the score forward from the pinned current score using each
+    # action's estimated_score_delta — keeps the preview consistent with the
+    # home gauge and the per-action deltas shown on the action cards.
+    after_score = min(100, before_score + sum(
+        int(a.get("estimated_score_delta") or 0) for a in selected
+    ))
 
     # Executing the entire plan brings the factory to full compliance: every
     # gap is closed and the contradictions they stem from resolve alongside,

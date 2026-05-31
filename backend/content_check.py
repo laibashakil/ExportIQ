@@ -96,7 +96,7 @@ for a in report.get("action_chain", []):
         fail("action.description", f"contains 'Current status:': '{title}'")
     if re.search(r"severity\s*:", desc.lower()):
         fail("action.description", f"contains 'Severity:': '{title}'")
-    # Raw regulation codes as first words: e.g. "CBAM-..." or all-caps acronym kicker
+    # Raw regulation codes as first words: e.g. "CSDDD-..." or all-caps acronym kicker
     first_words = desc.split(maxsplit=2)[:2]
     if first_words and re.fullmatch(r"[A-Z]{3,}(-[A-Z0-9]+)+", first_words[0]):
         fail("action.description", f"raw reg code as first word: '{first_words[0]}'")

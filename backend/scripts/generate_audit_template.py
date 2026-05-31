@@ -106,8 +106,8 @@ def build_docx(out_path: Path) -> None:
     section(4, "ENVIRONMENTAL DATA")
     field("Water effluent discharge level (ppm)", "EU limit: 8 ppm")
     field("Chemical dyes used (list SVHC substances if any)")
-    field("Annual CO2 emissions (tonnes)", "required for EU CBAM")
-    field("Embedded carbon per unit (kgCO2)")
+    field("Lead content in dyes (ppm)", "OEKO-TEX / EU REACH limit: 50 ppm")
+    field("Formaldehyde in fabric (ppm)", "EU REACH: 75 ppm infant / 300 ppm skin-contact")
 
     # 5
     section(5, "LABOUR COMPLIANCE")
@@ -215,8 +215,8 @@ def build_pdf(out_path: Path) -> None:
     sec(4, "ENVIRONMENTAL DATA")
     field("Water effluent discharge level (ppm)", "EU limit: 8 ppm")
     field("Chemical dyes used (list SVHC substances if any)")
-    field("Annual CO2 emissions (tonnes)", "required for EU CBAM")
-    field("Embedded carbon per unit (kgCO2)")
+    field("Lead content in dyes (ppm)", "OEKO-TEX / EU REACH limit: 50 ppm")
+    field("Formaldehyde in fabric (ppm)", "EU REACH: 75 ppm infant / 300 ppm skin-contact")
 
     sec(5, "LABOUR COMPLIANCE")
     field("Average weekly working hours (incl. overtime)", "EU limit: 48 hrs")

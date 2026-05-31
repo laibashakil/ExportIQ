@@ -1,0 +1,53 @@
+{
+  "regulation_id": "sa8000",
+  "name": "SA8000",
+  "full_name": "SA8000 Social Accountability Standard",
+  "jurisdiction": "INTERNATIONAL",
+  "issuer": "Social Accountability International (SAI)",
+  "version": "2014",
+  "source_url": "https://sa-intl.org/programs/sa8000/",
+  "source_document": "sa8000.pdf",
+  "requirement_areas": [
+    "Child Labour",
+    "Forced or Compulsory Labour",
+    "Health and Safety",
+    "Freedom of Association and Right to Collective Bargaining",
+    "Discrimination",
+    "Disciplinary Practices",
+    "Working Hours",
+    "Remuneration",
+    "Management System"
+  ],
+  "rules": [
+    {
+      "rule_id": "sa8000.working_hours",
+      "regulation_name": "SA8000",
+      "requirement": "Working hours must not exceed 48 regular hours per week. Overtime must not exceed 12 hours per week and must be voluntary.",
+      "category": "LABOUR",
+      "metric": "avg_weekly_hours",
+      "numerical_limit": 60.0,
+      "unit": "hours",
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "SA8000:2014 §7 Working Hours",
+      "recommendation": "Implement an hour-tracking system, cap at 48 regular + 12 overtime, and obtain written voluntary overtime consent from all workers."
+    },
+    {
+      "rule_id": "sa8000.certification.current",
+      "regulation_name": "SA8000",
+      "requirement": "SA8000 social accountability certification must be current and valid, with surveillance audits on file.",
+      "category": "AUDIT_CERTIFICATION",
+      "certification": "SA8000",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "CRITICAL",
+      "source_section": "SA8000:2014 §9 Management System",
+      "recommendation": "Book an SA8000 / SMETA re-audit before the certificate expiry date."
+    }
+  ]
+}

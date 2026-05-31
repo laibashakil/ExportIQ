@@ -21,11 +21,30 @@ import { getRegulationUrl } from '../services/firebase';
 // The regulations the agents read, with their Firebase Storage PDF paths.
 // Rendered as tappable rows under step 2 so users can open the real text.
 const REGULATIONS = [
-  { name: 'EU Carbon Border Adjustment Mechanism (EU CBAM)', path: 'regulations/eu_cbam.pdf' },
-  { name: 'UK Modern Slavery Act 2015', path: 'regulations/uk_modern_slavery.pdf' },
   {
-    name: 'EU Supply Chain Due Diligence Directive (EU CSDDD)',
-    path: 'regulations/eu_supply_chain_directive.pdf',
+    name: 'EU Corporate Sustainability Due Diligence Directive (CSDDD) — 2024/1760',
+    note: 'Applies to all suppliers of EU companies above €450M revenue from 2027',
+    path: 'regulations/eu_csddd.pdf',
+  },
+  {
+    name: 'UK Modern Slavery Act 2015 — Section 54',
+    note: 'Annual transparency statement required for all UK supply chain partners',
+    path: 'regulations/uk_modern_slavery.pdf',
+  },
+  {
+    name: 'SA8000 Social Accountability Standard — SAI 2014',
+    note: 'Buyer-mandated social audit: labour rights, working hours, safety',
+    path: 'regulations/sa8000.pdf',
+  },
+  {
+    name: 'EU REACH — Restricted Substances in Textiles',
+    note: 'Bans azo dyes, limits lead, formaldehyde, and other hazardous chemicals',
+    path: 'regulations/eu_reach.pdf',
+  },
+  {
+    name: 'GSP+ — EU Zero-Tariff Access (expires Dec 2027)',
+    note: "Pakistan's duty-free EU access. Non-compliance triggers 12% tariffs overnight.",
+    path: 'regulations/gsplus.pdf',
   },
 ];
 
@@ -41,7 +60,7 @@ const STEPS = [
     key: 'rules',
     title: 'Our AI reads EU and UK export rules',
     body:
-      'We keep the latest EU CBAM, UK Modern Slavery Act and Supply Chain rules in our system — you don\'t have to. Tap any rule to read it:',
+      'We keep the latest EU CSDDD, UK Modern Slavery Act, SA8000, EU REACH and GSP+ rules in our system — you don\'t have to. Tap any rule to read it:',
   },
   {
     icon: 'search',
@@ -67,7 +86,7 @@ const SCORE_BANDS = [
 
 // Weights verbatim from backend/tools/compliance_scorer.py.
 const DEDUCTIONS = [
-  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CBAM registration (mandatory)' },
+  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CSDDD due diligence policy (mandatory)' },
   { type: 'High severity gap', weight: '−10 pts', example: 'SA8000 certification expired' },
   { type: 'Medium severity gap', weight: '−5 pts', example: 'Supply chain mapping incomplete' },
   { type: 'Low severity gap', weight: '−2 pts', example: 'Advisory recommendation not addressed' },
@@ -182,7 +201,10 @@ function RegulationLinks() {
           onPress={() => open(reg)}
           disabled={!!loadingPath}
         >
-          <Text style={styles.regName}>{reg.name}</Text>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <Text style={styles.regName}>{reg.name}</Text>
+            {reg.note ? <Text style={styles.regNote}>{reg.note}</Text> : null}
+          </View>
           {loadingPath === reg.path ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
@@ -366,9 +388,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
-    flex: 1,
-    marginRight: 8,
     lineHeight: 20,
+  },
+  regNote: {
+    color: '#8B949E',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
   },
   sectionHeader: {
     color: colors.primary,

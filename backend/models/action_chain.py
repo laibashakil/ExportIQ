@@ -14,7 +14,7 @@ Effort = Literal["LOW", "MEDIUM", "HIGH"]
 class GeneratedDocument(BaseModel):
     document_id: str
     title: str
-    kind: Literal["CBAM_FORM", "BUYER_EMAIL", "AUDIT_CHECKLIST", "REMEDIATION_PLAN", "CERTIFICATION_APP"]
+    kind: Literal["CSDDD_DUE_DILIGENCE_REPORT", "CBAM_FORM", "BUYER_EMAIL", "AUDIT_CHECKLIST", "REMEDIATION_PLAN", "CERTIFICATION_APP"]
     body: str = Field(..., description="Markdown / HTML body, ready to render or email")
     relates_to_action: str | None = None
     generated_at: datetime = Field(default_factory=datetime.utcnow)

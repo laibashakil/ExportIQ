@@ -13,7 +13,7 @@ const STEPS = [
     icon: 'doc',
     title: 'Our AI reads EU and UK export rules',
     body:
-      "We keep the latest EU CBAM, UK Modern Slavery Act and Supply Chain rules in our system — you don't have to.",
+      "We keep the latest EU CSDDD, UK Modern Slavery Act, SA8000, EU REACH and GSP+ rules in our system — you don't have to.",
   },
   {
     icon: 'cpu',
@@ -42,7 +42,7 @@ const SCORE_BANDS = [
 // Penalty weights — verbatim from backend/tools/compliance_scorer.py
 // (SEVERITY_PENALTY + CONTRADICTION_PENALTY). Every factory starts at 100.
 const DEDUCTIONS = [
-  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CBAM registration (mandatory)' },
+  { type: 'Critical gap', weight: '−12 pts', example: 'Missing CSDDD registration (mandatory)' },
   { type: 'High severity gap', weight: '−10 pts', example: 'SA8000 certification expired' },
   { type: 'Medium severity gap', weight: '−5 pts', example: 'Supply chain mapping incomplete' },
   { type: 'Low severity gap', weight: '−2 pts', example: 'Advisory recommendation not addressed' },

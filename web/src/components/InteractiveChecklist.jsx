@@ -15,7 +15,7 @@ import Markdown, { renderInline } from './Markdown.jsx';
 
 function detectTemplateKind(label) {
   const l = label.toLowerCase();
-  if (l.includes('cbam')) return 'CBAM_FORM';
+  if (l.includes('csddd') && l.includes('report')) return 'CSDDD_DUE_DILIGENCE_REPORT';
   if (l.includes('modern slavery') || l.includes('msa')) return 'MSA_STATEMENT';
   if (l.includes('csddd') || l.includes('due diligence') || l.includes('supply chain narrative')) {
     return 'CSDDD_NARRATIVE';
@@ -46,10 +46,10 @@ function parseChecklistBody(body) {
 }
 
 const TEMPLATE_LABELS = {
-  CBAM_FORM: 'CBAM Form',
+  CSDDD_DUE_DILIGENCE_REPORT: 'CSDDD Report',
   MSA_STATEMENT: 'MSA Statement',
   CSDDD_NARRATIVE: 'CSDDD Narrative',
-  EMISSIONS_REPORT: 'Emissions Report',
+  EMISSIONS_REPORT: 'Supply Chain Transparency Report',
   AUDIT_CHECKLIST: 'Audit Checklist',
   CERTIFICATION_APP: 'Certification Form',
 };

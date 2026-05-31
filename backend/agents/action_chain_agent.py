@@ -107,7 +107,7 @@ def run(state: AgentState) -> dict:
 def _action_title(gap: dict) -> str:
     """Use the gap's plain-English display_title verbatim — this is already
     an imperative ≤6-word phrase set by the gap_detection agent (e.g.
-    "File EU Carbon Tax Report"). Falls back to a status-derived verb plus
+    "Establish CSDDD Due Diligence Policy"). Falls back to a status-derived verb plus
     a humanised regulation name if no display_title is present."""
     display = (gap.get("display_title") or "").strip()
     if display:

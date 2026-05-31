@@ -553,15 +553,15 @@ const READY_TO_SEND_KINDS = new Set(['BUYER_EMAIL']);
 function plainDocTitle(d) {
   if (d.title) return d.title;
   switch (d.kind) {
-    case 'CBAM_FORM':
-    case 'CBAM_DECLARATION':
-      return 'EU Carbon Tax Filing';
+    case 'CSDDD_DUE_DILIGENCE_REPORT':
+    case 'CSDDD_NARRATIVE':
+      return 'CSDDD Due Diligence Report';
     case 'CERTIFICATION_APP':
       return 'Certification Application';
     case 'MSA_STATEMENT':
       return 'Modern Slavery Statement';
     case 'EMISSIONS_REPORT':
-      return 'Emissions Report';
+      return 'Supply Chain Transparency Report';
     case 'AUDIT_CHECKLIST':
       return 'Audit Checklist';
     case 'REMEDIATION_PLAN':
@@ -896,7 +896,7 @@ function DocumentsTab({ factoryId, factory, documents, openDoc, setOpenDoc }) {
         <SourceDocCard factory={factory} />
         <div className="empty-state">
           No generated documents yet. Run an analysis to produce buyer emails,
-          CBAM forms, and audit checklists.
+          CSDDD due diligence reports, and audit checklists.
         </div>
       </div>
     );

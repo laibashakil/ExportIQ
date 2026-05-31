@@ -23,7 +23,7 @@ const REQUIRED_ITEMS = [
   'Chemical usage data — effluent discharge levels (ppm), dye chemicals used',
   'Working hours per week (including overtime)',
   'Forced/child labour compliance statement',
-  'Carbon/emissions data if exporting to EU (for CBAM compliance)',
+  'Supplier compliance data if exporting to EU (for CSDDD due diligence)',
   'Supply chain mapping — tier-1 and tier-2 suppliers if available',
 ];
 
@@ -99,8 +99,10 @@ export default function Upload() {
   const fileRef = useRef(null);
   const unsubJob = useRef(null);
 
-  // If the route is /upload without a factory id, default to a demo "New
-  // Factory" slot so a judge can drop in any PDF and see the pipeline run.
+  // If the route is /upload without a factory id, default to the demo-upload
+  // factory (Al-Madina Sportswear / ams_skl_004) so a judge can drop in its
+  // audit PDF and see the pipeline run and land on its pinned score-38 result.
+  // Switch to 'sgd_tex_005' to drive the backup factory instead.
   const factory = useMemo(() => {
     if (paramFactory) {
       return (
@@ -109,9 +111,9 @@ export default function Upload() {
       );
     }
     return {
-      factory_id: 'demo_factory_upload_test',
+      factory_id: 'ams_skl_004',
       factory_name: 'New Factory',
-      city: 'Faisalabad',
+      city: 'Sialkot',
     };
   }, [paramFactory]);
 
@@ -187,8 +189,8 @@ export default function Upload() {
         </div>
         <h1 className="upload-title">Let's check your factory</h1>
         <p className="upload-sub">
-          Upload your factory's audit report PDF. We already have the latest EU CBAM, UK Modern
-          Slavery Act, and EU CSDDD rules in our system — our agents will compare and find any gaps.
+          Upload your factory's audit report PDF. We already have the latest EU CSDDD, UK Modern
+          Slavery Act, SA8000, EU REACH, and GSP+ rules in our system — our agents will compare and find any gaps.
         </p>
 
         {isNew ? (
@@ -269,7 +271,7 @@ export default function Upload() {
           <div className="tip-head">What we'll do with your file</div>
           <ul>
             <li>Parse the audit with Gemini 2.5 Pro to extract certificates, claims, and audit findings.</li>
-            <li>Compare against EU CBAM, UK Modern Slavery Act, and EU CSDDD rules.</li>
+            <li>Compare against EU CSDDD, UK Modern Slavery Act, SA8000, EU REACH, and GSP+ requirements.</li>
             <li>Generate a compliance score, prioritised action plan, and buyer-facing emails.</li>
             <li>No data leaves your Firebase project — uploads go straight to Cloud Storage.</li>
           </ul>

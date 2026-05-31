@@ -1,0 +1,138 @@
+{
+  "factory_id": "sgd_tex_005",
+  "factory_name": "Sargodha Textile Mills (Pvt) Ltd",
+  "city": "Sargodha",
+  "province": "Punjab",
+  "primary_products": ["Woven shirting", "Uniform fabrics", "Workwear"],
+  "employee_count": 410,
+  "annual_export_pkr": 23000000000,
+  "audit_date": "2026-05-09",
+  "auditor": "CertVerify Pakistan (Pvt) Ltd",
+  "exports_by_buyer_pkr": {
+    "EuroThread SA": 10500000000,
+    "BritMart Retail": 8000000000,
+    "CottonEast GmbH": 4500000000
+  },
+  "primary_buyers": ["EuroThread SA", "BritMart Retail", "CottonEast GmbH"],
+  "buyers": [
+    {"name": "EuroThread SA", "pkr_crore": 105, "share": 0.457, "jurisdiction": "EU"},
+    {"name": "BritMart Retail", "pkr_crore": 80, "share": 0.348, "jurisdiction": "UK"},
+    {"name": "CottonEast GmbH", "pkr_crore": 45, "share": 0.196, "jurisdiction": "EU"}
+  ],
+  "avg_regular_hours": 48,
+  "avg_overtime_hours": 6,
+  "avg_weekly_hours": 54,
+  "overtime_voluntary": false,
+  "minimum_worker_age": 16,
+  "age_verification_complete": true,
+  "grievance_mechanism": "Formal",
+  "msa_statement_published": false,
+  "water_effluent_ppm": 7.1,
+  "chemical_testing_cert": "Present",
+  "dye_suppliers_verified": "Yes",
+  "azo_dye_test": "Pass",
+  "formaldehyde_ppm": 220,
+  "lead_in_dyes_ppm": 38,
+  "tier1_suppliers_mapped": "Yes",
+  "tier1_suppliers_audited": "Partial",
+  "tier2_suppliers_mapped": "No",
+  "csddd_due_diligence_policy": "Missing",
+  "sa8000_status": "NON_CONFORMANT",
+  "iso_14001_status": "VALID",
+  "iso_14001_expiry": "2028-03-10",
+  "gots_status": "NOT_HELD",
+  "certifications": [
+    {"name": "SA8000", "status": "NON_CONFORMANT", "expiry_date": null, "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2028-03-10", "issuer": "BSI"},
+    {"name": "GOTS", "status": "NOT_HELD", "expiry_date": null, "issuer": null},
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2027-04-20", "issuer": "OEKO-TEX Institute"}
+  ],
+  "self_reported_claims": [
+    "All working hours within statutory limits",
+    "Factory fully SA8000 compliant",
+    "UK Modern Slavery statement submitted to buyers"
+  ],
+  "claims": [
+    {"claim": "All working hours within statutory limits", "source": "sgd_compliance_self_report_q1.pdf", "value": true},
+    {"claim": "Factory fully SA8000 compliant", "source": "sgd_compliance_self_report_q1.pdf", "value": true},
+    {"claim": "UK Modern Slavery statement submitted to buyers", "source": "sgd_compliance_self_report_q1.pdf", "value": true}
+  ],
+  "audit_evidence": [
+    {"metric": "weekly_working_hours", "value": 54, "unit": "hours", "source": "sgd_labour_audit_q1_2026.pdf", "measured_on": "2026-03-21"},
+    {"metric": "water_effluent_discharge", "value": 7.1, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
+    {"metric": "lead_in_dyes", "value": 38.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "formaldehyde_ppm", "value": 220, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "csddd_due_diligence_policy", "value": "MISSING", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-05"}
+  ],
+  "demo_report": {
+    "compliance_score": 67,
+    "risk_level": "WARNING",
+    "orders_at_risk_pkr": 8050000000,
+    "score_after_full_simulation": 100,
+    "orders_at_risk_after_simulation": 0,
+    "buyers_affected": ["EuroThread SA", "BritMart Retail"],
+    "gaps": [
+      {
+        "gap_id": "gap_sgd_hours",
+        "rule_id": "sa8000.working_hours",
+        "regulation": "SA8000",
+        "requirement": "Working hours must not exceed 48 regular hours per week. Overtime must not exceed 12 hours per week and must be voluntary.",
+        "display_title": "Cap Working Hours to SA8000 Limit",
+        "status": "NON_CONFORMANT",
+        "factory_status": "NON_CONFORMANT — independent audit shows 54 hrs/week average, overtime not documented as voluntary",
+        "severity": "HIGH",
+        "deadline": null,
+        "days_remaining": null,
+        "evidence": ["sgd_labour_audit_q1_2026.pdf — payroll records"],
+        "recommendation": "Cap regular hours at 48, introduce formal voluntary overtime sign-off process, re-audit within 3 months.",
+        "linked_action_id": "act_sgd_1"
+      },
+      {
+        "gap_id": "gap_sgd_csddd",
+        "rule_id": "csddd.art8.due_diligence_policy",
+        "regulation": "EU CSDDD",
+        "requirement": "Establish and implement a due diligence policy identifying human rights and environmental risks in operations and supply chain.",
+        "display_title": "Establish CSDDD Due Diligence Policy",
+        "status": "MISSING",
+        "factory_status": "MISSING — no documented CSDDD due diligence policy. Tier-2 suppliers not mapped.",
+        "severity": "HIGH",
+        "deadline": "2027-01-01",
+        "days_remaining": 214,
+        "evidence": ["internal_governance_q1.pdf"],
+        "recommendation": "Draft and adopt board-level supply chain due diligence policy. Map all tier-2 suppliers before CSDDD Phase 1 deadline.",
+        "linked_action_id": "act_sgd_2"
+      },
+      {
+        "gap_id": "gap_sgd_msa",
+        "rule_id": "uk_msa.s54.statement",
+        "regulation": "UK Modern Slavery Act",
+        "requirement": "Publish annual Modern Slavery and Human Trafficking Statement approved by board, signed by director, linked from homepage.",
+        "display_title": "Publish Modern Slavery Statement",
+        "status": "MISSING",
+        "factory_status": "MISSING — statement not published on company website. Only shared informally with buyers via email.",
+        "severity": "MEDIUM",
+        "deadline": "2026-09-30",
+        "days_remaining": 121,
+        "evidence": ["sgd_compliance_self_report_q1.pdf — compliance declarations"],
+        "recommendation": "Publish formal s.54 statement on company website. Obtain board sign-off.",
+        "linked_action_id": "act_sgd_3"
+      }
+    ],
+    "contradictions": [
+      {
+        "claim": "All working hours within statutory limits / Factory fully SA8000 compliant",
+        "evidence": "Independent audit measured 54 hrs/week average — exceeds SA8000 48-hour regular week limit",
+        "source_a": "sgd_compliance_self_report_q1.pdf",
+        "source_b": "sgd_labour_audit_q1_2026.pdf",
+        "confidence": 0.85,
+        "impact": "The SA8000-compliance claim is undercut by a 54-hour audited week, exceeding the 48-hour regular-week limit."
+      }
+    ],
+    "action_chain": [
+      {"action_id": "act_sgd_1", "priority": 1, "title": "Cap working hours + implement voluntary overtime system", "description": "Cap regular hours at 48, introduce a formal voluntary overtime sign-off process, and re-audit within 3 months.", "addresses_gap_ids": ["gap_sgd_hours"], "effort": "MEDIUM", "deadline": "2026-07-01", "impact_pkr": 3900000000, "status": "PENDING", "estimated_score_delta": 16},
+      {"action_id": "act_sgd_2", "priority": 2, "title": "Establish CSDDD due diligence policy + map tier-2 suppliers", "description": "Draft and adopt a board-level supply chain due diligence policy and map all tier-2 suppliers before the CSDDD Phase 1 deadline.", "addresses_gap_ids": ["gap_sgd_csddd"], "effort": "HIGH", "deadline": "2027-01-01", "impact_pkr": 2930000000, "status": "PENDING", "estimated_score_delta": 12},
+      {"action_id": "act_sgd_3", "priority": 3, "title": "Publish UK Modern Slavery Act s.54 statement", "description": "Publish the formal s.54 statement on the company website with a homepage link and obtain board sign-off.", "addresses_gap_ids": ["gap_sgd_msa"], "effort": "LOW", "deadline": "2026-09-30", "impact_pkr": 1220000000, "status": "PENDING", "estimated_score_delta": 5}
+    ]
+  },
+  "notes": "Sargodha Textile Mills is the BACKUP demo-upload factory (not pre-loaded). Used only if Al-Madina Sportswear fails during the demo. Score 67 WARNING with 3 gaps and 1 contradiction; full simulation lands at 100 / PKR 0."
+}

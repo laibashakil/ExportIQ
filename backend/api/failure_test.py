@@ -41,7 +41,7 @@ async def inject_failure(job_id: str, req: FailureTestRequest, bg: BackgroundTas
         raise HTTPException(404, f"job {job_id} not found")
 
     factory_id = job["factory_id"]
-    regulation_ids = job.get("regulation_ids") or ["eu_cbam"]
+    regulation_ids = job.get("regulation_ids") or ["eu_csddd", "uk_modern_slavery", "sa8000", "eu_reach", "gsplus"]
 
     new_job_id = f"job_{uuid.uuid4().hex[:10]}_recovery"
     set_doc(f"jobs/{new_job_id}", {

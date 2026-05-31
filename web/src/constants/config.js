@@ -32,14 +32,16 @@ export const DEMO_FACTORIES = [
     factory_id: 'rgl_khi_003',
     factory_name: 'Ravi Garments Ltd',
     city: 'Karachi',
-    compliance_score: 91,
+    compliance_score: 95,
     risk_level: 'COMPLIANT',
     orders_at_risk_pkr: 8000000,
   },
 ];
 
 export const DEFAULT_REGULATION_IDS = [
-  'eu_cbam',
+  'eu_csddd',
   'uk_modern_slavery',
-  'eu_supply_chain_directive',
+  'sa8000',
+  'eu_reach',
+  'gsplus',
 ];

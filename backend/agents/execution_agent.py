@@ -2,8 +2,8 @@
 
 Simulates the impact of executing each action: updates compliance score in
 Firestore (real-time animation on mobile HomeScreen), computes PKR risk
-reduction, and generates supporting documents (buyer email, CBAM form,
-audit checklist).
+reduction, and generates supporting documents (buyer email, CSDDD due
+diligence report, audit checklist).
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import time
 from tools.compliance_scorer import score, risk_level, SEVERITY_PENALTY
 from tools.document_generator import (
     generate_buyer_email,
-    generate_cbam_form,
+    generate_csddd_report,
     generate_audit_checklist,
 )
 from tools.firestore_client import (
@@ -197,8 +197,8 @@ def _docs_for_action(factory: dict, action: dict, gaps: list[dict]) -> list[dict
 
     factory_name = factory.get("factory_name", "Factory")
 
-    if "CBAM" in (gap.get("regulation") or "").upper():
-        out.append(generate_cbam_form(factory_name, "Q2-2026", 1250.0))
+    if "CSDDD" in (gap.get("regulation") or "").upper():
+        out.append(generate_csddd_report(factory_name, "Q2-2026"))
     out.append(generate_audit_checklist(factory_name, gap))
 
     for d in out:
@@ -221,7 +221,7 @@ def _generate_proactive_buyer_emails(factory: dict, financial: dict) -> list[dic
     # Topics phrased as routine refresh work — never as failure remediation.
     in_progress = [
         "scheduled certification refresh cycle",
-        "emissions data documentation refresh",
+        "supply chain due diligence documentation refresh",
         "audit trail digitisation for working-hours records",
     ]
 

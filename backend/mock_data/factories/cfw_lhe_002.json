@@ -2,32 +2,110 @@
   "factory_id": "cfw_lhe_002",
   "factory_name": "Chenab Fabric Works",
   "city": "Lahore",
+  "province": "Punjab",
   "primary_products": ["Bed linen", "Towels", "Cotton apparel"],
-  "annual_export_pkr": 6800000000,
+  "employee_count": 350,
+  "annual_export_pkr": 1800000000,
+  "audit_date": "2026-05-08",
+  "auditor": "CertVerify Pakistan (Pvt) Ltd",
   "exports_by_buyer_pkr": {
-    "EuroThread SA": 2500000000,
-    "NordStyle Group": 2100000000,
-    "M&S": 1400000000,
-    "Mango": 800000000
+    "EuroThread SA": 900000000,
+    "M&S": 540000000,
+    "NordStyle Group": 360000000
   },
-  "primary_buyers": ["EuroThread SA", "NordStyle Group", "M&S", "Mango"],
+  "primary_buyers": ["EuroThread SA", "M&S", "NordStyle Group"],
+  "buyers": [
+    {"name": "EuroThread SA", "pkr_crore": 90, "share": 0.5, "jurisdiction": "EU"},
+    {"name": "M&S", "pkr_crore": 54, "share": 0.3, "jurisdiction": "UK"},
+    {"name": "NordStyle Group", "pkr_crore": 36, "share": 0.2, "jurisdiction": "EU"}
+  ],
+  "avg_weekly_hours": 47,
+  "avg_overtime_hours": 5,
+  "overtime_voluntary": true,
+  "minimum_worker_age": 15,
+  "age_verification_complete": false,
+  "grievance_mechanism": "Formal",
+  "msa_statement_published": true,
+  "water_effluent_ppm": 6.5,
+  "chemical_testing_cert": "Present",
+  "dye_suppliers_verified": "Partial",
+  "azo_dye_test": "Pass",
+  "formaldehyde_ppm": 210,
+  "lead_in_dyes_ppm": 42,
+  "tier1_suppliers_mapped": "Yes",
+  "tier1_suppliers_audited": "No",
+  "tier2_suppliers_mapped": "No",
+  "csddd_due_diligence_policy": "Present",
+  "sa8000_status": "VALID",
+  "sa8000_expiry": "2027-06-30",
+  "iso_14001_status": "VALID",
+  "iso_14001_expiry": "2028-01-01",
   "certifications": [
-    {"name": "SA8000", "status": "VALID", "expiry_date": "2027-04-30", "issuer": "SAI"},
-    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-02-15", "issuer": "CertVerify Pakistan"},
+    {"name": "SA8000", "status": "VALID", "expiry_date": "2027-06-30", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2028-01-01", "issuer": "CertVerify Pakistan"},
     {"name": "GOTS", "status": "VALID", "expiry_date": "2026-11-20", "issuer": "Control Union"},
-    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-10-01", "issuer": "OEKO-TEX Institute"}
+    {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2027-04-01", "issuer": "OEKO-TEX Institute"}
+  ],
+  "self_reported_claims": [
+    "Modern Slavery Act statement published 2026 and linked from homepage",
+    "CSDDD supply chain due diligence policy adopted at board level",
+    "Average weekly working hours: 47"
   ],
   "claims": [
-    {"claim": "CBAM quarterly declarations filed on time", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": true},
-    {"claim": "Modern Slavery Act statement published 2026", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": true},
-    {"claim": "Average weekly working hours: 52", "source": "chenab_fabric_compliance_q1_2026.pdf", "value": 52}
+    {"claim": "Modern Slavery Act statement published 2026 and linked from homepage", "source": "cfw_lhe_002.pdf", "value": true},
+    {"claim": "CSDDD supply chain due diligence policy adopted at board level", "source": "cfw_lhe_002.pdf", "value": true},
+    {"claim": "Average weekly working hours: 47", "source": "cfw_lhe_002.pdf", "value": 47}
   ],
   "audit_evidence": [
-    {"metric": "water_effluent_discharge", "value": 6.5, "unit": "ppm", "source": "bureau_veritas_water_apr26.pdf", "measured_on": "2026-04-08"},
-    {"metric": "weekly_working_hours", "value": 53, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-15"},
-    {"metric": "co2_per_unit", "value": 3.8, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
-    {"metric": "lead_in_dyes", "value": 92.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
-    {"metric": "supply_chain_due_diligence_report", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-01"}
+    {"metric": "weekly_working_hours", "value": 47, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-20"},
+    {"metric": "water_effluent_discharge", "value": 6.5, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
+    {"metric": "formaldehyde_ppm", "value": 210, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "tier1_suppliers_audited", "value": "NO", "unit": null, "source": "cfw_lhe_002.pdf — supplier management section", "measured_on": "2026-04-02"}
   ],
-  "notes": "Chenab Fabric Works is mostly clean; one outstanding gap is the EU Supply Chain Due Diligence Directive narrative still being in draft."
+  "demo_report": {
+    "compliance_score": 78,
+    "risk_level": "WARNING",
+    "orders_at_risk_pkr": 45000000,
+    "score_after_full_simulation": 100,
+    "orders_at_risk_after_simulation": 0,
+    "buyers_affected": ["EuroThread SA", "M&S"],
+    "gaps": [
+      {
+        "gap_id": "gap_cfw_supplier_audit",
+        "rule_id": "csddd.art10.supplier_audit",
+        "regulation": "EU CSDDD",
+        "requirement": "Carry out periodic supplier audits to verify that identified potential and actual adverse impacts are being addressed.",
+        "display_title": "Commission SMETA Supplier Audits",
+        "status": "PARTIAL",
+        "factory_status": "PARTIAL — factory has audited its own operations but has not audited any of its 8 raw material suppliers",
+        "severity": "HIGH",
+        "deadline": "2027-06-01",
+        "days_remaining": 365,
+        "evidence": ["cfw_lhe_002.pdf — supplier management section"],
+        "recommendation": "Commission SMETA or BSCI audits for top 3 suppliers by raw material spend.",
+        "linked_action_id": "act_cfw_1"
+      },
+      {
+        "gap_id": "gap_cfw_age",
+        "rule_id": "gsplus.ilo_c138.minimum_age",
+        "regulation": "GSP+",
+        "requirement": "ILO Convention 138 — minimum age for employment must equal school-leaving age, minimum 15 years.",
+        "display_title": "Verify Worker Age Records",
+        "status": "PARTIAL",
+        "factory_status": "UNVERIFIED — age verification records for 23 workers hired in 2024-2025 are missing from HR files",
+        "severity": "MEDIUM",
+        "deadline": "2026-12-31",
+        "days_remaining": 213,
+        "evidence": ["cfw_lhe_002.pdf — HR records section"],
+        "recommendation": "Retroactively obtain NADRA CNIC copies for all workers.",
+        "linked_action_id": "act_cfw_2"
+      }
+    ],
+    "contradictions": [],
+    "action_chain": [
+      {"action_id": "act_cfw_1", "priority": 1, "title": "Commission SMETA supplier audits for top 3 raw material suppliers", "description": "Commission SMETA or BSCI audits for the top 3 suppliers by raw material spend to satisfy CSDDD Article 10.", "addresses_gap_ids": ["gap_cfw_supplier_audit"], "effort": "HIGH", "deadline": "2027-06-01", "impact_pkr": 30000000, "status": "PENDING", "estimated_score_delta": 10},
+      {"action_id": "act_cfw_2", "priority": 2, "title": "Retroactively verify worker age records + implement ID hiring check", "description": "Retroactively obtain NADRA CNIC copies for the 23 workers with missing records and add an ID verification step to hiring.", "addresses_gap_ids": ["gap_cfw_age"], "effort": "LOW", "deadline": "2026-12-31", "impact_pkr": 15000000, "status": "PENDING", "estimated_score_delta": 5}
+    ]
+  },
+  "notes": "Chenab Fabric Works is the WARNING demo factory: broadly compliant with two residual gaps (unaudited suppliers, missing age records). Score and PKR are pinned via demo_report override."
 }

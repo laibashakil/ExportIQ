@@ -34,14 +34,14 @@ class AuditEvidence(BaseModel):
 
 
 class Gap(BaseModel):
-    regulation: str = Field(..., description="e.g. 'EU CBAM', 'UK Modern Slavery Act'")
+    regulation: str = Field(..., description="e.g. 'EU CSDDD', 'UK Modern Slavery Act', 'SA8000', 'EU REACH', 'GSP+'")
     requirement: str
     display_title: str | None = Field(
         None,
         description=(
             "Plain-English title for the gap, max 6 words. Used by the mobile "
-            "UI on the Status screen. Examples: 'File EU Carbon Tax Report', "
-            "'Renew Worker Safety Certificate', 'Fix Water Discharge Levels'."
+            "UI on the Status screen. Examples: 'Establish CSDDD Due Diligence Policy', "
+            "'Publish Modern Slavery Statement', 'Commission SMETA Supplier Audits'."
         ),
     )
     status: Literal["MISSING", "NON_CONFORMANT", "EXPIRED", "PARTIAL"]
@@ -63,7 +63,7 @@ class Contradiction(BaseModel):
 class Factory(BaseModel):
     factory_id: str
     factory_name: str
-    city: Literal["Faisalabad", "Karachi", "Lahore", "Sialkot", "Multan"]
+    city: Literal["Faisalabad", "Karachi", "Lahore", "Sialkot", "Multan", "Sargodha"]
     primary_products: list[str] = Field(default_factory=list)
     annual_export_pkr: int = 0
     primary_buyers: list[str] = Field(default_factory=list)

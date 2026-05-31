@@ -44,7 +44,7 @@ export function storage() {
 
 /**
  * Resolve a download URL for a file in Firebase Storage (e.g. a regulation
- * PDF stored at 'regulations/eu_cbam.pdf'). The returned URL can be handed
+ * PDF stored at 'regulations/eu_csddd.pdf'). The returned URL can be handed
  * straight to Linking.openURL to open in the device browser / PDF viewer.
  */
 export function getRegulationUrl(path) {

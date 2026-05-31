@@ -1,0 +1,48 @@
+{
+  "regulation_id": "gsplus",
+  "name": "GSP+",
+  "full_name": "GSP+ — EU Generalised Scheme of Preferences (Zero-Tariff Access)",
+  "jurisdiction": "EU",
+  "source_url": "https://policy.trade.ec.europa.eu/development-and-sustainability/generalised-scheme-preferences-gsp_en",
+  "source_document": "gsplus.pdf",
+  "pakistan_status": "Pakistan is a GSP+ beneficiary; current arrangement expires December 2027.",
+  "conventions_count": 27,
+  "convention_areas": [
+    "Human rights (UN core conventions)",
+    "Labour rights (ILO fundamental conventions)",
+    "Environmental protection",
+    "Good governance"
+  ],
+  "rules": [
+    {
+      "rule_id": "gsplus.ilo_c138.minimum_age",
+      "regulation_name": "GSP+",
+      "requirement": "ILO Convention 138 — the minimum age for employment must equal the school-leaving age and be no less than 15 years. Age must be verifiable for every worker.",
+      "category": "LABOUR",
+      "metric": "minimum_worker_age",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": "2026-12-31",
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "MEDIUM",
+      "source_section": "GSP+ Annex VIII — ILO Convention 138",
+      "recommendation": "Retroactively obtain NADRA CNIC copies for all workers and add an ID hiring check."
+    },
+    {
+      "rule_id": "gsplus.conventions.ratification",
+      "regulation_name": "GSP+",
+      "requirement": "Maintain effective implementation of the 27 international conventions on human rights, labour rights, environmental protection and good governance that underpin Pakistan's duty-free EU access. Non-compliance can trigger reinstatement of standard ~12% tariffs.",
+      "category": "SUPPLY_CHAIN",
+      "metric": "gsplus_conventions_status",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": "2027-12-31",
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "GSP Regulation (EU) No 978/2012 — GSP+ Annex VIII",
+      "recommendation": "Track ILO and environmental convention compliance at factory level to protect GSP+ tariff status ahead of the 2027 renewal."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "regulation_id": "eu_reach",
+  "name": "EU REACH",
+  "full_name": "EU REACH — Restricted Substances in Textiles (SVHC)",
+  "jurisdiction": "EU",
+  "regulation_number": "1907/2006",
+  "source_url": "https://echa.europa.eu/regulations/reach/understanding-reach",
+  "source_document": "eu_reach.pdf",
+  "rules": [
+    {
+      "rule_id": "eu_reach.svhc.azo_dyes",
+      "regulation_name": "EU REACH",
+      "requirement": "Azo dyes that can release carcinogenic aromatic amines are prohibited in textile articles. Formaldehyde must not exceed 75 ppm for infant articles and 300 ppm for skin-contact garments.",
+      "category": "CHEMICAL",
+      "metric": "azo_dye_test",
+      "numerical_limit": null,
+      "unit": null,
+      "deadline": "2026-12-31",
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "REACH Annex XVII Entry 43 (azo) / Entry 72 (formaldehyde)",
+      "recommendation": "Commission an Oeko-Tex or SGS chemical compliance test for all dye lots from current suppliers."
+    },
+    {
+      "rule_id": "eu_reach.svhc.lead_dyes",
+      "regulation_name": "EU REACH",
+      "requirement": "Lead content in textile dyes must not exceed 50 ppm per OEKO-TEX Standard 100 and EU REACH Annex XVII restrictions. Chromium VI must stay below 3 mg/kg.",
+      "category": "CHEMICAL",
+      "metric": "lead_in_dyes_ppm",
+      "numerical_limit": 50.0,
+      "unit": "ppm",
+      "deadline": "2026-12-31",
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "REACH Annex XVII Entry 63 (lead) / Entry 47 (Cr VI)",
+      "recommendation": "Switch to REACH-compliant dye suppliers and commission an SGS or Intertek full SVHC panel test."
+    },
+    {
+      "rule_id": "eu_reach.svhc.npe_effluent",
+      "regulation_name": "EU REACH",
+      "requirement": "Nonylphenol ethoxylates (NPEs) are restricted in textile articles, and effluent discharge must stay within environmental limits (8 ppm reference ceiling).",
+      "category": "CHEMICAL",
+      "metric": "water_effluent_ppm",
+      "numerical_limit": 8.0,
+      "unit": "ppm",
+      "deadline": null,
+      "grace_period_days": null,
+      "applies_to_pakistan_exporters": true,
+      "severity_if_missed": "HIGH",
+      "source_section": "REACH Annex XVII Entry 46a (NPEs)",
+      "recommendation": "Adjust the effluent-treatment plant and re-sample before the next OEKO-TEX surveillance audit."
+    }
+  ]
+}

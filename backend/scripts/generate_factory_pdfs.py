@@ -1,23 +1,26 @@
-"""Generate realistic factory audit PDFs from the canonical JSON fixtures.
+"""Generate realistic 7-page factory audit PDFs from the canonical JSON fixtures.
 
-Each PDF mirrors the data in `backend/mock_data/factories/*.json` so the
-LangGraph pipeline sees consistent inputs whether the upstream tool ingests
-the JSON directly or runs PyMuPDF over the PDF.
+Each PDF mirrors the data in `backend/mock_data/factories/*.json` (flat audit
+fields + the pinned `demo_report` block) so the pipeline and the apps see
+consistent inputs. NO mention of "CBAM" anywhere — it does not apply to textiles.
 
-Layout contract (every PDF must obey this):
-- A4 page (210mm x 297mm) with 20mm margins all sides.
-- Body Helvetica 10pt; H1 18pt; H2 Helvetica-Bold 14pt.
-- ALL long-text Table cells wrapped in Paragraph() so they word-wrap.
-- Column widths sum to exactly the content width (170mm).
-- Section breaks use Spacer(1, 12).
+7-page layout contract (every PDF obeys this):
+  1. Cover
+  2. Factory profile + buyers
+  3. Certifications
+  4. Self-reported compliance claims
+  5. Independent audit measurements
+  6. Contradiction cross-check
+  7. Audit findings summary + risk summary
 
-Usage:
+Run:
     python scripts/generate_factory_pdfs.py
 """
 from __future__ import annotations
 
 import json
 import sys
+from functools import partial
 from pathlib import Path
 
 from reportlab.lib import colors
@@ -35,103 +38,66 @@ from reportlab.platypus import (
 
 FACTORY_DIR = Path(__file__).resolve().parent.parent / "mock_data" / "factories"
 
-# Page geometry (A4 minus 20mm margins on each side)
 PAGE_WIDTH_MM = 210
-MARGIN_MM = 20
-CONTENT_WIDTH_MM = PAGE_WIDTH_MM - 2 * MARGIN_MM  # 170mm
+MARGIN_MM = 18
+CONTENT_WIDTH_MM = PAGE_WIDTH_MM - 2 * MARGIN_MM  # 174mm
+TOTAL_PAGES = 7
+
+NAVY = colors.HexColor("#0F172A")
+RED = colors.HexColor("#DC2626")
+GREEN = colors.HexColor("#16A34A")
+ORANGE = colors.HexColor("#F97316")
+GRID = colors.HexColor("#E5E7EB")
+GREY = colors.HexColor("#64748B")
+
+RED_TOKENS = {"EXPIRED", "NON_CONFORMANT", "MISSING", "DRAFT", "CONTRADICTION", "NO", "CRITICAL"}
+GREEN_TOKENS = {"VALID", "CONFORMANT", "PRESENT", "PASS", "YES", "PUBLISHED", "COMPLIANT"}
+ORANGE_TOKENS = {"GAP", "PARTIAL", "WARNING", "PENDING", "NOT_HELD", "NOT TESTED", "UNVERIFIED"}
 
 
 styles = getSampleStyleSheet()
-styles.add(ParagraphStyle(
-    name="H1Big",
-    parent=styles["Heading1"],
-    fontName="Helvetica-Bold",
-    fontSize=18,
-    leading=22,
-    spaceAfter=8,
-    textColor=colors.HexColor("#1a3a5f"),
-))
-styles.add(ParagraphStyle(
-    name="H2Sec",
-    parent=styles["Heading2"],
-    fontName="Helvetica-Bold",
-    fontSize=14,
-    leading=18,
-    spaceBefore=12,
-    spaceAfter=8,
-    textColor=colors.HexColor("#1a3a5f"),
-))
-styles.add(ParagraphStyle(
-    name="Body",
-    parent=styles["Normal"],
-    fontName="Helvetica",
-    fontSize=10,
-    leading=14,
-))
-styles.add(ParagraphStyle(
-    name="Cell",
-    parent=styles["Normal"],
-    fontName="Helvetica",
-    fontSize=9,
-    leading=12,
-))
-styles.add(ParagraphStyle(
-    name="CellSmall",
-    parent=styles["Normal"],
-    fontName="Helvetica",
-    fontSize=8,
-    leading=11,
-    textColor=colors.HexColor("#555555"),
-))
-styles.add(ParagraphStyle(
-    name="Small",
-    parent=styles["Normal"],
-    fontName="Helvetica",
-    fontSize=8,
-    leading=11,
-    textColor=colors.grey,
-))
-styles.add(ParagraphStyle(
-    name="Claim",
-    parent=styles["Normal"],
-    fontName="Helvetica-Oblique",
-    fontSize=10,
-    leading=14,
-    leftIndent=14,
-    textColor=colors.HexColor("#444444"),
-))
-styles.add(ParagraphStyle(
-    name="Warn",
-    parent=styles["Normal"],
-    fontName="Helvetica-Bold",
-    fontSize=10,
-    leading=14,
-    textColor=colors.HexColor("#b03030"),
-))
+styles.add(ParagraphStyle(name="CoverTitle", parent=styles["Heading1"], fontName="Helvetica-Bold",
+                          fontSize=24, leading=30, textColor=NAVY, spaceAfter=10))
+styles.add(ParagraphStyle(name="CoverSub", parent=styles["Normal"], fontName="Helvetica",
+                          fontSize=14, leading=20, textColor=GREY))
+styles.add(ParagraphStyle(name="H2Sec", parent=styles["Heading2"], fontName="Helvetica-Bold",
+                          fontSize=12, leading=16, spaceBefore=10, spaceAfter=8, textColor=NAVY))
+styles.add(ParagraphStyle(name="Body", parent=styles["Normal"], fontName="Helvetica",
+                          fontSize=10, leading=14))
+styles.add(ParagraphStyle(name="Cell", parent=styles["Normal"], fontName="Helvetica",
+                          fontSize=9, leading=12))
+styles.add(ParagraphStyle(name="CellB", parent=styles["Normal"], fontName="Helvetica-Bold",
+                          fontSize=9, leading=12, textColor=colors.white))
+styles.add(ParagraphStyle(name="Claim", parent=styles["Normal"], fontName="Helvetica-Oblique",
+                          fontSize=10, leading=15, leftIndent=10, textColor=colors.HexColor("#334155")))
+styles.add(ParagraphStyle(name="Small", parent=styles["Normal"], fontName="Helvetica",
+                          fontSize=8, leading=11, textColor=GREY))
 
 
-def _money_pkr(x: int) -> str:
-    """Format PKR with crore/lakh readable suffix."""
-    if x >= 10_000_000:
-        return f"PKR {x/10_000_000:.2f} crore"
-    if x >= 100_000:
-        return f"PKR {x/100_000:.2f} lakh"
-    return f"PKR {x:,}"
+def _cr(pkr) -> str:
+    try:
+        return f"PKR {int(pkr) / 1e7:.2f} crore"
+    except (TypeError, ValueError):
+        return "PKR —"
 
 
-def _cert_color(status: str) -> str:
-    return {
-        "VALID": "#1f7a1f",
-        "EXPIRED": "#b03030",
-        "MISSING": "#b03030",
-        "DRAFT": "#b07a00",
-    }.get(status, "#000000")
+def _token_hex(value: str) -> str:
+    v = (value or "").strip().upper()
+    if v in RED_TOKENS:
+        return "#DC2626"
+    if v in GREEN_TOKENS:
+        return "#16A34A"
+    if v in ORANGE_TOKENS:
+        return "#F97316"
+    return "#0F172A"
 
 
-def _p(text: str, style_name: str = "Cell") -> Paragraph:
-    """Tiny helper — every potentially long string inside a Table cell goes
-    through this so reportlab word-wraps it on the cell width."""
-    return Paragraph(text, styles[style_name])
+def _color_span(value: str) -> str:
+    return f'<font color="{_token_hex(value)}"><b>{value}</b></font>'
+
+
+def _p(text: str, style: str = "Cell") -> Paragraph:
+    return Paragraph(text, styles[style])
 
 
 def _table(data, col_widths, header=True, font_size=9):
@@ -139,8 +105,8 @@ def _table(data, col_widths, header=True, font_size=9):
     style = [
         ("FONT", (0, 0), (-1, -1), "Helvetica", font_size),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#888888")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f4f6fa")]),
+        ("GRID", (0, 0), (-1, -1), 0.5, GRID),
+        ("ROWBACKGROUNDS", (0, 1 if header else 0), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
         ("LEFTPADDING", (0, 0), (-1, -1), 5),
         ("RIGHTPADDING", (0, 0), (-1, -1), 5),
         ("TOPPADDING", (0, 0), (-1, -1), 5),
@@ -148,455 +114,254 @@ def _table(data, col_widths, header=True, font_size=9):
     ]
     if header:
         style += [
-            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", font_size),
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1a3a5f")),
+            ("BACKGROUND", (0, 0), (-1, 0), NAVY),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", font_size),
         ]
     t.setStyle(TableStyle(style))
     return t
 
 
-def _audit_header(factory: dict, audit_date: str, auditor: str) -> list:
-    elems = []
-    elems.append(Paragraph(
-        f"INDEPENDENT TEXTILE COMPLIANCE AUDIT — {factory['factory_name'].upper()}",
-        styles["H1Big"],
-    ))
-    elems.append(Paragraph(
-        f"Audit Reference: <b>EXP-{factory['factory_id'].upper()}-{audit_date.replace('-','')}</b> &nbsp;&nbsp; "
-        f"Audited by <b>{auditor}</b> &nbsp;&nbsp; Date of issue: <b>{audit_date}</b>",
-        styles["Small"],
-    ))
-    elems.append(Spacer(1, 8))
-    # Two-column meta table: 60mm label + 110mm value = 170mm
-    meta = [
-        [_p("<b>Legal entity</b>"), _p(factory["factory_name"])],
-        [_p("<b>City / Site</b>"), _p(f"{factory['city']}, {'Sindh' if factory['city'] == 'Karachi' else 'Punjab'}, Pakistan")],
-        [_p("<b>Factory ID</b>"), _p(factory["factory_id"])],
-        [_p("<b>Primary products</b>"), _p(", ".join(factory["primary_products"]))],
-        [_p("<b>Audit scope</b>"), _p(
-            "EU CBAM (Reg 2023/956), UK Modern Slavery Act 2015 §54, EU CSDDD "
-            "(Dir 2024/1760), ISO 14001 surveillance, SA8000 social compliance, "
-            "OEKO-TEX, REACH SVHC effluent screening"
-        )],
-        [_p("<b>Audit method</b>"), _p(
-            "On-site inspection, sample chain-of-custody, effluent grab samples "
-            "(3 points), HR log review, management interview"
-        )],
+def _hdr(label: str) -> list:
+    return [_p(f"<b>{label}</b>", "CellB")]
+
+
+# ───────────────────────── pages ─────────────────────────
+
+
+def _page_cover(f: dict) -> list:
+    fid = f["factory_id"].upper()
+    return [
+        Spacer(1, 60),
+        Paragraph(f["factory_name"], styles["CoverTitle"]),
+        Paragraph("Independent Textile Compliance Audit Report", styles["CoverSub"]),
+        Spacer(1, 30),
+        Paragraph(f"<b>Audit Reference:</b> EXP-{fid}-20260510", styles["Body"]),
+        Paragraph("<b>Audited by:</b> CertVerify Pakistan (Pvt) Ltd", styles["Body"]),
+        Paragraph(f"<b>Date of Issue:</b> {f.get('audit_date', '2026-05-10')}", styles["Body"]),
+        Spacer(1, 40),
+        Paragraph("CONFIDENTIAL — For Internal Use Only", styles["Small"]),
     ]
-    elems.append(_table(meta, col_widths=[60 * mm, 110 * mm], header=False))
-    elems.append(Spacer(1, 12))
-    return elems
 
 
-def _section_certifications(factory: dict) -> list:
-    elems = [Paragraph("1. Certifications &amp; certification status", styles["H2Sec"])]
-    # Columns sum to 170mm: 30 + 22 + 26 + 32 + 60
-    col_widths = [30 * mm, 22 * mm, 26 * mm, 32 * mm, 60 * mm]
-    data = [[
-        _p("<b>Certification</b>", "Cell"),
-        _p("<b>Status</b>", "Cell"),
-        _p("<b>Valid until</b>", "Cell"),
-        _p("<b>Issuer</b>", "Cell"),
-        _p("<b>Notes</b>", "Cell"),
-    ]]
-    for c in factory["certifications"]:
-        status_html = f'<font color="{_cert_color(c["status"])}"><b>{c["status"]}</b></font>'
-        note = ""
-        if c["status"] == "EXPIRED":
-            note = f"Expired {c['expiry_date']}; auditor recommends immediate re-audit booking."
-        elif c["status"] == "MISSING":
-            note = "Not held. Required by at least one buyer's commercial Code of Conduct."
-        elif c["status"] == "VALID":
-            note = "Surveillance audit on file. Valid for full scope of EU/UK shipments."
-        data.append([
-            _p(c["name"]),
-            _p(status_html),
-            _p(c["expiry_date"] or "—"),
-            _p(c["issuer"] or "—"),
-            _p(note),
-        ])
-    elems.append(_table(data, col_widths=col_widths, header=False))
-    elems.append(Spacer(1, 12))
-    return elems
-
-
-def _section_export_profile(factory: dict) -> list:
-    elems = [Paragraph("2. Export profile and buyer concentration", styles["H2Sec"])]
+def _page_profile(f: dict) -> list:
+    province = f.get("province", "Punjab")
+    rows = [
+        [_p("<b>Legal entity</b>"), _p(f["factory_name"])],
+        [_p("<b>Location</b>"), _p(f"{f['city']}, {province}, Pakistan")],
+        [_p("<b>Factory ID</b>"), _p(f["factory_id"])],
+        [_p("<b>Primary products</b>"), _p(", ".join(f.get("primary_products", [])))],
+        [_p("<b>Employee count</b>"), _p(str(f.get("employee_count", "—")))],
+        [_p("<b>Annual export volume</b>"), _p(_cr(f.get("annual_export_pkr")))],
+        [_p("<b>Primary markets</b>"), _p("EU, UK")],
+    ]
+    elems = [Paragraph("Factory Profile", styles["H2Sec"]),
+             _table(rows, [50 * mm, CONTENT_WIDTH_MM * mm - 50 * mm], header=False),
+             Spacer(1, 10),
+             Paragraph("Active Buyers", styles["H2Sec"])]
+    brows = [[_p("<b>Buyer</b>", "CellB"), _p("<b>PKR Cr</b>", "CellB"),
+              _p("<b>Share</b>", "CellB"), _p("<b>Jurisdiction</b>", "CellB")]]
+    for b in f.get("buyers", []):
+        brows.append([_p(b.get("name", "—")), _p(str(b.get("pkr_crore", "—"))),
+                      _p(f"{b.get('share', 0) * 100:.1f}%"), _p(b.get("jurisdiction", "—"))])
+    elems.append(_table(brows, [62 * mm, 28 * mm, 30 * mm, CONTENT_WIDTH_MM * mm - 120 * mm]))
+    elems.append(Spacer(1, 10))
     elems.append(Paragraph(
-        f"Total annual export value reported by management: <b>{_money_pkr(factory['annual_export_pkr'])}</b>. "
-        f"Breakdown by purchasing buyer (FY 2025):",
-        styles["Body"],
-    ))
-    elems.append(Spacer(1, 6))
-    # 170mm split: 50 + 36 + 24 + 60
-    col_widths = [50 * mm, 36 * mm, 24 * mm, 60 * mm]
-    rows = [[
-        _p("<b>Buyer</b>"),
-        _p("<b>Annual order value (PKR)</b>"),
-        _p("<b>Share of total</b>"),
-        _p("<b>Buyer HQ jurisdiction</b>"),
-    ]]
-    juris = {
-        "NordStyle Group": "EU (Sweden)", "EuroThread SA": "EU (Spain)", "Mango": "EU (Spain)",
-        "C&A": "EU", "Bestseller": "EU (Denmark)",
-        "BritMart Retail": "UK (Ireland-listed, UK-regulated)", "M&S": "UK", "Tesco": "UK",
-        "Next": "UK", "Asda": "UK",
-    }
-    total = factory["annual_export_pkr"]
-    for buyer, value in factory["exports_by_buyer_pkr"].items():
-        share = (value / total) * 100 if total else 0
-        rows.append([
-            _p(buyer),
-            _p(_money_pkr(value)),
-            _p(f"{share:.1f}%"),
-            _p(juris.get(buyer, "—")),
-        ])
-    elems.append(_table(rows, col_widths=col_widths, header=False))
-    elems.append(Spacer(1, 8))
-    top_share = max(factory["exports_by_buyer_pkr"].values()) / total
-    if top_share > 0.5:
-        elems.append(Paragraph(
-            f"<b>Concentration risk:</b> single buyer represents {top_share*100:.1f}% of exports. "
-            "A compliance suspension by that buyer would materially threaten factory revenue.",
-            styles["Warn"],
-        ))
-    elems.append(Spacer(1, 12))
+        "<b>Audit scope:</b> EU CSDDD (Dir 2024/1760), UK Modern Slavery Act 2015 §54, "
+        "SA8000 social compliance, EU REACH SVHC effluent screening, OEKO-TEX certification "
+        "status, GSP+ ILO convention compliance.", styles["Body"]))
     return elems
 
 
-def _section_self_reported(factory: dict) -> list:
-    elems = [Paragraph("3. Self-reported compliance claims (factory submission)", styles["H2Sec"])]
-    elems.append(Paragraph(
-        f"The following statements were provided by {factory['factory_name']}'s compliance team "
-        f"in the quarterly self-report (source filename in parentheses). These statements are "
-        f"recorded verbatim and used as the LEFT-HAND side of the contradiction check in Section 5.",
-        styles["Body"],
-    ))
-    elems.append(Spacer(1, 6))
-    for c in factory["claims"]:
-        elems.append(Paragraph(
-            f"&bull; \"{c['claim']}\" &nbsp; <font color=\"#888888\">(source: {c['source']})</font>",
-            styles["Claim"],
-        ))
-    elems.append(Spacer(1, 12))
-    return elems
+def _page_certs(f: dict) -> list:
+    rows = [[_p("<b>Certification</b>", "CellB"), _p("<b>Status</b>", "CellB"),
+             _p("<b>Valid Until</b>", "CellB"), _p("<b>Issuer</b>", "CellB"), _p("<b>Notes</b>", "CellB")]]
+    for c in f.get("certifications", []):
+        status = c.get("status", "")
+        note = {
+            "EXPIRED": f"Expired {c.get('expiry_date')}; immediate re-audit required.",
+            "MISSING": "Not held. Required by at least one buyer's Code of Conduct.",
+            "VALID": "Surveillance audit on file; valid for EU/UK shipments.",
+            "NON_CONFORMANT": "Held but a non-conformance was raised at audit.",
+            "NOT_HELD": "Not applicable to current product lines.",
+            "PENDING": "Renewal in progress.",
+        }.get(status, "")
+        rows.append([_p(c.get("name", "—")), _p(_color_span(status)),
+                     _p(c.get("expiry_date") or "—"), _p(c.get("issuer") or "—"), _p(note)])
+    return [Paragraph("Certifications", styles["H2Sec"]),
+            _table(rows, [28 * mm, 30 * mm, 26 * mm, 30 * mm, CONTENT_WIDTH_MM * mm - 114 * mm])]
 
 
-def _section_audit_evidence(factory: dict) -> list:
-    elems = [Paragraph("4. Independent audit evidence (third-party measurements)", styles["H2Sec"])]
-    # 170mm split: 50 + 28 + 24 + 28 + 40
-    col_widths = [50 * mm, 28 * mm, 24 * mm, 28 * mm, 40 * mm]
-    rows = [[
-        _p("<b>Metric</b>"),
-        _p("<b>Measured value</b>"),
-        _p("<b>Unit</b>"),
-        _p("<b>Date</b>"),
-        _p("<b>Source document</b>"),
-    ]]
-    for e in factory["audit_evidence"]:
-        rows.append([
-            _p(e["metric"].replace("_", " ")),
-            _p(str(e["value"])),
-            _p(e["unit"] or "—"),
-            _p(e["measured_on"]),
-            _p(e["source"]),
-        ])
-    elems.append(_table(rows, col_widths=col_widths, header=False))
-    elems.append(Spacer(1, 12))
-    return elems
-
-
-def _section_contradictions(factory: dict) -> list:
-    """Walk known claim↔evidence pairs and surface conflicts inside the same PDF."""
-    elems = [Paragraph("5. Auditor cross-check (claim vs evidence)", styles["H2Sec"])]
-    elems.append(Paragraph(
-        "The cross-check below compares Section 3 (self-reported claims) against Section 4 "
-        "(independent measurements). Any inconsistency triggers a recommended remediation in Section 6.",
-        styles["Body"],
-    ))
-    elems.append(Spacer(1, 6))
-
-    evid_map = {e["metric"]: e for e in factory["audit_evidence"]}
-    findings = []
-
-    # ISO 14001 / water effluent
-    water = evid_map.get("water_effluent_discharge")
-    iso_claim = next((c for c in factory["claims"] if "iso 14001" in c["claim"].lower() or "effluent" in c["claim"].lower() or "reach" in c["claim"].lower()), None)
-    if water and iso_claim and water["value"] > 8:
-        findings.append({
-            "claim_text": iso_claim["claim"],
-            "claim_src": iso_claim["source"],
-            "evidence_text": f"{water['metric']} = {water['value']} {water['unit']} (EU REACH/CBAM limit: 8 ppm)",
-            "evidence_src": water["source"],
-            "verdict": "CONTRADICTION",
-            "confidence": 0.91,
-            "rationale": "Self-report asserts compliance with effluent limits; lab measurement exceeds 8 ppm REACH ceiling by 50%.",
-        })
-
-    # SA8000 boolean claim vs measured weekly hours over 60
-    hours = evid_map.get("weekly_working_hours")
-    sa8000_claim = next(
-        (c for c in factory["claims"]
-         if "sa8000" in c["claim"].lower() and isinstance(c["value"], bool) and c["value"] is True),
-        None,
-    )
-    if hours and sa8000_claim and hours["value"] > 60:
-        findings.append({
-            "claim_text": sa8000_claim["claim"],
-            "claim_src": sa8000_claim["source"],
-            "evidence_text": f"weekly working hours = {hours['value']} hrs (SA8000 ceiling: 60 hrs incl. overtime)",
-            "evidence_src": hours["source"],
-            "verdict": "CONTRADICTION",
-            "confidence": 0.93,
-            "rationale": "SA8000 §7.1.1 caps total weekly hours at 60 including overtime; observed value exceeds ceiling.",
-        })
-
-    # Numeric working-hours claim vs measured working hours
-    hours_numeric_claim = next(
-        (c for c in factory["claims"]
-         if "working hour" in c["claim"].lower()
-         and isinstance(c["value"], (int, float)) and not isinstance(c["value"], bool)),
-        None,
-    )
-    if hours and hours_numeric_claim and abs(hours["value"] - hours_numeric_claim["value"]) > 4:
-        findings.append({
-            "claim_text": hours_numeric_claim["claim"],
-            "claim_src": hours_numeric_claim["source"],
-            "evidence_text": f"Independent labour audit recorded {hours['value']} hrs/week",
-            "evidence_src": hours["source"],
-            "verdict": "CONTRADICTION",
-            "confidence": 0.88,
-            "rationale": "Self-reported weekly hours differ from third-party measurement by more than 4 hours.",
-        })
-
-    # CBAM filing absence
-    cbam_filed_claim = next(
-        (c for c in factory["claims"]
-         if "cbam" in c["claim"].lower() and c.get("value") is True),
-        None,
-    )
-    cbam_evid = next(
-        (e for e in factory["audit_evidence"]
-         if "cbam" in e["metric"].lower() or "embedded" in e["metric"].lower()),
-        None,
-    )
-    if cbam_filed_claim is None and cbam_evid is None:
-        findings.append({
-            "claim_text": "(no CBAM filing claim in self-report)",
-            "claim_src": "—",
-            "evidence_text": "No CBAM declarant registration or quarterly filing record located in the audit evidence pack",
-            "evidence_src": "(audit evidence pack)",
-            "verdict": "GAP",
-            "confidence": 0.95,
-            "rationale": "Factory exports to EU; CBAM scope applies; no filing record exists. This is a regulatory GAP rather than a CONTRADICTION because the factory has not made a conflicting positive claim.",
-        })
-
-    # EU CSDDD draft narrative
-    csddd_claim = next(
-        (c for c in factory["claims"]
-         if ("supply chain" in c["claim"].lower() or "csddd" in c["claim"].lower() or "due diligence" in c["claim"].lower())
-         and c.get("value") is True),
-        None,
-    )
-    csddd_evid = next(
-        (e for e in factory["audit_evidence"]
-         if e["metric"] == "supply_chain_due_diligence_report"),
-        None,
-    )
-    if csddd_claim and csddd_evid and str(csddd_evid["value"]).upper() == "DRAFT":
-        findings.append({
-            "claim_text": csddd_claim["claim"],
-            "claim_src": csddd_claim["source"],
-            "evidence_text": f"CSDDD narrative status = {csddd_evid['value']} as of {csddd_evid['measured_on']}",
-            "evidence_src": csddd_evid["source"],
-            "verdict": "CONTRADICTION",
-            "confidence": 0.86,
-            "rationale": "Self-report claims publication; internal governance file shows DRAFT status. Directive (EU) 2024/1760 requires published narrative.",
-        })
-    elif csddd_evid and str(csddd_evid["value"]).upper() == "DRAFT" and not csddd_claim:
-        findings.append({
-            "claim_text": "(no published-status claim in self-report)",
-            "claim_src": "—",
-            "evidence_text": f"CSDDD narrative status = {csddd_evid['value']} as of {csddd_evid['measured_on']}",
-            "evidence_src": csddd_evid["source"],
-            "verdict": "GAP",
-            "confidence": 0.90,
-            "rationale": "Directive (EU) 2024/1760 transposition requires published due-diligence narrative; currently in DRAFT state.",
-        })
-
-    if not findings:
-        elems.append(Paragraph(
-            "&bull; All self-reported claims are consistent with the independent measurements. "
-            "No contradictions found.",
-            styles["Body"],
-        ))
-        elems.append(Spacer(1, 12))
-        return elems
-
-    # 170mm split: 8 + 60 + 60 + 20 + 22
-    col_widths = [8 * mm, 60 * mm, 60 * mm, 20 * mm, 22 * mm]
-    rows = [[
-        _p("<b>#</b>"),
-        _p("<b>Self-reported claim (source)</b>"),
-        _p("<b>Audit evidence (source)</b>"),
-        _p("<b>Confidence</b>"),
-        _p("<b>Verdict</b>"),
-    ]]
-    for i, f in enumerate(findings, 1):
-        rows.append([
-            _p(str(i)),
-            _p(f"{f['claim_text']}<br/><font color=\"#888888\">[{f['claim_src']}]</font>"),
-            _p(f"{f['evidence_text']}<br/><font color=\"#888888\">[{f['evidence_src']}]</font>"),
-            _p(f"{f['confidence']:.2f}"),
-            _p(f["verdict"]),
-        ])
-    elems.append(_table(rows, col_widths=col_widths, header=False))
-    elems.append(Spacer(1, 8))
-    for i, f in enumerate(findings, 1):
-        elems.append(Paragraph(
-            f"<b>Finding {i} rationale.</b> {f['rationale']}",
-            styles["Body"],
-        ))
+def _page_claims(f: dict) -> list:
+    elems = [Paragraph("Self-Reported Compliance Claims", styles["H2Sec"])]
+    claims = f.get("self_reported_claims") or [c.get("claim") for c in f.get("claims", [])]
+    for c in claims:
+        elems.append(Paragraph(f"&bull; \"{c}\"", styles["Claim"]))
         elems.append(Spacer(1, 4))
     elems.append(Spacer(1, 8))
+    elems.append(Paragraph(
+        f"Provided by {f['factory_name']} compliance team — {f.get('audit_date', '2026-05-10')}.",
+        styles["Small"]))
     return elems
 
 
-def _section_risk_summary(factory: dict, score: int, risk_level: str, orders_at_risk_pkr: int, summary: str) -> list:
-    elems = [Paragraph("6. Auditor risk summary and recommended remediation", styles["H2Sec"])]
-    # 170mm split: 70 + 100
-    col_widths = [70 * mm, 100 * mm]
-    rows = [
-        [_p("<b>Compliance score (0-100)</b>"), _p(str(score))],
-        [_p("<b>Risk level</b>"), _p(risk_level)],
-        [_p("<b>Estimated orders at risk</b>"), _p(_money_pkr(orders_at_risk_pkr))],
-        [_p("<b>Buyers materially affected</b>"), _p(", ".join([b for b in factory["primary_buyers"][:3]]))],
-        [_p("<b>Audit issued by</b>"), _p("Independent third-party (this report)")],
+def _page_measurements(f: dict) -> list:
+    def g(key, default="—"):
+        v = f.get(key)
+        return default if v is None else str(v)
+
+    csddd = f.get("csddd_due_diligence_policy") or f.get("csddd_due_diligence_report") or "—"
+    rows = [[_p("<b>Metric</b>", "CellB"), _p("<b>Measured Value</b>", "CellB"),
+             _p("<b>Unit</b>", "CellB"), _p("<b>Date</b>", "CellB"), _p("<b>Source Document</b>", "CellB")]]
+    measurements = [
+        ("Water effluent discharge", g("water_effluent_ppm"), "ppm", "2026-03-18", "certverify_water_audit"),
+        ("Weekly working hours", g("avg_weekly_hours"), "hours", "2026-03-22", "certverify_labour_audit"),
+        ("Overtime hours", g("avg_overtime_hours"), "hours/week", "2026-03-22", "certverify_labour_audit"),
+        ("Lead in dyes", g("lead_in_dyes_ppm"), "ppm", "2026-03-10", "chemical_lab_report"),
+        ("Formaldehyde in fabric", g("formaldehyde_ppm"), "ppm", "2026-03-10", "chemical_lab_report"),
+        ("CSDDD due diligence status", _color_span(csddd), "—", "2026-04-05", "internal_governance"),
     ]
-    elems.append(_table(rows, col_widths=col_widths, header=False))
+    for m in measurements:
+        rows.append([_p(m[0]), _p(m[1]), _p(m[2]), _p(m[3]), _p(m[4])])
+    return [Paragraph("Independent Audit Measurements", styles["H2Sec"]),
+            _table(rows, [46 * mm, 32 * mm, 24 * mm, 24 * mm, CONTENT_WIDTH_MM * mm - 126 * mm])]
+
+
+def _page_contradictions(f: dict) -> list:
+    elems = [Paragraph("Contradiction Cross-Check", styles["H2Sec"])]
+    contradictions = (f.get("demo_report") or {}).get("contradictions", [])
+    if not contradictions:
+        elems.append(Paragraph(
+            "All self-reported claims are consistent with the independent measurements. "
+            f"{_color_span('PASS')} — no contradictions found.", styles["Body"]))
+        return elems
+    rows = [[_p("<b>#</b>", "CellB"), _p("<b>Self-reported claim</b>", "CellB"),
+             _p("<b>Audit evidence</b>", "CellB"), _p("<b>Confidence</b>", "CellB"),
+             _p("<b>Verdict</b>", "CellB")]]
+    for i, c in enumerate(contradictions, 1):
+        rows.append([
+            _p(str(i)),
+            _p(f"{c.get('claim', '')}<br/><font color=\"#64748B\">[{c.get('source_a', '')}]</font>"),
+            _p(f"{c.get('evidence', '')}<br/><font color=\"#64748B\">[{c.get('source_b', '')}]</font>"),
+            _p(f"{c.get('confidence', 0):.2f}"),
+            _p(_color_span("CONTRADICTION")),
+        ])
+    elems.append(_table(rows, [8 * mm, 58 * mm, 58 * mm, 22 * mm, CONTENT_WIDTH_MM * mm - 146 * mm]))
     elems.append(Spacer(1, 8))
-    elems.append(Paragraph(summary, styles["Body"]))
+    for i, c in enumerate(contradictions, 1):
+        if c.get("impact"):
+            elems.append(Paragraph(f"<b>Finding {i}.</b> {c['impact']}", styles["Body"]))
+            elems.append(Spacer(1, 4))
     return elems
 
 
-def _build(factory: dict, audit_date: str, auditor: str, score: int, risk_level: str,
-           orders_at_risk_pkr: int, summary: str, out_path: Path) -> None:
+def _page_findings(f: dict) -> list:
+    dr = f.get("demo_report") or {}
+    gaps = dr.get("gaps", [])
+    elems = [Paragraph("Audit Findings Summary", styles["H2Sec"])]
+    for i, g in enumerate(gaps, 1):
+        req = (g.get("requirement") or "").split(". ")[0].rstrip(".") + "."
+        status = (g.get("factory_status") or g.get("status") or "").split(" — ")[0]
+        elems.append(Paragraph(f"<b>Finding {i}:</b> {req}", styles["Body"]))
+        elems.append(Paragraph(
+            f"Status: {_color_span(status)} &nbsp;&nbsp; Severity: {_color_span(g.get('severity', ''))} "
+            f"&nbsp;&nbsp; Regulation: {g.get('regulation', '')}", styles["Cell"]))
+        elems.append(Spacer(1, 6))
+
+    elems.append(Spacer(1, 6))
+    elems.append(Paragraph("Risk Summary", styles["H2Sec"]))
+    score = dr.get("compliance_score", "—")
+    risk = dr.get("risk_level", "—")
+    at_risk = dr.get("orders_at_risk_pkr", 0)
+    buyers = ", ".join(dr.get("buyers_affected", []) or [b.get("name") for b in f.get("buyers", [])])
+    rows = [
+        [_p("<b>Compliance Score</b>"), _p(f"{score}/100")],
+        [_p("<b>Risk Level</b>"), _p(_color_span(risk))],
+        [_p("<b>Estimated Orders at Risk</b>"), _p(_cr(at_risk))],
+        [_p("<b>Buyers Materially Affected</b>"), _p(buyers)],
+    ]
+    elems.append(_table(rows, [55 * mm, CONTENT_WIDTH_MM * mm - 55 * mm], header=False))
+    elems.append(Spacer(1, 8))
+    narrative = (
+        f"{f['factory_name']} carries a compliance score of {score}/100 ({risk}). "
+        f"The findings above place an estimated {_cr(at_risk)} of orders at risk across "
+        f"{buyers or 'its EU/UK buyers'}, driven principally by the highest-severity gaps listed. "
+        f"Remediating the action chain in full restores the factory to a 100/100 compliant posture."
+    )
+    elems.append(Paragraph(narrative, styles["Body"]))
+    elems.append(Spacer(1, 10))
+    elems.append(Paragraph(
+        "This report was generated for the AISeekho 2026 Google Antigravity Hackathon submission "
+        "(ExportIQ). It contains realistic but synthetic data for the named factories.",
+        styles["Small"]))
+    return elems
+
+
+# ───────────────────────── chrome (header/footer) ─────────────────────────
+
+
+def _draw_chrome(canvas, doc, factory_name: str):
+    canvas.saveState()
+    width, height = A4
+    # Header bar
+    canvas.setFillColor(NAVY)
+    canvas.rect(0, height - 16 * mm, width, 16 * mm, fill=1, stroke=0)
+    canvas.setFillColor(colors.white)
+    canvas.setFont("Helvetica-Bold", 10)
+    canvas.drawString(MARGIN_MM * mm, height - 11 * mm, factory_name)
+    canvas.setFont("Helvetica", 9)
+    page = canvas.getPageNumber()
+    canvas.drawRightString(width - MARGIN_MM * mm, height - 11 * mm, f"Page {page} of {TOTAL_PAGES}")
+    # Footer
+    canvas.setFillColor(GREY)
+    canvas.setFont("Helvetica", 8)
+    canvas.drawString(MARGIN_MM * mm, 10 * mm,
+                      f"Confidential — {factory_name} Audit Report Q1 2026 — Page {page} of {TOTAL_PAGES}")
+    canvas.restoreState()
+
+
+def _build(f: dict, out_path: Path) -> None:
     doc = SimpleDocTemplate(
-        str(out_path),
-        pagesize=A4,
+        str(out_path), pagesize=A4,
         leftMargin=MARGIN_MM * mm, rightMargin=MARGIN_MM * mm,
-        topMargin=MARGIN_MM * mm, bottomMargin=MARGIN_MM * mm,
-        title=f"{factory['factory_name']} — Compliance Audit {audit_date}",
-        author=auditor,
+        topMargin=24 * mm, bottomMargin=18 * mm,
+        title=f"{f['factory_name']} — Compliance Audit",
+        author="CertVerify Pakistan (Pvt) Ltd",
     )
     story: list = []
-    story += _audit_header(factory, audit_date, auditor)
-    story += _section_certifications(factory)
-    story += _section_export_profile(factory)
-    story += _section_self_reported(factory)
+    story += _page_cover(f)
     story.append(PageBreak())
-    story += _section_audit_evidence(factory)
-    story += _section_contradictions(factory)
-    story += _section_risk_summary(factory, score, risk_level, orders_at_risk_pkr, summary)
-    story.append(Spacer(1, 12))
-    story.append(Paragraph(
-        "<i>This report was generated for the AISeekho 2026 Google Antigravity Hackathon submission "
-        "(ExportIQ). It contains realistic but synthetic data for the named factories.</i>",
-        styles["Small"],
-    ))
-    doc.build(story)
+    story += _page_profile(f)
+    story.append(PageBreak())
+    story += _page_certs(f)
+    story.append(PageBreak())
+    story += _page_claims(f)
+    story.append(PageBreak())
+    story += _page_measurements(f)
+    story.append(PageBreak())
+    story += _page_contradictions(f)
+    story.append(PageBreak())
+    story += _page_findings(f)
+    chrome = partial(_draw_chrome, factory_name=f["factory_name"])
+    doc.build(story, onFirstPage=chrome, onLaterPages=chrome)
 
 
-PROFILES = {
-    "fwi_fsd_001": dict(
-        audit_date="2026-04-12",
-        auditor="CertVerify Pakistan (Pvt) Ltd.",
-        score=43,
-        risk_level="CRITICAL",
-        orders_at_risk_pkr=340_000_000,
-        summary=(
-            "<b>CRITICAL.</b> The factory's compliance posture is unsuitable for continued shipment of NordStyle Group and BritMart Retail orders without "
-            "immediate remediation. The headline risks are (i) SA8000 social-compliance certification has lapsed since 15 January 2026; (ii) no CBAM "
-            "declarant registration is held despite roughly 61% of exports going to EU jurisdictions; (iii) lead-in-dye measurements at 95 ppm exceed the "
-            "EU REACH-aligned 90 ppm ceiling; (iv) measured weekly working hours of 68 exceed the SA8000 60-hour ceiling and contradict the factory's "
-            "self-reported figure of 48 hours; (v) the EU Corporate Sustainability Due Diligence Directive supply-chain narrative is not on file; "
-            "(vi) GOTS certification is not held, restricting access to organic-cotton product lines. The self-reported claim of ISO 14001 compliance is "
-            "materially inconsistent with the third-party water audit evidence (12.0 ppm effluent vs an 8.0 ppm limit). Without remediation the auditor "
-            "recommends a hold on EU/UK shipment authorisations until certificate renewals are completed and CBAM registration is filed. Estimated "
-            "revenue at risk within the next 12 months is PKR 34 crore. The mobile ExportIQ pipeline ranks the actions automatically and produces "
-            "remediation artifacts including the CBAM declaration template, buyer communication drafts for NordStyle Group and BritMart Retail sourcing "
-            "managers, and the SA8000 re-audit application letter."
-        ),
-    ),
-    "cfw_lhe_002": dict(
-        audit_date="2026-04-22",
-        auditor="Bureau Veritas Pakistan",
-        score=75,
-        risk_level="WARNING",
-        orders_at_risk_pkr=45_000_000,
-        summary=(
-            "<b>WARNING.</b> Chenab Fabric Works is broadly compliant across SA8000, ISO 14001, GOTS, and OEKO-TEX certifications, all of which are current "
-            "and within their surveillance audit windows. Three residual gaps remain: (i) lead-in-dye measurements at 92 ppm marginally exceed the "
-            "EU REACH-aligned 90 ppm ceiling and require an effluent-treatment plant adjustment before the next OEKO-TEX surveillance audit. "
-            "(ii) CO2 intensity at 3.8 kgCO2/garment is over the 3.5 kgCO2/garment limit anticipated for the 2027 CBAM free-allowance phase-out — the "
-            "factory should begin embedded-emissions monitoring under the CBAM authorised-declarant regime. (iii) The EU Corporate Sustainability Due "
-            "Diligence Directive (CSDDD) supply-chain narrative is in DRAFT status and has not yet been published; this is required for EuroThread SA's "
-            "2026-27 commercial cycle and the deadline lapses 2026-12-31. Estimated exposure if these are not resolved within 6 months is PKR 4.5 crore, "
-            "concentrated on the M&amp;S and EuroThread SA order books."
-        ),
-    ),
-    "rgl_khi_003": dict(
-        audit_date="2026-05-02",
-        auditor="amfori-accredited audit (third party)",
-        score=90,
-        risk_level="COMPLIANT",
-        orders_at_risk_pkr=2_500_000,
-        summary=(
-            "<b>COMPLIANT.</b> Ravi Garments Ltd is the gold-standard case for this audit cycle. All five certifications (SA8000, ISO 14001, GOTS, OEKO-TEX, BSCI) are "
-            "current with surveillance audits on file. CBAM quarterly declarations have been filed since October 2025 under an authorised declarant registration. "
-            "The UK Modern Slavery Act 2015 s.54 statement was published in April 2026 and is hosted on the factory's website with the supply-chain map. The EU "
-            "Corporate Sustainability Due Diligence narrative has been published in line with Directive (EU) 2024/1760 transposition deadlines. Water effluent at "
-            "3.2 ppm is well within the 8 ppm REACH ceiling; weekly working hours at 47 are below the SA8000 60-hour cap; CO2 per garment at 2.4 kgCO2 is the best "
-            "in this audit cycle and positions Ideal favourably under the 2027 CBAM free-allowance phase-out. A single advisory: continue to monitor lead-in-dye "
-            "measurements (currently 22 ppm vs OEKO-TEX limit 50 ppm) to maintain the current margin of safety."
-        ),
-    ),
-    "ams_skl_004": dict(
-        audit_date="2026-05-10",
-        auditor="CertVerify Pakistan (Pvt) Ltd.",
-        score=38,
-        risk_level="CRITICAL",
-        orders_at_risk_pkr=520_000_000,
-        summary=(
-            "<b>CRITICAL.</b> Al-Madina Sportswear (Pvt) Ltd presents multiple critical compliance failures that jeopardise continued shipment to EU and UK buyers. "
-            "The primary risks are: (i) GOTS certification expired November 2025 — six months lapsed without renewal, affecting organic-cotton product lines shipped "
-            "to NordStyle Group and M&amp;S; (ii) no EU CBAM declarant registration or quarterly filing exists despite 71% of exports going to EU jurisdictions "
-            "(NordStyle Group + EuroThread SA); (iii) water effluent at 11.5 ppm exceeds the EU REACH SVHC ceiling of 8 ppm by 44%, contradicting the factory's "
-            "self-reported claim of REACH compliance; (iv) weekly working hours measured at 62 exceed the SA8000 60-hour cap and contradict the self-reported figure "
-            "of 49 hours — a discrepancy of 13 hours; (v) lead-in-dyes at 78 ppm exceeds the OEKO-TEX Standard 100 limit of 50 ppm; (vi) the EU Corporate "
-            "Sustainability Due Diligence Directive (CSDDD) supply-chain narrative remains in DRAFT status. BSCI certification is not held, which is required "
-            "by BritMart Retail's Code of Conduct. Without immediate remediation, estimated revenue at risk is PKR 52 crore across NordStyle Group, EuroThread SA, "
-            "M&amp;S, and BritMart Retail order books. The auditor recommends a hold on all EU/UK shipment authorisations until the GOTS renewal audit is completed, "
-            "CBAM registration is filed, and effluent remediation is verified by re-sampling."
-        ),
-    ),
-}
+FACTORY_IDS = ["fwi_fsd_001", "cfw_lhe_002", "rgl_khi_003", "ams_skl_004", "sgd_tex_005"]
 
 
 def main() -> int:
     if not FACTORY_DIR.exists():
         print(f"missing dir {FACTORY_DIR}", file=sys.stderr)
         return 1
-    for fid, meta in PROFILES.items():
+    for fid in FACTORY_IDS:
         json_path = FACTORY_DIR / f"{fid}.json"
         if not json_path.exists():
             print(f"skip {fid}: no source JSON", file=sys.stderr)
             continue
         factory = json.loads(json_path.read_text(encoding="utf-8"))
         out = FACTORY_DIR / f"{fid}.pdf"
-        _build(factory, out_path=out, **meta)
-        print(f"wrote {out.relative_to(FACTORY_DIR.parent.parent)} ({out.stat().st_size:,} bytes)")
+        _build(factory, out)
+        print(f"wrote {out.name} ({out.stat().st_size:,} bytes)")
     return 0
 
 

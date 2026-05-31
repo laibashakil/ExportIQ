@@ -40,7 +40,7 @@ def run(state: AgentState) -> dict:
         patches.update(log_step(state, AGENT_NAME, "injected_failure", {"kind": kind}))
         raise RuntimeError(f"injected failure ({kind}) in {AGENT_NAME}")
 
-    regulation_ids = state.get("regulation_ids") or ["eu_cbam"]
+    regulation_ids = state.get("regulation_ids") or ["eu_csddd", "uk_modern_slavery", "sa8000", "eu_reach", "gsplus"]
     rules: list[dict] = []
     for reg_id in regulation_ids:
         parsed = _load_or_parse(reg_id, state)
