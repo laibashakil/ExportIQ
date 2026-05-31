@@ -21,10 +21,10 @@ import { getRegulationUrl } from '../services/firebase';
 // The regulations the agents read, with their Firebase Storage PDF paths.
 // Rendered as tappable rows under step 2 so users can open the real text.
 const REGULATIONS = [
-  { name: 'EU Carbon Border Adjustment Mechanism (CBAM)', path: 'regulations/eu_cbam.pdf' },
+  { name: 'EU Carbon Border Adjustment Mechanism (EU CBAM)', path: 'regulations/eu_cbam.pdf' },
   { name: 'UK Modern Slavery Act 2015', path: 'regulations/uk_modern_slavery.pdf' },
   {
-    name: 'EU Supply Chain Due Diligence Directive (CSDDD)',
+    name: 'EU Supply Chain Due Diligence Directive (EU CSDDD)',
     path: 'regulations/eu_supply_chain_directive.pdf',
   },
 ];
@@ -84,12 +84,11 @@ function RegulationLinks() {
           onPress={() => open(reg)}
           disabled={!!loadingPath}
         >
-          <Ionicons name="document-text-outline" size={18} color={colors.primary} />
           <Text style={styles.regName}>{reg.name}</Text>
           {loadingPath === reg.path ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Ionicons name="open-outline" size={16} color={colors.textDim} />
+            <Ionicons name="document-outline" size={14} color="#00C48C" />
           )}
         </TouchableOpacity>
       ))}
@@ -278,7 +277,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
-    marginLeft: 10,
     marginRight: 8,
     lineHeight: 20,
   },

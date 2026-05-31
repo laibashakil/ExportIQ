@@ -46,15 +46,9 @@ export const DEMO_FACTORIES = [
     risk_level: 'COMPLIANT',
     orders_at_risk_pkr: 8000000,
   },
-  // Empty factory used to demo the upload flow. Tapping this card sends the
-  // user to the upload screen (no report exists yet → routed before tabs).
-  {
-    factory_id: 'demo_factory_upload_test',
-    factory_name: 'Add New Factory',
-    city: '',
-    compliance_score: null,
-    risk_level: null,
-    orders_at_risk_pkr: 0,
-    is_empty: true,
-  },
 ];
+
+// Factory id used by the permanent "Add New Factory" card's upload flow.
+// It is intentionally NOT part of DEMO_FACTORIES — the add affordance is a
+// static UI element, never a data row.
+export const NEW_FACTORY_UPLOAD_ID = 'demo_factory_upload_test';

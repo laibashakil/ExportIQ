@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors, riskColor, radii, spacing, shadow } from '../constants/colors';
-import { DEMO_FACTORIES } from '../constants/config';
+import { DEMO_FACTORIES, NEW_FACTORY_UPLOAD_ID } from '../constants/config';
 import { subscribeFactory, subscribeReport } from '../services/firebase';
 import { complianceLevel } from '../services/format';
 import {
@@ -239,7 +239,6 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="business" size={18} color={colors.primary} />
             <Text style={styles.summaryText} numberOfLines={1}>
               {factories.filter(f =>
-                !f.is_empty &&
                 f.compliance_score !== null &&
                 f.compliance_score !== undefined &&
                 f.status !== 'pending_upload'
@@ -277,6 +276,17 @@ export default function HomeScreen({ navigation }) {
             />
           );
         })}
+
+        {/* Permanent "add" affordance — always last, never part of the data
+            list. Remains below real factories no matter how many are added. */}
+        <AddNewFactoryCard
+          onPress={() =>
+            navigation.navigate('Upload', {
+              factoryId: NEW_FACTORY_UPLOAD_ID,
+              factoryName: 'New Factory',
+            })
+          }
+        />
 
         <Text style={styles.footerNote}>
           Pull down to refresh · Tap a factory to see details
@@ -352,6 +362,26 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
           </>
         )}
       </View>
+    </TouchableOpacity>
+  );
+}
+
+// Static "Add New Factory" card. Rendered separately from the factories
+// array as a permanent affordance at the bottom of the list.
+function AddNewFactoryCard({ onPress }) {
+  return (
+    <TouchableOpacity
+      style={styles.addCard}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityLabel="Add a new factory"
+    >
+      <Ionicons name="add-circle-outline" size={52} color="#00C48C" />
+      <Text style={styles.addTitle}>Add New Factory</Text>
+      <Text style={styles.addSubtitle}>
+        Upload your audit report to check compliance
+      </Text>
+      <Text style={styles.addHint}>Tap to get started</Text>
     </TouchableOpacity>
   );
 }
@@ -488,6 +518,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
     textAlign: 'center',
+  },
+
+  // Permanent "Add New Factory" affordance.
+  addCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderStyle: 'dashed',
+    borderColor: '#00C48C',
+    borderWidth: 1,
+    opacity: 0.7,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  addTitle: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: spacing.sm,
+  },
+  addSubtitle: {
+    color: '#C9D1D9',
+    fontSize: 13,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  addHint: {
+    color: '#6B7280',
+    fontSize: 12,
+    marginTop: 8,
   },
   uploadBadge: { alignItems: 'center' },
   uploadBadgeText: {

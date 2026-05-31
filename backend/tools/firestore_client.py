@@ -169,6 +169,28 @@ def append_trace(job_id: str, entry: dict) -> None:
     )
 
 
+def upload_to_storage(dest_path: str, data: bytes, content_type: str = "application/pdf") -> str | None:
+    """Upload raw bytes to Firebase Storage at `dest_path`.
+
+    Attaches a `firebaseStorageDownloadTokens` metadata value so the client
+    SDK's `getDownloadURL()` resolves to a tokenised, publicly fetchable URL —
+    the same shape the regulation/audit PDFs use. Returns `dest_path` on
+    success, or `None` when running on the in-memory fallback (no real
+    Firebase configured), so callers can skip persisting a path that won't
+    resolve.
+    """
+    client = _client()
+    if client is _mem:
+        return None
+    import uuid
+    from firebase_admin import storage
+
+    blob = storage.bucket().blob(dest_path)
+    blob.metadata = {"firebaseStorageDownloadTokens": uuid.uuid4().hex}
+    blob.upload_from_string(data, content_type=content_type or "application/pdf")
+    return dest_path
+
+
 def list_collection(path: str) -> list[dict]:
     client = _client()
     if client is _mem:

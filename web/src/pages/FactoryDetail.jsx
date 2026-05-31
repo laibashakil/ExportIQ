@@ -97,6 +97,11 @@ export default function FactoryDetail() {
     setError(null);
     setRunning(true);
     setTab('trace');
+    // Optimistically stamp the analysis time the instant the user clicks, and
+    // persist it to Firestore on start so any other client watching this
+    // factory sees "Last analyzed" update immediately (not just on complete).
+    setOptimisticAnalyzedAt(new Date());
+    markAnalyzed();
     try {
       const res = await api.analyze(factoryId);
       if (res?.job_id) setJobId(res.job_id);
