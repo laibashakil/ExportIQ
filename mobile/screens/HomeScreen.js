@@ -30,7 +30,7 @@ const DEADLINE_WINDOW_DAYS = 30;
 
 function plainRiskLine(factory, report, empty) {
   if (empty) {
-    return 'No data yet — tap to upload';
+    return 'Upload your audit report to check compliance';
   }
   const gaps = report?.gaps?.length ?? 0;
   const contradictions = report?.contradictions?.length ?? 0;
@@ -238,7 +238,12 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.summaryRow}>
             <Ionicons name="business" size={18} color={colors.primary} />
             <Text style={styles.summaryText} numberOfLines={1}>
-              {factories.length} factories monitored
+              {factories.filter(f =>
+                !f.is_empty &&
+                f.compliance_score !== null &&
+                f.compliance_score !== undefined &&
+                f.status !== 'pending_upload'
+              ).length} factories monitored
             </Text>
           </View>
           <Text style={styles.summarySub} numberOfLines={1}>
@@ -289,7 +294,12 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
   const c = empty ? colors.textDim : riskColor(level);
   return (
     <TouchableOpacity
-      style={[styles.card, { borderLeftColor: c }]}
+      style={[
+        styles.card,
+        empty
+          ? { borderStyle: 'dashed', borderColor: '#00C48C', borderWidth: 1, borderLeftWidth: 1 }
+          : { borderLeftColor: c },
+      ]}
       onPress={onPress}
       activeOpacity={0.85}
     >
@@ -304,10 +314,9 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
       </View>
 
       <View style={styles.cardMid}>
-        <Text style={styles.factoryName} numberOfLines={2}>
+        <Text style={[styles.factoryName, empty && { color: colors.primary }]} numberOfLines={2}>
           {item.factory_name}
         </Text>
-        {/* Hide city entirely on empty cards — no inferred location. */}
         {!empty && (
           <View style={styles.locationRow}>
             <Ionicons name="location" size={13} color={colors.textDim} />
@@ -321,22 +330,27 @@ function FactoryCard({ item, riskLine, empty, onPress }) {
 
       <View style={styles.cardRight}>
         {empty ? (
-          <DashedEmptyScore size={68} stroke={4} />
+          <>
+            <Ionicons name="add-circle-outline" size={48} color="#00C48C" />
+            <Text style={styles.tapToStart}>Tap to get started</Text>
+          </>
         ) : (
-          <CircularScore
-            size={68}
-            stroke={6}
-            score={Number(item.compliance_score) || 0}
-            risk={level}
-            label="/ 100"
-          />
+          <>
+            <CircularScore
+              size={68}
+              stroke={6}
+              score={Number(item.compliance_score) || 0}
+              risk={level}
+              label="/ 100"
+            />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.textDim}
+              style={{ marginTop: 6 }}
+            />
+          </>
         )}
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={colors.textDim}
-          style={{ marginTop: 6 }}
-        />
       </View>
     </TouchableOpacity>
   );
@@ -467,6 +481,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     marginTop: spacing.lg,
+  },
+  tapToStart: {
+    color: colors.textDim,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
   },
   uploadBadge: { alignItems: 'center' },
   uploadBadgeText: {

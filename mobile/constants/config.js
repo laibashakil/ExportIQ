@@ -50,10 +50,10 @@ export const DEMO_FACTORIES = [
   // user to the upload screen (no report exists yet → routed before tabs).
   {
     factory_id: 'demo_factory_upload_test',
-    factory_name: 'New Factory (Demo Upload)',
-    city: 'Faisalabad',
-    compliance_score: 0,
-    risk_level: 'WARNING',
+    factory_name: 'Add New Factory',
+    city: '',
+    compliance_score: null,
+    risk_level: null,
     orders_at_risk_pkr: 0,
     is_empty: true,
   },

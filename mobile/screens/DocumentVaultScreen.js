@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
@@ -16,7 +18,7 @@ import {
   shadow,
   spacing,
 } from '../constants/colors';
-import { subscribeReport } from '../services/firebase';
+import { subscribeReport, subscribeFactory, getRegulationUrl } from '../services/firebase';
 import { openInGmail } from '../services/mail';
 import { api } from '../services/api';
 import { buyerFlag, formatRelativeTime } from '../services/format';
@@ -90,14 +92,31 @@ function splitSubjectFromBody(rawBody, fallbackTitle) {
 }
 
 export default function DocumentVaultScreen({ route, navigation }) {
-  const { factoryId } = route.params;
+  const { factoryId, factoryName } = route.params;
   const [report, setReport] = useState(null);
+  const [factoryDoc, setFactoryDoc] = useState(null);
   const [openId, setOpenId] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
-    const u = subscribeReport(factoryId, setReport);
-    return () => u && u();
+    const u1 = subscribeReport(factoryId, setReport);
+    const u2 = subscribeFactory(factoryId, setFactoryDoc);
+    return () => { u1 && u1(); u2 && u2(); };
   }, [factoryId]);
+
+  const openAuditPdf = async () => {
+    const path = factoryDoc?.audit_pdf_path;
+    if (!path) return;
+    setPdfLoading(true);
+    try {
+      const url = await getRegulationUrl(path);
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Unable to open document. Try again.');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const docs = report?.documents || [];
 
@@ -111,7 +130,7 @@ export default function DocumentVaultScreen({ route, navigation }) {
     return { readyToSend: r, formsToFile: f };
   }, [docs]);
 
-  if (docs.length === 0) {
+  if (docs.length === 0 && !factoryDoc) {
     return (
       <View style={styles.bg}>
         <EmptyState
@@ -154,6 +173,47 @@ export default function DocumentVaultScreen({ route, navigation }) {
       <Text style={styles.subtitle}>
         Emails ready to send and forms ready to file
       </Text>
+
+      {/* Source Documents — original uploaded audit report */}
+      {factoryDoc && (
+        <View style={{ marginBottom: spacing.xl }}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionEmoji}>📄</Text>
+            <Text style={styles.section}>Original Audit Report</Text>
+          </View>
+          <View style={[styles.sourceCard, !factoryDoc.audit_pdf_path && styles.sourceCardDisabled]}>
+            <View style={styles.sourceIconWrap}>
+              <Ionicons
+                name="document-outline"
+                size={28}
+                color={factoryDoc.audit_pdf_path ? colors.primary : colors.textDim}
+              />
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[styles.sourceCardTitle, !factoryDoc.audit_pdf_path && { color: colors.textDim }]}>
+                {factoryDoc.factory_name || factoryName || 'Factory'}
+              </Text>
+              <Text style={styles.sourceCardMeta}>
+                {factoryDoc.audit_pdf_path ? 'Audit Report PDF' : 'Audit document not available'}
+              </Text>
+            </View>
+            {factoryDoc.audit_pdf_path && (
+              pdfLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 8 }} />
+              ) : (
+                <TouchableOpacity
+                  style={styles.viewPdfBtn}
+                  onPress={openAuditPdf}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.viewPdfBtnText}>View</Text>
+                </TouchableOpacity>
+              )
+            )}
+          </View>
+          {docs.length > 0 && <View style={styles.sourceDivider} />}
+        </View>
+      )}
 
       {readyToSend.length > 0 && (
         <View style={{ marginBottom: spacing.xl }}>
@@ -480,5 +540,62 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginTop: spacing.md,
     marginBottom: spacing.md,
+  },
+
+  // Source Documents section
+  sectionEmoji: {
+    fontSize: 18,
+    marginRight: 4,
+  },
+  sourceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    padding: 12,
+    ...shadow,
+  },
+  sourceCardDisabled: {
+    opacity: 0.55,
+  },
+  sourceIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sourceCardTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  sourceCardMeta: {
+    color: colors.textDim,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  viewPdfBtn: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radii.pill,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginLeft: 8,
+  },
+  viewPdfBtnText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  sourceDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginTop: spacing.xl,
   },
 });
