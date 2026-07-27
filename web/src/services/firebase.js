@@ -33,7 +33,7 @@ export function storage() {
 
 /**
  * Resolve a download URL for a file in Firebase Storage (e.g. a regulation
- * PDF stored at 'regulations/eu_cbam.pdf'). Returned URL is a public,
+ * PDF stored at 'regulations/eu_csddd.pdf'). Returned URL is a public,
  * tokenised link suitable for opening in a new browser tab.
  */
 export function getRegulationUrl(path) {

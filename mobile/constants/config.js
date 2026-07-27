@@ -42,7 +42,7 @@ export const DEMO_FACTORIES = [
     factory_id: 'rgl_khi_003',
     factory_name: 'Ravi Garments Ltd',
     city: 'Karachi',
-    compliance_score: 91,
+    compliance_score: 95,
     risk_level: 'COMPLIANT',
     orders_at_risk_pkr: 8000000,
   },
@@ -50,5 +50,8 @@ export const DEMO_FACTORIES = [
 
 // Factory id used by the permanent "Add New Factory" card's upload flow.
 // It is intentionally NOT part of DEMO_FACTORIES — the add affordance is a
-// static UI element, never a data row.
-export const NEW_FACTORY_UPLOAD_ID = 'demo_factory_upload_test';
+// static UI element, never a data row. Points at the demo-upload factory
+// (Al-Madina Sportswear) so uploading during the pitch analyzes ams_skl_004
+// and surfaces its pinned score-38 result. Switch to 'sgd_tex_005' to drive
+// the backup factory instead.
+export const NEW_FACTORY_UPLOAD_ID = 'ams_skl_004';

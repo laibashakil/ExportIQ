@@ -1,4 +1,4 @@
-"""Generates buyer emails, CBAM forms, and audit checklists.
+"""Generates buyer emails, CSDDD due diligence reports, and audit checklists.
 
 Two-stage buyer-email narrative
 -------------------------------
@@ -109,7 +109,7 @@ Dear {Buyer Name} compliance team,
 
 Following our routine compliance review, all certifications are current and
 verified. The full documentation package — including certification copies,
-emissions records, supply-chain narrative, and labour audit evidence — is
+the CSDDD supply-chain due diligence report, and labour audit evidence — is
 available on request ahead of your upcoming audit cycle.
 
 We look forward to a smooth audit cycle and continued partnership.
@@ -122,11 +122,13 @@ Compliance Office
 )
 
 
-CBAM_FORM_PROMPT = (
-    """Draft a CBAM (EU Carbon Border Adjustment Mechanism)
-quarterly declaration. Include factory name, reporting period, total embedded
-emissions (tCO2e), default vs verified emission factors used, and signatory
-block. Output Markdown.
+CSDDD_REPORT_PROMPT = (
+    """Draft an EU CSDDD (Corporate Sustainability Due Diligence Directive,
+Dir 2024/1760) supply chain due diligence report. Include factory name,
+reporting period, the due diligence policy summary, identified human-rights
+and environmental risks across tier-1/tier-2 suppliers, prevention and
+mitigation measures, the grievance mechanism, and a signatory block. Output
+Markdown.
 """
     + _NAMING_CONSTRAINT
 )
@@ -245,7 +247,7 @@ def generate_audit_ready_email(
         f"Dear {buyer} compliance team,\n\n"
         f"Following our routine compliance review, all certifications are "
         f"current and verified. The full documentation package — including "
-        f"{certs_line}, emissions records, supply-chain narrative, and "
+        f"{certs_line}, the CSDDD supply-chain due diligence report, and "
         f"labour audit evidence — is available on request ahead of your "
         f"upcoming audit cycle.\n\n"
         f"We look forward to a smooth audit cycle and continued partnership.\n\n"
@@ -265,26 +267,39 @@ def generate_audit_ready_email(
     }
 
 
-def generate_cbam_form(factory_name: str, period: str, emissions_tco2: float) -> dict:
+def generate_csddd_report(factory_name: str, period: str, *, supplier_count: int = 0) -> dict:
     user = (
         f"Factory: {factory_name}\nReporting period: {period}\n"
-        f"Embedded emissions (tCO2e): {emissions_tco2}"
+        f"Tier-1/tier-2 suppliers in scope: {supplier_count or 'all mapped suppliers'}"
     )
     stub = (
-        f"# CBAM Quarterly Declaration — {factory_name}\n\n"
+        f"# CSDDD Supply Chain Due Diligence Report — {factory_name}\n\n"
         f"**Reporting period:** {period}\n"
-        f"**Embedded emissions:** {emissions_tco2} tCO2e\n"
-        f"**Methodology:** EU default factors (interim — verified factors pending)\n\n"
+        f"**Directive:** EU CSDDD (Dir 2024/1760), Articles 5, 7, 8, 10, 11\n\n"
+        f"**1. Due diligence policy.** {factory_name} has adopted a board-level "
+        f"supply chain due diligence policy and supplier code of conduct.\n\n"
+        f"**2. Identified risks.** Human-rights and environmental risks were "
+        f"assessed across tier-1 and tier-2 suppliers.\n\n"
+        f"**3. Prevention & mitigation.** Periodic supplier audits (SMETA/BSCI) "
+        f"and contractual assurances are in place.\n\n"
+        f"**4. Grievance mechanism.** A confidential, non-retaliatory complaints "
+        f"procedure is maintained.\n\n"
         f"---\n_Signed: Compliance Office, {factory_name}_"
     )
-    body = call_gemini(CBAM_FORM_PROMPT, user, expect_json=False, stub_response=stub)
+    body = call_gemini(CSDDD_REPORT_PROMPT, user, expect_json=False, stub_response=stub)
     return {
         "document_id": _new_id("doc"),
-        "title": f"CBAM Declaration — {factory_name} — {period}",
-        "kind": "CBAM_FORM",
+        "title": f"CSDDD Due Diligence Report — {factory_name} — {period}",
+        "kind": "CSDDD_DUE_DILIGENCE_REPORT",
         "body": body,
         "generated_at": datetime.utcnow().isoformat(),
     }
+
+
+# Back-compat shim — older call sites import generate_cbam_form. Routes to the
+# CSDDD due diligence report (CBAM no longer applies to textiles).
+def generate_cbam_form(factory_name: str, period: str, emissions_tco2: float = 0.0) -> dict:
+    return generate_csddd_report(factory_name, period)
 
 
 def generate_audit_checklist(factory_name: str, gap: dict) -> dict:
@@ -297,7 +312,7 @@ def generate_audit_checklist(factory_name: str, gap: dict) -> dict:
         f"1. Assign compliance officer (HSE Manager) — by next Monday\n"
         f"2. Collect current evidence (sensor logs, certificates) — within 1 week\n"
         f"3. Engage external auditor (CertVerify Pakistan) — within 2 weeks\n"
-        f"4. Prepare CBAM declaration form — within 3 weeks\n"
+        f"4. Prepare CSDDD due diligence report — within 3 weeks\n"
         f"5. Implement corrective action — within 4 weeks\n"
         f"6. Re-audit + submit evidence to buyer — before {gap.get('deadline') or 'deadline'}\n"
     )

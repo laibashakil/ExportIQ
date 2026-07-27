@@ -74,15 +74,15 @@ agents; that role belongs to FastAPI + LangGraph on Cloud Run.
 
 The mobile app (Expo) reads real-time Firestore updates so a factory owner sees
 agents reasoning live, watches the score climb as actions execute, and downloads
-the buyer emails, CBAM forms, and audit checklists the agents generate.
+the buyer emails, CSDDD due diligence reports, and audit checklists the agents generate.
 
 ---
 
 ## Problem Statement
 
 Pakistan's textile sector ships ~USD 17B/year, employs ~15M people, and depends
-on EU/UK buyers who increasingly enforce CBAM, CSDDD, Modern Slavery, REACH,
-and ZDHC compliance. A single missed deadline or one expired SA8000 certificate
+on EU/UK buyers who increasingly enforce CSDDD, Modern Slavery, SA8000, REACH,
+and GSP+ compliance. A single missed deadline or one expired SA8000 certificate
 can cancel hundreds of millions of PKR in confirmed orders. Today, factories
 discover gaps in third-party audits weeks before shipment — too late.
 
@@ -110,10 +110,11 @@ generated compliance documents come out — fully autonomously.
 
 The system is split into three layers:
 
-1. **Data Ingestion Layer** — Accepts regulation PDFs (EU CBAM, CSDDD, UK
-   Modern Slavery Act), factory audit PDFs, and export CSV data. PDFs are
-   parsed with PyMuPDF deterministically, with Gemini as fallback for messy
-   scans. Pre-parsed JSON profiles exist for the 4 demo factories.
+1. **Data Ingestion Layer** — Accepts regulation PDFs (EU CSDDD, UK Modern
+   Slavery Act, SA8000, EU REACH, GSP+), factory audit PDFs, and export CSV
+   data. PDFs are parsed with PyMuPDF deterministically, with Gemini as
+   fallback for messy scans. Pre-parsed JSON profiles exist for the 5 demo
+   factories.
 
 2. **Agentic Reasoning Layer** — A LangGraph DAG orchestrates 6 specialised
    agents sequentially (with a parallel start for Regulation + Factory
@@ -124,7 +125,7 @@ The system is split into three layers:
 3. **Action & Output Layer** — The pipeline produces a compliance report with
    scored gaps, contradictions with dual-source citations, a PKR-denominated
    risk breakdown per buyer, a prioritised action chain, and generated
-   documents (buyer emails, CBAM declarations, audit checklists). All outputs
+   documents (buyer emails, CSDDD due diligence reports, audit checklists). All outputs
    stream to Firestore in real time for the mobile app.
 
 ---
@@ -196,7 +197,7 @@ node.
 ## Agents Developed
 
 ### Agent 1: Regulation Ingestion (`regulation_agent.py`)
-- **Input**: Regulation IDs (e.g. `eu_cbam`, `uk_modern_slavery`)
+- **Input**: Regulation IDs (e.g. `eu_csddd`, `uk_modern_slavery`, `sa8000`, `eu_reach`, `gsplus`)
 - **Process**: Loads pre-parsed JSON from `mock_data/regulations/` or parses
   real PDFs with PyMuPDF + Gemini extraction
 - **Output**: Structured rulebook — list of rules with deadlines, numerical
@@ -243,7 +244,7 @@ node.
 - **Process**: Simulates each action sequentially:
   - Removes addressed gaps from the active set
   - Recomputes compliance score and risk after each action
-  - Generates supporting documents (CBAM forms, audit checklists)
+  - Generates supporting documents (CSDDD due diligence reports, audit checklists)
   - Generates one proactive buyer email per affected buyer
   - Pushes real-time score updates to Firestore (drives mobile animation)
 - **Output**: Before/after compliance scores, PKR risk reduction, list of
@@ -264,10 +265,10 @@ node.
 |---|---|---|
 | **LLM (Gemini)** | Deterministic stub responses hardcoded per agent — pipeline produces realistic output with zero API calls | Gemini 2.5 Pro via Vertex AI (`langchain-google-vertexai`); falls back to AI Studio API key if Vertex quota exhausted |
 | **Firestore** | In-memory `_MemStore` class mimics Firestore set/get/update/append/list operations with dict-backed storage | Firebase Admin SDK with real Firestore project; real-time listeners from mobile app |
-| **Factory Data** | 4 pre-built JSON profiles in `mock_data/factories/` (Faisal Weave Industries, Chenab Fabric Works, Ravi Garments, AMS Sportswear) | Same JSON profiles; real deployment would ingest factory ERP exports |
-| **Regulation Data** | 3 pre-parsed JSON rulebooks in `mock_data/regulations/` (EU CBAM, EU CSDDD, UK Modern Slavery Act) + real PDFs for Gemini parsing | Same; additional regulations can be dropped into the directory |
+| **Factory Data** | 5 pre-built JSON profiles in `mock_data/factories/` (Faisal Weave Industries, Chenab Fabric Works, Ravi Garments, Al-Madina Sportswear, Sargodha Textile Mills) | Same JSON profiles; real deployment would ingest factory ERP exports |
+| **Regulation Data** | 5 pre-parsed JSON rulebooks in `mock_data/regulations/` (EU CSDDD, UK Modern Slavery Act, SA8000, EU REACH, GSP+) + real PDFs for Gemini parsing | Same; additional regulations can be dropped into the directory |
 | **PDF Parsing** | PyMuPDF text extraction (always works) | PyMuPDF + Gemini-based structure extraction for complex/scanned PDFs |
-| **Document Generation** | Deterministic Markdown templates for buyer emails, CBAM forms, and checklists | Gemini-generated documents with tone constraints (no confessional language) |
+| **Document Generation** | Deterministic Markdown templates for buyer emails, CSDDD due diligence reports, and checklists | Gemini-generated documents with tone constraints (no confessional language) |
 | **Export CSV** | `factory_export_data.csv` with PKR volumes per buyer | Same; production would pull from ERP/PO systems |
 
 **Circuit breaker**: If the first Gemini call fails with PermissionDenied,
@@ -325,7 +326,7 @@ agent.
 2. **Tap "Run Full Analysis"**. The mobile app calls `POST /analyze`, which
    kicks off the agent pipeline as a background job.
 3. **Six agents run in order on Cloud Run**:
-   - **Regulation Ingestion** parses the EU CBAM regulation into a structured
+   - **Regulation Ingestion** parses the EU CSDDD regulation into a structured
      rulebook with deadlines and numerical limits.
    - **Factory Profile** parses the factory audit data into claims,
      certifications, and audit evidence.
@@ -338,8 +339,8 @@ agent.
    - **Action Chain** ranks gaps by severity × urgency and picks the 3–5
      actions with the highest PKR impact.
    - **Execution Simulation** runs each action through a simulator, computes
-     score deltas and risk recovered, and generates buyer emails, CBAM forms,
-     and audit checklists.
+     score deltas and risk recovered, and generates buyer emails, CSDDD due
+     diligence reports, and audit checklists.
 4. **The mobile app streams the trace** from Firestore so the user watches
    each step in real time.
 5. **The user can simulate any subset of actions**, see the score jump (e.g.
@@ -389,7 +390,7 @@ ExportIQ/
 │   │   ├── gemini_client.py       # Vertex AI / AI Studio / stub client
 │   │   ├── firestore_client.py    # Firestore + in-memory fallback
 │   │   ├── contradiction_detector.py # Rule-based + LLM contradiction detection
-│   │   ├── document_generator.py  # Buyer emails, CBAM forms, checklists
+│   │   ├── document_generator.py  # Buyer emails, CSDDD reports, checklists
 │   │   ├── compliance_scorer.py   # Score calculation from gaps
 │   │   ├── pdf_parser.py          # PyMuPDF + Gemini extraction
 │   │   ├── csv_processor.py       # Export data CSV parsing
@@ -496,17 +497,18 @@ LAN ranges.
 
 1. Open mobile app, select **Faisal Weave Industries** — score `43/100`,
    PKR 340M at risk (RED).
-2. Show 4 gaps + 1 contradiction card ("Factory claims ISO 14001, water audit
-   disagrees").
+2. Show 4 gaps + 1 contradiction card ("Factory claims current SA8000 — the
+   certificate expired Jan 2026 and payroll shows 62-hr weeks").
 3. Tap **Run Full Analysis** on mobile; all 6 agents fire and produce output
    visible in the Agent Trace screen.
-4. Tap **Simulate CBAM Filing** — score 43 → 61, risk 340M → 180M PKR.
-5. Tap **Simulate All Actions** — score 43 → 71, risk 340M → 60M PKR.
+4. Tap **Simulate "Establish CSDDD Due Diligence Policy"** — score 43 → 55,
+   risk 340M → 220M PKR.
+5. Tap **Simulate All Actions** — score 43 → 100, risk 340M → 0 PKR.
 6. Hit `POST /failure-test/<job_id>` for the **recovery moment** — kill an
    agent; the Recovery Agent runs a fallback artifact and the pipeline
    continues.
-7. Show the generated documents: CBAM declaration, buyer email, audit
-   checklist.
+7. Show the generated documents: CSDDD due diligence report, buyer email,
+   audit checklist.
 8. Show the mobile **Agent Trace** screen — full reasoning visible.
 
 ---
@@ -517,7 +519,7 @@ LAN ranges.
 |---|---|---|
 | Google Antigravity Integration | 25% | Used as primary development IDE; 8 skill files + 2 workflow files in `antigravity/.agent/`; Gemini 2.5 Pro on Vertex AI for all LLM calls |
 | Agentic Reasoning & Workflow | 20% | 6 agents on LangGraph DAG with shared state, parallel start, contradiction detection across two sources, constraint-based action prioritisation, failure recovery with fallback |
-| Insight & Decision Quality | 20% | Specific PKR figures per buyer, named regulations (CBAM/CSDDD/Modern Slavery/REACH), contradictions cite two sources by name, non-trivial gaps |
+| Insight & Decision Quality | 20% | Specific PKR figures per buyer, named regulations (CSDDD/Modern Slavery/SA8000/REACH/GSP+), contradictions cite two sources by name, non-trivial gaps |
 | Action Simulation & Outcome | 15% | Per-action and aggregate score delta, PKR risk reduction, real document generation, before/after state persisted |
 | Technical Implementation | 10% | FastAPI + LangGraph + Firestore + Expo, clean separation of agents/tools/models/api, failure handling + circuit breaker |
 | Innovation & UX | 10% | No existing solution for Pakistan textile compliance, mobile-first, PKR-denominated risk, Urdu/English-ready |
@@ -548,10 +550,10 @@ In **stub mode** (no LLM): **~3–5s**.
 
 **Assumptions**
 
-- 4 factories with hand-curated audit profiles approximate realistic Pakistani
+- 5 factories with hand-curated audit profiles approximate realistic Pakistani
   textile factories. Real-world adoption would ingest existing factory ERP
   exports and third-party audit PDFs.
-- EU CBAM is the primary demo regulation. Additional regulations can be added
+- EU CSDDD is the primary demo regulation. Additional regulations can be added
   to `backend/mock_data/regulations/`.
 - PKR risk numbers are derived from `annual_export_pkr` and severity-weighted
   gap penalties.

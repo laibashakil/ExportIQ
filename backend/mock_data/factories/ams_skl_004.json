@@ -2,21 +2,62 @@
   "factory_id": "ams_skl_004",
   "factory_name": "Al-Madina Sportswear (Pvt) Ltd",
   "city": "Sialkot",
-  "primary_products": ["Sportswear", "Athleisure", "Performance knits"],
-  "annual_export_pkr": 5200000000,
+  "province": "Punjab",
+  "primary_products": ["Sportswear", "Athleisure", "Performance Knits"],
+  "employee_count": 620,
+  "annual_export_pkr": 52000000000,
+  "audit_date": "2026-05-10",
+  "auditor": "CertVerify Pakistan (Pvt) Ltd",
   "exports_by_buyer_pkr": {
-    "NordStyle Group": 2100000000,
-    "EuroThread SA": 1600000000,
-    "M&S": 900000000,
-    "BritMart Retail": 600000000
+    "NordStyle Group": 21000000000,
+    "EuroThread SA": 16000000000,
+    "M&S": 9000000000,
+    "BritMart Retail": 6000000000
   },
   "primary_buyers": ["NordStyle Group", "EuroThread SA", "M&S", "BritMart Retail"],
+  "buyers": [
+    {"name": "NordStyle Group", "pkr_crore": 210, "share": 0.404, "jurisdiction": "EU"},
+    {"name": "EuroThread SA", "pkr_crore": 160, "share": 0.308, "jurisdiction": "EU"},
+    {"name": "M&S", "pkr_crore": 90, "share": 0.173, "jurisdiction": "UK"},
+    {"name": "BritMart Retail", "pkr_crore": 60, "share": 0.115, "jurisdiction": "UK"}
+  ],
+  "avg_weekly_hours": 62,
+  "avg_overtime_hours": 18,
+  "overtime_voluntary": false,
+  "minimum_worker_age": 16,
+  "age_verification_complete": true,
+  "grievance_mechanism": "Informal",
+  "msa_statement_published": true,
+  "water_effluent_ppm": 11.5,
+  "lead_in_dyes_ppm": 78,
+  "co2_per_unit": 3.9,
+  "chemical_testing_cert": "Partial",
+  "dye_suppliers_verified": "No",
+  "formaldehyde_ppm": 185,
+  "tier1_suppliers_mapped": "Yes",
+  "tier1_suppliers_audited": "No",
+  "tier2_suppliers_mapped": "No",
+  "csddd_due_diligence_policy": "DRAFT",
+  "csddd_due_diligence_report": "DRAFT",
+  "sa8000_status": "VALID",
+  "sa8000_expiry": "2027-02-28",
+  "iso_14001_status": "VALID",
+  "iso_14001_expiry": "2027-07-15",
+  "gots_status": "EXPIRED",
+  "gots_expiry": "2025-11-30",
   "certifications": [
     {"name": "SA8000", "status": "VALID", "expiry_date": "2027-02-28", "issuer": "SAI"},
     {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-07-15", "issuer": "CertVerify Pakistan"},
     {"name": "GOTS", "status": "EXPIRED", "expiry_date": "2025-11-30", "issuer": "Control Union"},
     {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-12-10", "issuer": "OEKO-TEX Institute"},
     {"name": "BSCI", "status": "MISSING", "expiry_date": null, "issuer": null}
+  ],
+  "self_reported_claims": [
+    "GOTS certification current and under surveillance",
+    "Factory is ISO 14001 compliant — effluent fully within legal limits",
+    "Chemical discharge meets EU REACH standards",
+    "Average weekly working hours: 49",
+    "Modern Slavery Act statement published 2026"
   ],
   "claims": [
     {"claim": "GOTS certification current and under surveillance", "source": "almadina_compliance_q1_2026.pdf", "value": true},
@@ -26,12 +67,106 @@
     {"claim": "Modern Slavery Act statement published 2026", "source": "almadina_compliance_q1_2026.pdf", "value": true}
   ],
   "audit_evidence": [
-    {"metric": "water_effluent_discharge", "value": 11.5, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
     {"metric": "weekly_working_hours", "value": 62, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
     {"metric": "overtime_hours", "value": 18, "unit": "hours/week", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
-    {"metric": "co2_per_unit", "value": 3.9, "unit": "kgCO2/garment", "source": "carbon_calc_q1_2026.csv", "measured_on": "2026-03-31"},
+    {"metric": "water_effluent_discharge", "value": 11.5, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
     {"metric": "lead_in_dyes", "value": 78.0, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
-    {"metric": "supply_chain_due_diligence_report", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-05"}
+    {"metric": "formaldehyde_ppm", "value": 185, "unit": "ppm", "source": "chemical_lab_report_q1_2026.pdf", "measured_on": "2026-03-10"},
+    {"metric": "csddd_due_diligence_policy", "value": "DRAFT", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-05"}
   ],
-  "notes": "Al-Madina Sportswear is a mid-risk factory for demo purposes: GOTS expired, no CBAM filing, high effluent, working hours contradiction, CSDDD still in DRAFT. Designed to produce multiple gaps and contradictions when processed by ExportIQ."
+  "demo_report": {
+    "compliance_score": 38,
+    "risk_level": "CRITICAL",
+    "orders_at_risk_pkr": 20800000000,
+    "score_after_full_simulation": 100,
+    "orders_at_risk_after_simulation": 0,
+    "buyers_affected": ["NordStyle Group", "EuroThread SA", "M&S", "BritMart Retail"],
+    "gaps": [
+      {
+        "gap_id": "gap_ams_gots",
+        "rule_id": "gots.certification.renewal",
+        "regulation": "GOTS",
+        "requirement": "GOTS certification must be current and under active surveillance for organic-cotton product lines shipped to EU/UK buyers. Expired certificates are not accepted by accredited buyers.",
+        "display_title": "Renew Expired GOTS Certification",
+        "status": "EXPIRED",
+        "factory_status": "EXPIRED — GOTS certificate expired 30 Nov 2025. Six months lapsed without renewal. Affects organic-cotton lines shipped to NordStyle Group and M&S.",
+        "severity": "CRITICAL",
+        "deadline": null,
+        "days_remaining": null,
+        "evidence": ["almadina_compliance_q1_2026.pdf — certifications page", "GOTS certificate scan (expired 2025-11-30)"],
+        "recommendation": "Book GOTS renewal audit with Control Union immediately. Notify NordStyle Group and M&S of certification gap and remediation plan.",
+        "linked_action_id": "act_ams_1"
+      },
+      {
+        "gap_id": "gap_ams_csddd",
+        "rule_id": "csddd.art8.due_diligence_policy",
+        "regulation": "EU CSDDD",
+        "requirement": "Establish and implement a due diligence policy identifying human rights and environmental risks. Policy must be published — DRAFT status does not satisfy the directive requirement.",
+        "display_title": "Publish CSDDD Due Diligence Report",
+        "status": "PARTIAL",
+        "factory_status": "DRAFT — CSDDD supply chain due diligence narrative exists as internal draft as of 2026-04-05 but has not been published or formally adopted by management.",
+        "severity": "CRITICAL",
+        "deadline": "2027-01-01",
+        "days_remaining": 214,
+        "evidence": ["internal_governance_q1.pdf"],
+        "recommendation": "Finalise, board-approve, and publish the due diligence report before CSDDD Phase 1 enforcement date.",
+        "linked_action_id": "act_ams_2"
+      },
+      {
+        "gap_id": "gap_ams_lead",
+        "rule_id": "eu_reach.svhc.lead_dyes",
+        "regulation": "EU REACH",
+        "requirement": "Lead content in textile dyes must not exceed 50 ppm per OEKO-TEX Standard 100 and EU REACH Annex XVII restrictions.",
+        "display_title": "Reduce Lead in Dyes (REACH)",
+        "status": "NON_CONFORMANT",
+        "factory_status": "NON_CONFORMANT — chemical lab report shows lead in dyes at 78 ppm, exceeding the 50 ppm OEKO-TEX limit by 56%.",
+        "severity": "HIGH",
+        "deadline": "2026-12-31",
+        "days_remaining": 213,
+        "evidence": ["chemical_lab_report_q1_2026.pdf"],
+        "recommendation": "Switch to REACH-compliant dye suppliers. Commission SGS or Intertek full SVHC panel test.",
+        "linked_action_id": "act_ams_3"
+      },
+      {
+        "gap_id": "gap_ams_bsci",
+        "rule_id": "bsci.certification.missing",
+        "regulation": "BSCI",
+        "requirement": "BSCI (Business Social Compliance Initiative) audit is required by BritMart Retail's commercial Code of Conduct for all tier-1 suppliers. Without it, factory is ineligible for PO renewal.",
+        "display_title": "Complete BSCI Social Audit",
+        "status": "MISSING",
+        "factory_status": "MISSING — BSCI certification not held. No audit has been commissioned or scheduled.",
+        "severity": "HIGH",
+        "deadline": "2026-09-30",
+        "days_remaining": 121,
+        "evidence": ["almadina_compliance_q1_2026.pdf — certifications page"],
+        "recommendation": "Register with amfori BSCI platform and commission initial BSCI audit through accredited audit body.",
+        "linked_action_id": "act_ams_4"
+      }
+    ],
+    "contradictions": [
+      {
+        "claim": "Factory is ISO 14001 compliant — effluent fully within legal limits",
+        "evidence": "water_effluent_discharge = 11.5 ppm (EU REACH limit: 8 ppm) — exceeds limit by 44%",
+        "source_a": "almadina_compliance_q1_2026.pdf — self-report",
+        "source_b": "certverify_water_audit_mar26.pdf — independent measurement",
+        "confidence": 0.91,
+        "impact": "The ISO 14001 / REACH compliance claim cannot hold while measured effluent exceeds the 8 ppm ceiling by 44%."
+      },
+      {
+        "claim": "Average weekly working hours: 49",
+        "evidence": "Independent labour audit recorded 62 hrs/week — discrepancy of 13 hours vs self-report",
+        "source_a": "almadina_compliance_q1_2026.pdf — self-report",
+        "source_b": "certverify_labour_audit_mar26.pdf — third-party audit",
+        "confidence": 0.88,
+        "impact": "A 13-hour gap between self-reported and audited hours undermines the reliability of the factory's labour disclosures."
+      }
+    ],
+    "action_chain": [
+      {"action_id": "act_ams_1", "priority": 1, "title": "Book and complete GOTS renewal audit", "description": "Book the GOTS renewal audit with Control Union immediately and notify NordStyle Group and M&S of the certification gap and remediation plan.", "addresses_gap_ids": ["gap_ams_gots"], "effort": "HIGH", "deadline": "2026-08-01", "impact_pkr": 5000000000, "status": "PENDING", "estimated_score_delta": 15},
+      {"action_id": "act_ams_2", "priority": 2, "title": "Finalise and publish CSDDD due diligence report", "description": "Finalise, board-approve, and publish the CSDDD supply chain due diligence report before the Phase 1 enforcement date.", "addresses_gap_ids": ["gap_ams_csddd"], "effort": "MEDIUM", "deadline": "2027-01-01", "impact_pkr": 5000000000, "status": "PENDING", "estimated_score_delta": 15},
+      {"action_id": "act_ams_3", "priority": 3, "title": "Switch to REACH-compliant dyes + commission SVHC test", "description": "Switch to REACH-compliant dye suppliers and commission an SGS or Intertek full SVHC panel test to bring lead below the 50 ppm limit.", "addresses_gap_ids": ["gap_ams_lead"], "effort": "HIGH", "deadline": "2026-12-31", "impact_pkr": 4000000000, "status": "PENDING", "estimated_score_delta": 12},
+      {"action_id": "act_ams_4", "priority": 4, "title": "Register and complete BSCI audit", "description": "Register with the amfori BSCI platform and commission an initial BSCI audit through an accredited audit body to restore BritMart Retail PO eligibility.", "addresses_gap_ids": ["gap_ams_bsci"], "effort": "HIGH", "deadline": "2026-09-30", "impact_pkr": 6800000000, "status": "PENDING", "estimated_score_delta": 20}
+    ]
+  },
+  "notes": "Al-Madina Sportswear is the DEMO UPLOAD factory (not pre-loaded). Uploaded live during the pitch to show the upload+analyze flow. Score 38 CRITICAL with 4 gaps and 2 contradictions; full simulation lands at 100 / PKR 0."
 }

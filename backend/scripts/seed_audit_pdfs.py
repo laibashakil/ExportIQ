@@ -33,19 +33,24 @@ SA_PATH = BACKEND_DIR / "service-account.json"
 BUCKET = "gen-lang-client-0067611351.firebasestorage.app"
 
 # factory_id -> source PDF filename in mock_data/factories
+# NOTE: scripts/seed_demo.py is the comprehensive seeder (factories + reports +
+# actions + regulation PDFs). This script remains as a lightweight PDF-only
+# uploader kept in sync with the current regulation set.
 FACTORIES = {
     "fwi_fsd_001": "fwi_fsd_001.pdf",
     "cfw_lhe_002": "cfw_lhe_002.pdf",
     "rgl_khi_003": "rgl_khi_003.pdf",
+    "ams_skl_004": "ams_skl_004.pdf",
+    "sgd_tex_005": "sgd_tex_005.pdf",
 }
 
 # Storage path -> source PDF filename in mock_data/regulations.
-# Note the source filenames differ from the canonical storage paths the
-# mobile/web apps link to.
 REGULATIONS = {
-    "regulations/eu_cbam.pdf": "eu_cbam.pdf",
-    "regulations/uk_modern_slavery.pdf": "uk_modern_slavery_act.pdf",
-    "regulations/eu_supply_chain_directive.pdf": "eu_csddd.pdf",
+    "regulations/eu_csddd.pdf": "eu_csddd.pdf",
+    "regulations/uk_modern_slavery.pdf": "uk_modern_slavery.pdf",
+    "regulations/sa8000.pdf": "sa8000.pdf",
+    "regulations/eu_reach.pdf": "eu_reach.pdf",
+    "regulations/gsplus.pdf": "gsplus.pdf",
 }
 REGULATION_DIR = BACKEND_DIR / "mock_data" / "regulations"
 

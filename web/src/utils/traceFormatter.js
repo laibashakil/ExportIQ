@@ -2,10 +2,12 @@
 // consistent across mobile and web. No raw JSON ever appears in the UI.
 
 const REGULATION_LABELS = {
-  eu_cbam: 'EU CBAM',
-  uk_modern_slavery: 'UK Modern Slavery Act',
-  eu_supply_chain_directive: 'EU CSDDD',
   eu_csddd: 'EU CSDDD',
+  eu_supply_chain_directive: 'EU CSDDD',
+  uk_modern_slavery: 'UK Modern Slavery Act',
+  sa8000: 'SA8000',
+  eu_reach: 'EU REACH',
+  gsplus: 'GSP+',
 };
 
 function prettyReg(id) {

@@ -33,7 +33,7 @@ GAP_PROMPT = """Compare this regulation rulebook against this factory profile.
 
 Identify gaps — every rule the factory does not satisfy. For each:
   gap_id          unique short id
-  regulation      regulation name (e.g. "EU CBAM")
+  regulation      regulation name (e.g. "EU CSDDD")
   requirement     plain-English rule statement
   status          MISSING | NON_CONFORMANT | EXPIRED | PARTIAL
   severity        CRITICAL | HIGH | MEDIUM | LOW
@@ -107,16 +107,20 @@ def run(state: AgentState) -> dict:
 # imperative phrase under 6 words.
 _TITLE_RULES: list[tuple[str, str]] = [
     # (regex against `requirement` or `regulation`, plain-English title)
-    (r"verified.*emission factor|q1\s*2027|embedded emissions.*default",
-     "Verify Emissions Data Sources"),
-    (r"quarterly cbam|cbam declaration|carbon border adjustment",
-     "File EU Carbon Tax Report"),
-    (r"carbon emissions report|emissions report",
-     "Submit Quarterly Emissions Report"),
-    (r"modern slavery statement|msa statement",
+    (r"periodic supplier audit|supplier audit|smeta|bsci",
+     "Commission SMETA Supplier Audits"),
+    (r"due diligence policy|csddd|article 8|article 5",
+     "Establish CSDDD Due Diligence Policy"),
+    (r"grievance|complaints procedure|article 11",
+     "Implement Formal Grievance Mechanism"),
+    (r"modern slavery statement|msa statement|section 54|s\.?54",
      "Publish Modern Slavery Statement"),
-    (r"supply chain.*(audit|due diligence)|csddd",
-     "Complete Supply Chain Audit"),
+    (r"supply chain.*(audit|due diligence)",
+     "Complete Supply Chain Due Diligence"),
+    (r"minimum age|ilo.*138|age verification",
+     "Verify Worker Age Records"),
+    (r"azo dye|formaldehyde|chromium|svhc",
+     "Commission REACH Chemical Test"),
     (r"sa[\s-]?8000|social accountability",
      "Renew Social Accountability Certificate"),
     (r"labour|labor.*(standard|cert)|certverify.*labour",
@@ -200,8 +204,8 @@ def _attach_display_titles(gaps: list[dict]) -> list[dict]:
         "You produce SHORT plain-English titles for compliance gaps. "
         "Each title must be an imperative verb phrase (e.g. 'File ...', "
         "'Renew ...', 'Fix ...') of AT MOST 6 words. No acronyms unless "
-        "they are universally known (EU is fine, CBAM/CSDDD/ISO are not — "
-        "spell them out as 'Carbon Tax', 'Supply Chain', 'Environmental'). "
+        "they are universally known (EU is fine, CSDDD/SA8000/ISO are not — "
+        "spell them out as 'Supply Chain', 'Social Accountability', 'Environmental'). "
         "Return ONLY valid JSON: {\"titles\": [{\"gap_id\": ..., \"title\": "
         "\"...\"}, ...]}. If unsure, copy the heuristic_title verbatim."
     )
@@ -229,8 +233,8 @@ def _attach_display_titles(gaps: list[dict]) -> list[dict]:
 # the factory has covered the requirement. Used as the fallback when no
 # explicit metric value is on file.
 _CLAIM_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "cbam_carbon_declaration": ("cbam", "filed"),
-    "csddd_due_diligence_narrative": ("supply chain", "due diligence"),
+    "csddd.art8.due_diligence_policy": ("supply chain", "due diligence"),
+    "csddd.art5.integrate_policy": ("due diligence", "policy"),
 }
 
 

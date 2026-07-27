@@ -1,5 +1,5 @@
 // Minimal markdown → JSX renderer used by the Documents tab so buyer
-// emails, CBAM forms, and remediation plans render with proper headings,
+// emails, CSDDD due diligence reports, and remediation plans render with proper headings,
 // bold, italics, lists, and horizontal rules instead of raw `*`/`#`/`-`.
 //
 // Supported: # / ## / ### headings, **bold**, *italic*, `code`, --- hr,

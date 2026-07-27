@@ -1,15 +1,17 @@
 {
   "regulation_id": "uk_modern_slavery",
-  "name": "UK Modern Slavery Act 2015",
+  "name": "UK Modern Slavery Act",
+  "full_name": "UK Modern Slavery Act 2015 — Section 54",
   "jurisdiction": "UK",
   "effective_date": "2015-10-29",
-  "source_url": "https://www.legislation.gov.uk/ukpga/2015/30/contents",
-  "source_document": "uk_modern_slavery_act.pdf",
+  "source_url": "https://www.legislation.gov.uk/ukpga/2015/30/section/54",
+  "source_document": "uk_modern_slavery.pdf",
+  "turnover_threshold_gbp": 36000000,
   "rules": [
     {
-      "rule_id": "msa_section_54_statement",
+      "rule_id": "uk_msa.s54.statement",
       "regulation_name": "UK Modern Slavery Act",
-      "requirement": "Publish an annual slavery and human trafficking statement (Section 54) covering supply chain due diligence.",
+      "requirement": "Publish an annual Modern Slavery and Human Trafficking Statement (Section 54) for organisations with GBP 36M+ turnover, approved by the board and signed by a director, published on the company website with a prominent homepage link. The statement must cover organisation structure, supply chains, due diligence policies, risk assessment, KPIs and training.",
       "category": "REPORTING_ANNUAL",
       "metric": "msa_statement_published",
       "numerical_limit": null,
@@ -18,21 +20,8 @@
       "grace_period_days": 0,
       "applies_to_pakistan_exporters": true,
       "severity_if_missed": "HIGH",
-      "source_section": "Section 54"
-    },
-    {
-      "rule_id": "msa_working_hours",
-      "regulation_name": "UK Modern Slavery Act",
-      "requirement": "Average weekly working hours including overtime must not exceed 60 (SA8000 alignment).",
-      "category": "LABOUR",
-      "metric": "weekly_working_hours",
-      "numerical_limit": 60.0,
-      "unit": "hours",
-      "deadline": null,
-      "grace_period_days": null,
-      "applies_to_pakistan_exporters": true,
-      "severity_if_missed": "HIGH",
-      "source_section": "Schedule 1"
+      "source_section": "Section 54",
+      "recommendation": "Draft the s.54 statement covering the 6 required areas, obtain board approval and a director signature, and publish it on the company website with a homepage link."
     }
   ]
 }

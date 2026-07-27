@@ -1,5 +1,5 @@
 // Style object used by every <Markdown /> instance in the app so document
-// bodies (buyer emails, CBAM forms, checklists) render with the same
+// bodies (buyer emails, CSDDD forms, checklists) render with the same
 // typography. Shape matches the keys understood by
 // `react-native-markdown-display`.
 import { colors, radii } from '../constants/colors';

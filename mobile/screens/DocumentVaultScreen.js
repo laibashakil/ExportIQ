@@ -29,21 +29,21 @@ import { transformMarkdownTables } from '../utils/markdownTransform';
 
 // Documents split into two friendly buckets:
 //   - "Ready to Send"   = anything addressed to a buyer / external party
-//   - "Forms to File"   = CBAM declarations, checklists, internal forms
+//   - "Forms to File"   = CSDDD due diligence reports, checklists, internal forms
 const READY_TO_SEND_KINDS = new Set(['BUYER_EMAIL']);
 
 function plainDocTitle(d) {
   if (d.title) return d.title;
   switch (d.kind) {
-    case 'CBAM_FORM':
-    case 'CBAM_DECLARATION':
-      return 'EU Carbon Tax Filing';
+    case 'CSDDD_DUE_DILIGENCE_REPORT':
+    case 'CSDDD_FORM':
+    case 'CSDDD_DECLARATION':
+    case 'CSDDD_NARRATIVE':
+      return 'CSDDD Due Diligence Report';
     case 'CERTIFICATION_APP':
       return 'Certification Application';
     case 'MSA_STATEMENT':
       return 'Modern Slavery Statement';
-    case 'EMISSIONS_REPORT':
-      return 'Emissions Report';
     case 'AUDIT_CHECKLIST':
       return 'Audit Checklist';
     case 'REMEDIATION_PLAN':
@@ -178,7 +178,7 @@ export default function DocumentVaultScreen({ route, navigation }) {
       {factoryDoc && (
         <View style={{ marginBottom: spacing.xl }}>
           <View style={styles.sectionHead}>
-            <Text style={styles.sectionEmoji}>📄</Text>
+            <Ionicons name="document-text-outline" size={22} color="#00C48C" />
             <Text style={styles.section}>Original Audit Report</Text>
           </View>
           <View style={[styles.sourceCard, !factoryDoc.audit_pdf_path && styles.sourceCardDisabled]}>

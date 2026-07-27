@@ -10,7 +10,7 @@ Exposes the following routes used by the Expo mobile app + Antigravity Manager v
     GET  /report/{factory_id}             — final compliance report
     GET  /actions/{factory_id}            — prioritised action chain only
     POST /simulate/{factory_id}           — run execution-simulation for chosen actions
-    GET  /documents/{factory_id}          — list generated artifacts (buyer emails, CBAM forms)
+    GET  /documents/{factory_id}          — list generated artifacts (buyer emails, CSDDD reports)
     POST /documents/{factory_id}/audit-ready — bundle the audit-ready document set
     POST /failure-test/{job_id}           — inject a controlled failure for demo recovery
     GET  /export-summary                  — CSV/markdown export of every factory's status

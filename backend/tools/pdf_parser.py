@@ -30,10 +30,10 @@ REGULATION_EXTRACTION_PROMPT = """You are a compliance analyst specialising in E
 Given the raw text of a regulation PDF, extract a structured rulebook for
 Pakistani textile exporters. For EACH rule produce:
 
-  rule_id          short stable id, e.g. "cbam_carbon_declare"
+  rule_id          short stable id, e.g. "csddd.art8.due_diligence_policy"
   requirement      one-sentence plain-English statement
-  category         CARBON | CHEMICAL | LABOUR | AUDIT_CERTIFICATION | SUPPLY_CHAIN | REPORTING
-  numerical_limit  number or null (e.g. ppm, tCO2)
+  category         CHEMICAL | LABOUR | AUDIT_CERTIFICATION | SUPPLY_CHAIN | REPORTING
+  numerical_limit  number or null (e.g. ppm)
   unit             string or null
   deadline         ISO date or null
   grace_period_days int or null

@@ -2,35 +2,154 @@
   "factory_id": "fwi_fsd_001",
   "factory_name": "Faisal Weave Industries",
   "city": "Faisalabad",
+  "province": "Punjab",
   "primary_products": ["Denim", "Cotton woven", "Home textiles"],
-  "annual_export_pkr": 4250000000,
+  "employee_count": 800,
+  "annual_export_pkr": 3400000000,
+  "audit_date": "2026-05-10",
+  "auditor": "CertVerify Pakistan (Pvt) Ltd",
   "exports_by_buyer_pkr": {
-    "NordStyle Group": 1900000000,
-    "BritMart Retail": 1450000000,
-    "EuroThread SA": 700000000,
-    "Tesco": 200000000
+    "NordStyle Group": 2000000000,
+    "BritMart Retail": 1400000000
   },
-  "primary_buyers": ["NordStyle Group", "BritMart Retail", "EuroThread SA", "Tesco"],
-  "score_after_full_simulation": 100,
-  "orders_at_risk_after_simulation": 0,
+  "primary_buyers": ["NordStyle Group", "BritMart Retail"],
+  "buyers": [
+    {"name": "NordStyle Group", "pkr_crore": 200, "share": 0.588, "jurisdiction": "EU"},
+    {"name": "BritMart Retail", "pkr_crore": 140, "share": 0.412, "jurisdiction": "UK"}
+  ],
+  "avg_regular_hours": 48,
+  "avg_overtime_hours": 14,
+  "avg_weekly_hours": 62,
+  "overtime_voluntary": false,
+  "minimum_worker_age": 17,
+  "age_verification_complete": true,
+  "grievance_mechanism": "Informal",
+  "msa_statement_published": false,
+  "water_effluent_ppm": 12,
+  "chemical_testing_cert": "Missing",
+  "dye_suppliers_verified": "No",
+  "azo_dye_test": "Not Tested",
+  "formaldehyde_ppm": null,
+  "lead_in_dyes_ppm": null,
+  "tier1_suppliers_mapped": "Yes",
+  "tier1_suppliers_audited": "No",
+  "tier2_suppliers_mapped": "No",
+  "csddd_due_diligence_policy": "Missing",
+  "sa8000_status": "EXPIRED",
+  "sa8000_expiry": "2026-01-12",
+  "iso_14001_status": "VALID",
+  "iso_14001_expiry": "2027-03-15",
+  "wrap_status": "CLAIMED_VALID",
   "certifications": [
-    {"name": "SA8000", "status": "EXPIRED", "expiry_date": "2026-01-15", "issuer": "SAI"},
-    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2026-09-30", "issuer": "Bureau Veritas"},
+    {"name": "SA8000", "status": "EXPIRED", "expiry_date": "2026-01-12", "issuer": "SAI"},
+    {"name": "ISO 14001", "status": "VALID", "expiry_date": "2027-03-15", "issuer": "Bureau Veritas"},
     {"name": "OEKO-TEX", "status": "VALID", "expiry_date": "2026-12-01", "issuer": "OEKO-TEX Institute"},
+    {"name": "WRAP", "status": "PENDING", "expiry_date": null, "issuer": "WRAP"},
     {"name": "GOTS", "status": "MISSING", "expiry_date": null, "issuer": null}
   ],
+  "self_reported_claims": [
+    "Factory holds current and valid SA8000 certification",
+    "ISO 14001 compliant — effluent fully within legal limits",
+    "Average weekly working hours: 48",
+    "Chemical discharge meets EU REACH standards"
+  ],
   "claims": [
-    {"claim": "Factory is ISO 14001 compliant — effluent fully within legal limits", "source": "faisal_weave_self_report_q1_2026.csv", "value": true},
-    {"claim": "SA8000 audit completed and current", "source": "faisal_weave_self_report_q1_2026.csv", "value": true},
-    {"claim": "Average weekly working hours: 48", "source": "faisal_weave_self_report_q1_2026.csv", "value": 48},
-    {"claim": "Chemical discharge meets EU Reach standards", "source": "faisal_weave_self_report_q1_2026.csv", "value": true}
+    {"claim": "Factory holds current and valid SA8000 certification", "source": "fwi_fsd_001.pdf", "value": true},
+    {"claim": "ISO 14001 compliant — effluent fully within legal limits", "source": "fwi_fsd_001.pdf", "value": true},
+    {"claim": "Average weekly working hours: 48", "source": "fwi_fsd_001.pdf", "value": 48},
+    {"claim": "Chemical discharge meets EU REACH standards", "source": "fwi_fsd_001.pdf", "value": true}
   ],
   "audit_evidence": [
-    {"metric": "water_effluent_discharge", "value": 12.0, "unit": "ppm", "source": "water_audit_march25.pdf", "measured_on": "2026-03-12"},
-    {"metric": "weekly_working_hours", "value": 68, "unit": "hours", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
-    {"metric": "overtime_hours", "value": 22, "unit": "hours/week", "source": "certverify_labour_audit_feb26.pdf", "measured_on": "2026-02-20"},
-    {"metric": "co2_per_unit", "value": 3.4, "unit": "kgCO2/garment", "source": "carbon_calc_jan26.csv", "measured_on": "2026-01-31"},
-    {"metric": "lead_in_dyes", "value": 95.0, "unit": "ppm", "source": "chemical_lab_report_jan26.pdf", "measured_on": "2026-01-22"}
+    {"metric": "weekly_working_hours", "value": 62, "unit": "hours", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
+    {"metric": "overtime_hours", "value": 14, "unit": "hours/week", "source": "certverify_labour_audit_mar26.pdf", "measured_on": "2026-03-22"},
+    {"metric": "water_effluent_discharge", "value": 12.0, "unit": "ppm", "source": "certverify_water_audit_mar26.pdf", "measured_on": "2026-03-18"},
+    {"metric": "csddd_due_diligence_policy", "value": "MISSING", "unit": null, "source": "internal_governance_q1.pdf", "measured_on": "2026-04-05"}
   ],
-  "notes": "Faisal Weave Industries' NordStyle Group order shipped Q2 2026 is contingent on resolving the SA8000 expiry; BritMart Retail have flagged CBAM declaration as a hold."
+  "demo_report": {
+    "compliance_score": 43,
+    "risk_level": "CRITICAL",
+    "orders_at_risk_pkr": 340000000,
+    "score_after_full_simulation": 100,
+    "orders_at_risk_after_simulation": 0,
+    "buyers_affected": ["NordStyle Group", "BritMart Retail"],
+    "gaps": [
+      {
+        "gap_id": "gap_fwi_csddd",
+        "rule_id": "csddd.art8.due_diligence_policy",
+        "regulation": "EU CSDDD",
+        "requirement": "Establish and implement a due diligence policy identifying human rights and environmental risks in operations and supply chain.",
+        "display_title": "Establish CSDDD Due Diligence Policy",
+        "status": "MISSING",
+        "factory_status": "MISSING — no documented due diligence policy exists",
+        "severity": "CRITICAL",
+        "deadline": "2027-01-01",
+        "days_remaining": 214,
+        "evidence": ["fwi_fsd_001.pdf — management interview section"],
+        "recommendation": "Draft board-level supply chain due diligence policy covering all tier-1 suppliers before CSDDD Phase 1 deadline.",
+        "linked_action_id": "act_fwi_1"
+      },
+      {
+        "gap_id": "gap_fwi_hours",
+        "rule_id": "sa8000.working_hours",
+        "regulation": "SA8000",
+        "requirement": "Working hours must not exceed 48 regular hours per week. Overtime must not exceed 12 hours per week and must be voluntary.",
+        "display_title": "Cap Working Hours to SA8000 Limit",
+        "status": "NON_CONFORMANT",
+        "factory_status": "NON_CONFORMANT — audit records show average 62 hrs/week during peak season, overtime not documented as voluntary",
+        "severity": "CRITICAL",
+        "deadline": null,
+        "days_remaining": null,
+        "evidence": ["fwi_fsd_001.pdf — payroll records section"],
+        "recommendation": "Implement hour-tracking system, cap at 48+12, obtain written voluntary overtime consent from all workers.",
+        "linked_action_id": "act_fwi_2"
+      },
+      {
+        "gap_id": "gap_fwi_msa",
+        "rule_id": "uk_msa.s54.statement",
+        "regulation": "UK Modern Slavery Act",
+        "requirement": "Publish annual Modern Slavery and Human Trafficking Statement approved by board, signed by director, linked from homepage.",
+        "display_title": "Publish Modern Slavery Statement",
+        "status": "MISSING",
+        "factory_status": "MISSING — no statement published for FY2025",
+        "severity": "HIGH",
+        "deadline": "2026-09-30",
+        "days_remaining": 121,
+        "evidence": ["fwi_fsd_001.pdf — compliance declarations section"],
+        "recommendation": "Draft s.54 statement covering 6 required areas, get board approval, publish on company website.",
+        "linked_action_id": "act_fwi_3"
+      },
+      {
+        "gap_id": "gap_fwi_reach",
+        "rule_id": "eu_reach.svhc.azo_dyes",
+        "regulation": "EU REACH",
+        "requirement": "Azo dyes that can release carcinogenic aromatic amines are prohibited in textile articles. Formaldehyde must not exceed 75 ppm for infants, 300 ppm for skin-contact garments.",
+        "display_title": "Commission REACH Chemical Compliance Test",
+        "status": "PARTIAL",
+        "factory_status": "UNVERIFIED — no third-party chemical testing certificate on file. Factory uses reactive dyes from 3 unverified suppliers.",
+        "severity": "HIGH",
+        "deadline": "2026-12-31",
+        "days_remaining": 213,
+        "evidence": ["fwi_fsd_001.pdf — chemical procurement section"],
+        "recommendation": "Commission Oeko-Tex or SGS chemical compliance test for all dye lots from current suppliers.",
+        "linked_action_id": "act_fwi_4"
+      }
+    ],
+    "contradictions": [
+      {
+        "claim": "Factory self-reports SA8000 certification as current and valid",
+        "evidence": "SA8000 certificate shows expiry date 12 Jan 2026 — expired. Payroll records also show 62-hr work weeks violating SA8000 working hours requirement.",
+        "source_a": "fwi_fsd_001.pdf — certifications page (self-report)",
+        "source_b": "fwi_fsd_001.pdf — SA8000 certificate scan + payroll records",
+        "confidence": 0.91,
+        "impact": "An expired SA8000 certificate paired with 62-hour weeks means buyers relying on the self-report face an unmanaged labour-compliance risk."
+      }
+    ],
+    "action_chain": [
+      {"action_id": "act_fwi_1", "priority": 1, "title": "Establish CSDDD Supply Chain Due Diligence Policy", "description": "Draft and board-approve a supply chain due diligence policy covering all tier-1 suppliers before the CSDDD Phase 1 deadline.", "addresses_gap_ids": ["gap_fwi_csddd"], "effort": "HIGH", "deadline": "2027-01-01", "impact_pkr": 120000000, "status": "PENDING", "estimated_score_delta": 12},
+      {"action_id": "act_fwi_2", "priority": 2, "title": "Cap working hours + document voluntary overtime consent", "description": "Cap regular hours at 48, limit overtime to 12 hrs/week, and obtain written voluntary overtime consent from all workers.", "addresses_gap_ids": ["gap_fwi_hours"], "effort": "MEDIUM", "deadline": null, "impact_pkr": 100000000, "status": "PENDING", "estimated_score_delta": 12},
+      {"action_id": "act_fwi_3", "priority": 3, "title": "Publish UK Modern Slavery Act s.54 Statement", "description": "Draft the s.54 statement covering the 6 required areas, obtain board approval, and publish it on the company website with a homepage link.", "addresses_gap_ids": ["gap_fwi_msa"], "effort": "MEDIUM", "deadline": "2026-09-30", "impact_pkr": 70000000, "status": "PENDING", "estimated_score_delta": 10},
+      {"action_id": "act_fwi_4", "priority": 4, "title": "Commission REACH / Oeko-Tex Chemical Compliance Test", "description": "Commission an Oeko-Tex or SGS chemical compliance test for all dye lots from current suppliers to verify azo-dye and formaldehyde limits.", "addresses_gap_ids": ["gap_fwi_reach"], "effort": "HIGH", "deadline": "2026-12-31", "impact_pkr": 50000000, "status": "PENDING", "estimated_score_delta": 10}
+    ]
+  },
+  "notes": "Faisal Weave Industries is the flagship CRITICAL demo factory: expired SA8000, 62-hr weeks, no CSDDD policy, unpublished MSA statement, and unverified REACH chemical status. Score and PKR are pinned via demo_report override."
 }

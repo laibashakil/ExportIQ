@@ -36,7 +36,7 @@ const REQUIRED_ITEMS = [
   'Chemical usage data — effluent discharge levels (ppm), dye chemicals used',
   'Working hours per week (including overtime)',
   'Forced/child labour compliance statement',
-  'Carbon/emissions data if exporting to EU (for CBAM compliance)',
+  'Supplier compliance data if exporting to EU (for CSDDD due diligence)',
   'Supply chain mapping — tier-1 and tier-2 suppliers if available',
 ];
 

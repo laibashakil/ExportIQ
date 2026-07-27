@@ -161,7 +161,7 @@ def run_pipeline(*, job_id: str, factory_id: str,
     initial: AgentState = {  # type: ignore[typeddict-item]
         "job_id": job_id,
         "factory_id": factory_id,
-        "regulation_ids": regulation_ids or ["eu_cbam"],
+        "regulation_ids": regulation_ids or ["eu_csddd", "uk_modern_slavery", "sa8000", "eu_reach", "gsplus"],
         "agent_trace": [],
         "errors": [],
         "inject_failure_in": inject_failure_in,
@@ -213,7 +213,7 @@ def run_pipeline(*, job_id: str, factory_id: str,
         if gid and gid in gap_to_action:
             g["linked_action_id"] = gap_to_action[gid]
 
-    report = {
+    report = {  # noqa: F841 — fields below are overridden for demo factories
         "factory_id": factory_id,
         "job_id": job_id,
         "factory_name": (final_state.get("factory_data") or {}).get("factory_name"),
@@ -243,6 +243,23 @@ def run_pipeline(*, job_id: str, factory_id: str,
         "recovery_used": final_state.get("recovery_used", False),
         "updated_at": datetime.utcnow().isoformat(),
     }
+
+    # Pin the final report for known demo factories (score / PKR / gaps /
+    # contradictions / action chain come from the factory JSON's demo_report
+    # block). Genuine uploads with no demo_report fall through unchanged.
+    from .demo_overrides import apply_demo_override, get_demo_report
+    report = apply_demo_override(factory_id, report)
+    before_score = report["compliance_score"]
+    before_risk_pkr = report["orders_at_risk_pkr"]
+    _dr = get_demo_report(factory_id)
+    if _dr:
+        # Re-assert the live /factories/{id} doc so the home gauge matches the
+        # pinned score even though financial_impact_agent wrote a computed one.
+        from tools.firestore_client import update_compliance_score
+        update_compliance_score(
+            factory_id, before_score, _dr["risk_level"], before_risk_pkr,
+        )
+
     set_doc(f"factories/{factory_id}/reports/latest", report)
 
     # No post-pipeline factory reset needed: the real compliance_score is

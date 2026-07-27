@@ -54,7 +54,7 @@ async function uploadFile({ uri, name, mimeType, factoryId }) {
 
 export const api = {
   upload: uploadFile,
-  analyze: (factoryId, regulationIds = ['eu_cbam', 'uk_modern_slavery', 'eu_supply_chain_directive']) =>
+  analyze: (factoryId, regulationIds = ['eu_csddd', 'uk_modern_slavery', 'sa8000', 'eu_reach', 'gsplus']) =>
     req('/analyze', {
       method: 'POST',
       body: JSON.stringify({ factory_id: factoryId, regulation_ids: regulationIds }),

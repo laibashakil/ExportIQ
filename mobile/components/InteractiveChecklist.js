@@ -32,12 +32,14 @@ function parseChecklistBody(body) {
 
 function detectTemplateKind(label) {
   const l = label.toLowerCase();
-  if (l.includes('cbam')) return 'CBAM_FORM';
   if (l.includes('modern slavery') || l.includes('msa')) return 'MSA_STATEMENT';
-  if (l.includes('csddd') || l.includes('due diligence') || l.includes('supply chain narrative')) {
+  if (
+    l.includes('csddd') ||
+    l.includes('due diligence') ||
+    l.includes('supply chain narrative')
+  ) {
     return 'CSDDD_NARRATIVE';
   }
-  if (l.includes('emission')) return 'EMISSIONS_REPORT';
   if (l.includes('audit checklist')) return 'AUDIT_CHECKLIST';
   if (l.includes('certification application') || l.includes('sa8000') && l.includes('apply')) {
     return 'CERTIFICATION_APP';
@@ -46,10 +48,8 @@ function detectTemplateKind(label) {
 }
 
 const TEMPLATE_LABELS = {
-  CBAM_FORM: 'CBAM Form',
   MSA_STATEMENT: 'MSA Statement',
   CSDDD_NARRATIVE: 'CSDDD Narrative',
-  EMISSIONS_REPORT: 'Emissions Report',
   AUDIT_CHECKLIST: 'Audit Checklist',
   CERTIFICATION_APP: 'Certification Form',
 };

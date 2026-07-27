@@ -20,6 +20,7 @@ class RegulationRule(BaseModel):
         "AUDIT_CERTIFICATION",
         "SUPPLY_CHAIN",
         "REPORTING",
+        "REPORTING_ANNUAL",
     ]
     numerical_limit: float | None = None
     unit: str | None = None
@@ -32,7 +33,7 @@ class RegulationRule(BaseModel):
 
 class Regulation(BaseModel):
     regulation_id: str
-    name: str = Field(..., description="e.g. 'EU CBAM', 'UK Modern Slavery Act 2015'")
+    name: str = Field(..., description="e.g. 'EU CSDDD', 'UK Modern Slavery Act 2015'")
     jurisdiction: Jurisdiction
     effective_date: str | None = None
     source_url: str | None = None
